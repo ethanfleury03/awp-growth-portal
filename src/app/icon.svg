@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="PlumberOS icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1422" />
+      <stop offset="100%" stop-color="#1f3558" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f26a1f" />
+      <stop offset="100%" stop-color="#d95614" />
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="52" fill="url(#bg)" />
+  <path
+    d="M88 72c8-8 20-8 28 0l16 16 13-13c7-7 19-7 26 0 7 7 7 19 0 26l-13 13 22 22c8 8 8 20 0 28l-20 20c-8 8-20 8-28 0l-22-22-31 31c-7 7-19 7-26 0s-7-19 0-26l31-31-16-16c-8-8-8-20 0-28z"
+    fill="url(#accent)"
+  />
+</svg>

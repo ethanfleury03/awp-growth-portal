@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img" aria-label="Landscaping photo placeholder">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0E1A2B"/>
+      <stop offset="100%" stop-color="#1a2b45"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="url(#bg)"/>
+  <g transform="translate(0 520)" fill="#F26A1F" opacity="0.85">
+    <path d="M0 230 Q 300 120 600 200 T 1200 180 L 1200 230 Z"/>
+  </g>
+  <g transform="translate(620 180)" fill="#F26A1F">
+    <rect x="-12" y="180" width="24" height="160" fill="#7a3f18"/>
+    <circle cx="0" cy="140" r="100"/>
+    <circle cx="-90" cy="190" r="70" opacity="0.85"/>
+    <circle cx="90" cy="190" r="70" opacity="0.85"/>
+    <circle cx="0" cy="70" r="70" opacity="0.85"/>
+  </g>
+  <g transform="translate(260 280)" fill="#F26A1F" opacity="0.6">
+    <circle cx="0" cy="60" r="50"/>
+    <circle cx="-40" cy="90" r="40"/>
+    <circle cx="40" cy="90" r="40"/>
+    <rect x="-6" y="100" width="12" height="80" fill="#7a3f18"/>
+  </g>
+  <g transform="translate(100 640)" fill="#FAF7F2">
+    <text x="0" y="0" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="54" font-weight="800">Landscaping</text>
+    <text x="0" y="40" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="18" fill="#FAF7F2" opacity="0.6">Coming soon</text>
+  </g>
+</svg>

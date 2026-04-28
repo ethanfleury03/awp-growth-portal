@@ -1,0 +1,534 @@
+{
+  "generated": true,
+  "app_base_url_placeholder": "https://handiness-imitate-settle.ngrok-free.dev",
+  "auth": {
+    "headers": [
+      "Authorization: Bearer <RETELL_TOOL_SHARED_SECRET>",
+      "x-retell-tool-secret: <RETELL_TOOL_SHARED_SECRET>"
+    ]
+  },
+  "webhook": {
+    "method": "POST",
+    "url": "https://handiness-imitate-settle.ngrok-free.dev/api/receptionist/providers/retell/webhook"
+  },
+  "functions": [
+    {
+      "name": "get_receptionist_context",
+      "purpose": "Load company name, policies, business hours, after-hours mode, and JSON hints from WNY Automation Portal settings.",
+      "when_to_call": "Near the start of every call, before promising scheduling or policy.",
+      "method": "POST",
+      "url": "https://handiness-imitate-settle.ngrok-free.dev/api/receptionist/providers/retell/functions/get_receptionist_context",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Retell call id for this conversation (preferred when available)."
+          },
+          "receptionist_call_id": {
+            "type": "string",
+            "description": "WNY Automation Portal receptionist_calls.id from registerPhoneCall metadata / dynamic variables."
+          }
+        },
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "context": {
+            "type": "object"
+          }
+        }
+      },
+      "example": {
+        "request": {},
+        "response": {
+          "ok": true,
+          "context": {
+            "companyName": "Demo Plumbing",
+            "afterHoursMode": "message",
+            "disclosureEnabled": true
+          }
+        }
+      }
+    },
+    {
+      "name": "get_availability",
+      "purpose": "Return deterministic suggested booking windows from WNY Automation Portal (not a live calendar optimizer).",
+      "when_to_call": "Before offering specific callback or quote visit times.",
+      "method": "POST",
+      "url": "https://handiness-imitate-settle.ngrok-free.dev/api/receptionist/providers/retell/functions/get_availability",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Retell call id for this conversation (preferred when available)."
+          },
+          "receptionist_call_id": {
+            "type": "string",
+            "description": "WNY Automation Portal receptionist_calls.id from registerPhoneCall metadata / dynamic variables."
+          }
+        },
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "availability": {
+            "type": "object",
+            "properties": {
+              "windows": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "timezone": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "example": {
+        "request": {},
+        "response": {
+          "ok": true,
+          "availability": {
+            "timezone": "America/Toronto",
+            "windows": [
+              {
+                "label": "Tomorrow morning",
+                "start": "2026-04-13T14:00:00.000Z",
+                "end": "2026-04-13T15:00:00.000Z"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "create_lead",
+      "purpose": "Create a CRM lead from the current receptionist call and link it in SQLite.",
+      "when_to_call": "Caller is not ready to book but you have enough info for human follow-up.",
+      "method": "POST",
+      "url": "https://handiness-imitate-settle.ngrok-free.dev/api/receptionist/providers/retell/functions/create_lead",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Retell call id for this conversation (preferred when available)."
+          },
+          "receptionist_call_id": {
+            "type": "string",
+            "description": "WNY Automation Portal receptionist_calls.id from registerPhoneCall metadata / dynamic variables."
+          },
+          "caller_name": {
+            "type": "string",
+            "description": "Caller full name."
+          },
+          "callerName": {
+            "type": "string",
+            "description": "Alias for caller_name."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Callback number in E.164 or readable form."
+          },
+          "callback_number": {
+            "type": "string",
+            "description": "Alias for phone."
+          },
+          "address": {
+            "type": "string",
+            "description": "Service address."
+          },
+          "service_address": {
+            "type": "string",
+            "description": "Alias for address."
+          },
+          "issue_type": {
+            "type": "string",
+            "description": "Short issue category."
+          },
+          "issue_description": {
+            "type": "string",
+            "description": "What is happening."
+          },
+          "issue": {
+            "type": "string",
+            "description": "Alias for issue_description."
+          },
+          "urgency": {
+            "type": "string",
+            "description": "Caller-reported urgency: low | medium | high | emergency."
+          },
+          "preferred_callback_window": {
+            "type": "string",
+            "description": "Agreed callback window text."
+          },
+          "preferred_visit_window": {
+            "type": "string",
+            "description": "Agreed on-site quote window text."
+          }
+        },
+        "required": []
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "leadId": {
+            "type": "string"
+          },
+          "alreadyLinked": {
+            "type": "boolean"
+          }
+        }
+      },
+      "example": {
+        "request": {
+          "call_id": "call_live_abc123",
+          "caller_name": "Jane Doe",
+          "phone": "+14165550123",
+          "address": "12 River Rd, Toronto",
+          "issue_description": "Slow drain in kitchen sink",
+          "urgency": "low"
+        },
+        "response": {
+          "ok": true,
+          "leadId": "lead_xyz",
+          "alreadyLinked": false
+        }
+      }
+    },
+    {
+      "name": "book_callback",
+      "purpose": "Book a callback (job) from extracted + call data in WNY Automation Portal.",
+      "when_to_call": "After caller confirms callback window and contact details.",
+      "method": "POST",
+      "url": "https://handiness-imitate-settle.ngrok-free.dev/api/receptionist/providers/retell/functions/book_callback",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Retell call id for this conversation (preferred when available)."
+          },
+          "receptionist_call_id": {
+            "type": "string",
+            "description": "WNY Automation Portal receptionist_calls.id from registerPhoneCall metadata / dynamic variables."
+          },
+          "caller_name": {
+            "type": "string",
+            "description": "Caller full name."
+          },
+          "callerName": {
+            "type": "string",
+            "description": "Alias for caller_name."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Callback number in E.164 or readable form."
+          },
+          "callback_number": {
+            "type": "string",
+            "description": "Alias for phone."
+          },
+          "address": {
+            "type": "string",
+            "description": "Service address."
+          },
+          "service_address": {
+            "type": "string",
+            "description": "Alias for address."
+          },
+          "issue_type": {
+            "type": "string",
+            "description": "Short issue category."
+          },
+          "issue_description": {
+            "type": "string",
+            "description": "What is happening."
+          },
+          "issue": {
+            "type": "string",
+            "description": "Alias for issue_description."
+          },
+          "urgency": {
+            "type": "string",
+            "description": "Caller-reported urgency: low | medium | high | emergency."
+          },
+          "preferred_callback_window": {
+            "type": "string",
+            "description": "Agreed callback window text."
+          },
+          "preferred_visit_window": {
+            "type": "string",
+            "description": "Agreed on-site quote window text."
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "bookingId": {
+            "type": "string"
+          },
+          "jobId": {
+            "type": "string"
+          }
+        }
+      },
+      "example": {
+        "request": {
+          "call_id": "call_live_abc123",
+          "preferred_callback_window": "Tomorrow between 9 and 11 a.m.",
+          "phone": "+14165550123"
+        },
+        "response": {
+          "ok": true,
+          "bookingId": "b_1",
+          "jobId": "j_1"
+        }
+      }
+    },
+    {
+      "name": "book_quote_visit",
+      "purpose": "Book an on-site quote/estimate visit (job) from call data.",
+      "when_to_call": "After caller confirms visit window and service address.",
+      "method": "POST",
+      "url": "https://handiness-imitate-settle.ngrok-free.dev/api/receptionist/providers/retell/functions/book_quote_visit",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Retell call id for this conversation (preferred when available)."
+          },
+          "receptionist_call_id": {
+            "type": "string",
+            "description": "WNY Automation Portal receptionist_calls.id from registerPhoneCall metadata / dynamic variables."
+          },
+          "caller_name": {
+            "type": "string",
+            "description": "Caller full name."
+          },
+          "callerName": {
+            "type": "string",
+            "description": "Alias for caller_name."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Callback number in E.164 or readable form."
+          },
+          "callback_number": {
+            "type": "string",
+            "description": "Alias for phone."
+          },
+          "address": {
+            "type": "string",
+            "description": "Service address."
+          },
+          "service_address": {
+            "type": "string",
+            "description": "Alias for address."
+          },
+          "issue_type": {
+            "type": "string",
+            "description": "Short issue category."
+          },
+          "issue_description": {
+            "type": "string",
+            "description": "What is happening."
+          },
+          "issue": {
+            "type": "string",
+            "description": "Alias for issue_description."
+          },
+          "urgency": {
+            "type": "string",
+            "description": "Caller-reported urgency: low | medium | high | emergency."
+          },
+          "preferred_callback_window": {
+            "type": "string",
+            "description": "Agreed callback window text."
+          },
+          "preferred_visit_window": {
+            "type": "string",
+            "description": "Agreed on-site quote window text."
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "bookingId": {
+            "type": "string"
+          },
+          "jobId": {
+            "type": "string"
+          }
+        }
+      },
+      "example": {
+        "request": {
+          "call_id": "call_live_abc123",
+          "preferred_visit_window": "Thursday afternoon",
+          "address": "44 Maple Ave",
+          "issue_description": "Water heater leaking",
+          "urgency": "high"
+        },
+        "response": {
+          "ok": true,
+          "bookingId": "b_2",
+          "jobId": "j_2"
+        }
+      }
+    },
+    {
+      "name": "flag_emergency",
+      "purpose": "Mark the receptionist call as emergency for dispatch prioritization.",
+      "when_to_call": "Active flooding, burst pipe, no water, sewer backup, or similar urgent situations.",
+      "method": "POST",
+      "url": "https://handiness-imitate-settle.ngrok-free.dev/api/receptionist/providers/retell/functions/flag_emergency",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Retell call id for this conversation (preferred when available)."
+          },
+          "receptionist_call_id": {
+            "type": "string",
+            "description": "WNY Automation Portal receptionist_calls.id from registerPhoneCall metadata / dynamic variables."
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "flagged": {
+            "const": true
+          }
+        }
+      },
+      "example": {
+        "request": {
+          "call_id": "call_live_abc123"
+        },
+        "response": {
+          "ok": true,
+          "flagged": true
+        }
+      }
+    },
+    {
+      "name": "mark_spam",
+      "purpose": "Mark the call as spam / abuse in WNY Automation Portal.",
+      "when_to_call": "Clear spam, harassment, or obvious wrong-number abuse.",
+      "method": "POST",
+      "url": "https://handiness-imitate-settle.ngrok-free.dev/api/receptionist/providers/retell/functions/mark_spam",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Retell call id for this conversation (preferred when available)."
+          },
+          "receptionist_call_id": {
+            "type": "string",
+            "description": "WNY Automation Portal receptionist_calls.id from registerPhoneCall metadata / dynamic variables."
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "marked": {
+            "const": true
+          }
+        }
+      },
+      "example": {
+        "request": {
+          "call_id": "call_live_abc123"
+        },
+        "response": {
+          "ok": true,
+          "marked": true
+        }
+      }
+    },
+    {
+      "name": "end_call_notes",
+      "purpose": "Append a lightweight internal note to WNY Automation Portal receptionist_events.",
+      "when_to_call": "Optional short internal summary before ending the call.",
+      "method": "POST",
+      "url": "https://handiness-imitate-settle.ngrok-free.dev/api/receptionist/providers/retell/functions/end_call_notes",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Retell call id for this conversation (preferred when available)."
+          },
+          "receptionist_call_id": {
+            "type": "string",
+            "description": "WNY Automation Portal receptionist_calls.id from registerPhoneCall metadata / dynamic variables."
+          },
+          "notes": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Alias for notes."
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "logged": {
+            "const": true
+          }
+        }
+      },
+      "example": {
+        "request": {
+          "call_id": "call_live_abc123",
+          "notes": "Caller will email photos of leak"
+        },
+        "response": {
+          "ok": true,
+          "logged": true
+        }
+      }
+    }
+  ]
+}

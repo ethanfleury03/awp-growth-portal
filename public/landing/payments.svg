@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" role="img" aria-label="Payments photo placeholder: homeowner hands phone back to plumber after signing, warm kitchen">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#faf7f2"/>
+      <stop offset="100%" stop-color="#f1ece4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="1000" fill="url(#bg)"/>
+  <rect x="0" y="700" width="1000" height="300" fill="#e6dccb"/>
+  <rect x="120" y="220" width="240" height="480" rx="18" fill="#c9b894" opacity="0.7"/>
+  <rect x="640" y="220" width="240" height="480" rx="18" fill="#c9b894" opacity="0.7"/>
+  <rect x="140" y="260" width="200" height="120" rx="8" fill="#d7c5a4"/>
+  <rect x="660" y="260" width="200" height="120" rx="8" fill="#d7c5a4"/>
+
+  <g transform="translate(320 400)">
+    <ellipse cx="0" cy="360" rx="110" ry="18" fill="#000000" opacity="0.18"/>
+    <rect x="-60" y="200" width="120" height="160" rx="20" fill="#1f3558"/>
+    <circle cx="0" cy="160" r="44" fill="#f5d6b3"/>
+    <rect x="-44" y="120" width="88" height="44" rx="22" fill="#0b1422"/>
+    <rect x="70" y="220" width="80" height="28" rx="14" fill="#1f3558" transform="rotate(-18 110 240)"/>
+  </g>
+
+  <g transform="translate(680 440)">
+    <ellipse cx="0" cy="320" rx="110" ry="18" fill="#000000" opacity="0.18"/>
+    <rect x="-60" y="180" width="120" height="140" rx="20" fill="#f26a1f" opacity="0.9"/>
+    <circle cx="0" cy="140" r="40" fill="#f5d6b3"/>
+    <rect x="-60" y="180" width="120" height="28" fill="#d95614"/>
+    <rect x="-100" y="220" width="80" height="28" rx="14" fill="#f26a1f" transform="rotate(18 -60 240)"/>
+  </g>
+
+  <g transform="translate(500 560)">
+    <rect x="-40" y="-60" width="80" height="140" rx="10" fill="#0b1422"/>
+    <rect x="-32" y="-52" width="64" height="110" rx="6" fill="#ffffff"/>
+    <text x="0" y="-24" text-anchor="middle" font-family="Inter, sans-serif" font-size="8" font-weight="700" fill="#334155">PAID</text>
+    <text x="0" y="-8" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#0e1a2b">$1,284</text>
+    <path d="M-20 20 q 20 16 40 0" stroke="#f26a1f" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M-26 28 q 26 20 52 0" stroke="#f26a1f" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.6"/>
+  </g>
+
+  <rect x="60" y="60" width="4" height="32" fill="#f26a1f"/>
+  <text x="80" y="86" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#0e1a2b" letter-spacing="4">PAYMENTS PHOTO PLACEHOLDER</text>
+  <text x="60" y="920" font-family="Inter, sans-serif" font-size="22" font-weight="800" fill="#0e1a2b">Homeowner signs · warm kitchen</text>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img" aria-label="Garage door photo placeholder">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0E1A2B"/>
+      <stop offset="100%" stop-color="#1c2c48"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="url(#bg)"/>
+  <g transform="translate(340 160)">
+    <rect x="0" y="0" width="520" height="380" fill="#F26A1F" opacity="0.92" rx="10"/>
+    <g stroke="#0E1A2B" stroke-width="6" opacity="0.55">
+      <line x1="0" y1="95" x2="520" y2="95"/>
+      <line x1="0" y1="190" x2="520" y2="190"/>
+      <line x1="0" y1="285" x2="520" y2="285"/>
+    </g>
+    <g fill="#0E1A2B" opacity="0.55">
+      <circle cx="130" cy="45" r="12"/>
+      <circle cx="260" cy="45" r="12"/>
+      <circle cx="390" cy="45" r="12"/>
+    </g>
+  </g>
+  <g transform="translate(100 620)" fill="#FAF7F2">
+    <text x="0" y="0" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="54" font-weight="800">Garage Door</text>
+    <text x="0" y="40" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="18" fill="#FAF7F2" opacity="0.6">Coming soon</text>
+  </g>
+</svg>

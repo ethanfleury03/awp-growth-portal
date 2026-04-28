@@ -1,0 +1,172 @@
+'use client';
+
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
+import { useClerk } from '@clerk/nextjs';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import type { LucideIcon } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Settings,
+  ChevronRight,
+  Users,
+  LogOut,
+  BarChart3,
+  Bot,
+  Megaphone,
+  FolderOpen,
+} from 'lucide-react';
+import type { SessionUser } from '@/lib/auth/types';
+import clsx from 'clsx';
+import { cn } from '@/lib/ops';
+
+const PRIMARY_NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
+  { href: '/app', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/leads', label: 'Leads', icon: Users },
+  { href: '/outreach', label: 'Outreach', icon: Megaphone },
+  { href: '/marketing', label: 'Marketing', icon: FolderOpen },
+  { href: '/ai-assistant', label: 'AI Growth Assistant', icon: Bot },
+  { href: '/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/settings', label: 'Settings', icon: Settings },
+];
+
+function navItemIsActive(pathname: string, href: string) {
+  if (href === '/app') {
+    return pathname === '/app';
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function ClerkSignOutIconButton({ className }: { className?: string }) {
+  const { signOut } = useClerk();
+  return (
+    <button
+      type="button"
+      onClick={() => signOut({ redirectUrl: '/' })}
+      title="Sign out"
+      className={className}
+    >
+      <LogOut className="w-4 h-4" />
+    </button>
+  );
+}
+
+type AppSidebarProps = {
+  /** Rendered above the user profile card for contextual portal status. */
+  beforeUserCard?: ReactNode;
+  mobile?: boolean;
+  onNavigate?: () => void;
+  onClose?: () => void;
+};
+
+export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose }: AppSidebarProps) {
+  const pathname = usePathname() || '';
+  const [user, setUser] = useState<SessionUser | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => r.json())
+      .then((j: { authenticated: boolean; user?: SessionUser }) => {
+        if (j.authenticated && j.user) setUser(j.user);
+      })
+      .catch(() => {});
+  }, []);
+
+  const navLinkClass = (active: boolean) =>
+    clsx(
+      'sidebar-item flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm',
+      active ? 'active text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]' : 'text-slate-300 hover:text-white',
+    );
+
+  const handleNavigate = () => {
+    onNavigate?.();
+  };
+
+  return (
+    <aside
+      className={cn(
+        'sidebar flex min-h-0 w-[18rem] flex-col text-white',
+        mobile ? 'h-full max-h-full' : 'h-screen max-h-screen shrink-0',
+      )}
+    >
+      <div className="relative z-10 border-b border-white/10 px-5 py-5">
+        <div className="mb-4 flex items-center justify-between">
+          <Link href="/app" className="flex items-center gap-3" onClick={handleNavigate}>
+            <div className="sidebar-logo flex h-11 w-11 items-center justify-center rounded-2xl shadow-lg">
+              <span className="text-sm font-bold">WNY</span>
+            </div>
+            <div>
+              <span className="block text-xl font-semibold tracking-[-0.03em] text-white">WNY Automation Portal</span>
+              <span className="block text-[11px] uppercase tracking-[0.22em] text-slate-400">Client Portal</span>
+            </div>
+          </Link>
+          {mobile ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 text-slate-300 transition-colors hover:bg-white/6 hover:text-white"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          ) : null}
+        </div>
+
+        <div className="rounded-[24px] border border-white/10 bg-white/6 px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Workspace</p>
+              <p className="mt-1 text-sm font-semibold text-white">Automation workspace</p>
+            </div>
+            <div className="rounded-full bg-emerald-400/16 px-2.5 py-1 text-[11px] font-semibold text-emerald-200">
+              Live
+            </div>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-slate-300">
+            Leads, automations, workflow status, reporting, and account activity in one shared portal.
+          </p>
+        </div>
+      </div>
+
+      <nav className="relative z-10 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+        <div className="mb-3">
+          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Portal</p>
+        </div>
+        {PRIMARY_NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const active = navItemIsActive(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={handleNavigate}
+              className={navLinkClass(active)}
+            >
+              <Icon className="w-[18px] h-[18px] flex-shrink-0 opacity-90" strokeWidth={1.75} aria-hidden />
+              <span className="font-medium leading-none">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="mt-auto relative z-10">
+        {beforeUserCard ? (
+          <div className="border-t border-white/10 px-4 pt-4">{beforeUserCard}</div>
+        ) : null}
+
+        <div className="border-t border-white/10 p-4">
+          <div className="group flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/6 p-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#4a7eff,#255cf3)] text-sm font-bold shadow-lg">
+              {user?.avatarInitials ?? '??'}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-white">{user?.name || user?.email || '—'}</p>
+              <p className="mt-0.5 text-xs capitalize text-slate-400">{user?.role ?? 'owner'}</p>
+            </div>
+            <ClerkSignOutIconButton className="shrink-0 rounded-xl p-2 text-slate-500 opacity-0 transition hover:bg-red-500/10 hover:text-red-300 group-hover:opacity-100" />
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}

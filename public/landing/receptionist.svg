@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="img" aria-label="Receptionist photo placeholder: tablet showing AI call transcript on a workshop bench">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#faf7f2"/>
+      <stop offset="100%" stop-color="#f1ece4"/>
+    </linearGradient>
+    <linearGradient id="woodBench" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5a3a20"/>
+      <stop offset="100%" stop-color="#3a2313"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+
+  <rect x="0" y="560" width="1200" height="340" fill="url(#woodBench)"/>
+  <g opacity="0.15">
+    <rect x="0" y="560" width="1200" height="2" fill="#ffffff"/>
+    <rect x="0" y="680" width="1200" height="1" fill="#ffffff"/>
+    <rect x="0" y="790" width="1200" height="1" fill="#ffffff"/>
+  </g>
+
+  <g transform="translate(340 220)">
+    <rect x="-20" y="-20" width="560" height="400" rx="28" fill="#0e1a2b" opacity="0.3" filter="blur(2px)"/>
+    <rect width="520" height="360" rx="24" fill="#0e1a2b"/>
+    <rect x="16" y="16" width="488" height="328" rx="16" fill="#ffffff"/>
+    <circle cx="40" cy="44" r="6" fill="#f26a1f"/>
+    <text x="58" y="50" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#f26a1f">LIVE CALL · 00:47</text>
+    <rect x="30" y="80" width="460" height="44" rx="8" fill="#f8f5f0"/>
+    <text x="46" y="108" font-family="Inter, sans-serif" font-size="14" fill="#334155">AI: Hi, this is Ava at Cedar Plumbing. How can I help?</text>
+    <rect x="30" y="134" width="460" height="44" rx="8" fill="#f8f5f0"/>
+    <text x="46" y="162" font-family="Inter, sans-serif" font-size="14" fill="#334155">Maria: My water heater is leaking in the basement.</text>
+    <rect x="30" y="188" width="460" height="44" rx="8" fill="#fff4eb" stroke="#f26a1f" stroke-opacity="0.3"/>
+    <text x="46" y="216" font-family="Inter, sans-serif" font-size="14" fill="#334155">AI: I can get a tech out between 24 PM today.</text>
+    <rect x="30" y="258" width="150" height="28" rx="14" fill="#dcfce7"/>
+    <text x="46" y="276" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#166534">Intent: book_service</text>
+    <rect x="30" y="300" width="180" height="30" rx="8" fill="#f26a1f"/>
+    <text x="55" y="320" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Booking 24 PM slot</text>
+  </g>
+
+  <g transform="translate(120 640)">
+    <circle cx="0" cy="0" r="60" fill="#0b1422"/>
+    <circle cx="0" cy="0" r="54" fill="#1f3558"/>
+    <rect x="-4" y="-60" width="8" height="24" rx="4" fill="#0b1422"/>
+    <text x="0" y="6" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#ffffff"></text>
+  </g>
+
+  <rect x="60" y="60" width="4" height="32" fill="#f26a1f"/>
+  <text x="80" y="86" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#0e1a2b" letter-spacing="4">RECEPTIONIST PHOTO PLACEHOLDER</text>
+  <text x="60" y="820" font-family="Inter, sans-serif" font-size="22" font-weight="800" fill="#0e1a2b" opacity="0.9">Tablet on workshop bench · live transcript</text>
+</svg>

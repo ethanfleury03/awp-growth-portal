@@ -1,0 +1,105 @@
+{
+  "model": "gemini-2.5-flash-image",
+  "style": "Photorealistic editorial photography, warm natural lighting, shallow depth of field, shot on a 35mm film camera, subtly desaturated colors with warm highlights. Brand palette that grounds the scene: navy blue (#0E1A2B) for vehicles / uniforms, safety-orange (#F26A1F) accents on logos or tools, cream / off-white surfaces (#FAF7F2).",
+  "negative": "no cartoon, no 3d render, no watermark, no text overlay, no logo mismatch, no oversaturation, no wide angle distortion",
+  "slots": [
+    {
+      "name": "hero",
+      "aspect_ratio": "16:9",
+      "width": 1600,
+      "height": 900,
+      "prompt": "A professional plumber in clean navy blue workwear standing beside a branded service van at golden hour, smiling at a smartphone. The van sides read 'CEDAR PLUMBING' in bold safety-orange lettering. A small-town main street is softly blurred behind them. Warm, trustworthy, editorial composition, rule-of-thirds framing with the plumber left of center, copy space on the right. Shot on 35mm."
+    },
+    {
+      "name": "receptionist",
+      "aspect_ratio": "4:3",
+      "width": 1200,
+      "height": 900,
+      "prompt": "Close-up of a tablet resting on a clean workshop bench. The tablet screen shows a live AI call transcript with a small orange pulsing indicator and timestamps. A ceramic mug of coffee sits to one side, steam rising. Warm afternoon light streams from a window, casting long soft shadows across wood grain. Flat editorial angle, shallow depth of field."
+    },
+    {
+      "name": "dispatch",
+      "aspect_ratio": "4:3",
+      "width": 1200,
+      "height": 900,
+      "prompt": "A dispatcher in a navy polo sits at a clean modern desk looking at three ultrawide monitors. Left monitor shows a map full of orange pins; center monitor shows a schedule grid with colored blocks; right monitor shows a queue of cards. Navy-accented office, dusk outside the window, cozy but professional. Over-the-shoulder angle, soft ambient light."
+    },
+    {
+      "name": "payments",
+      "aspect_ratio": "1:1",
+      "width": 1000,
+      "height": 1000,
+      "prompt": "A homeowner hands a smartphone back to a plumber after signing. Both are smiling warmly. The plumber wears navy blue uniform with subtle safety-orange trim; the homeowner wears a soft sweater. Warm modern kitchen in the background, soft bokeh of a pendant light. Focus on the hand-off gesture, 1:1 centered composition."
+    },
+    {
+      "name": "portal",
+      "aspect_ratio": "1:1",
+      "width": 1000,
+      "height": 1000,
+      "prompt": "A 13-inch laptop sits on a pale marble kitchen island. The laptop screen shows a customer-facing portal: an appointment card for tomorrow, a message button, and a past invoice. A ceramic coffee mug with visible steam is to the right. Morning light from a large window. Flat-lay-adjacent perspective, soft pastel warmth."
+    },
+    {
+      "name": "team",
+      "aspect_ratio": "16:9",
+      "width": 1600,
+      "height": 900,
+      "prompt": "Three plumbers of varied backgrounds — one white, one Black, one Hispanic — laugh together in front of a navy blue branded service van. All wear matching navy uniforms with safety-orange accents. Toolboxes and a ladder are neatly placed on the ground near their feet. Crisp morning light, shot slightly from below to make them feel heroic but approachable. Wide 16:9 framing with breathing room at the top."
+    },
+    {
+      "name": "plumbing",
+      "output_dir": "public/industries",
+      "aspect_ratio": "16:10",
+      "width": 1200,
+      "height": 750,
+      "prompt": "A plumber in clean navy blue workwear kneels beneath a modern kitchen sink, tightening a copper fitting with a wrench. Safety-orange logo patch on sleeve. Warm, bright kitchen with marble countertop visible above. Shallow depth of field on the hands and fitting, soft natural window light. 16:10 editorial framing."
+    },
+    {
+      "name": "electrical",
+      "output_dir": "public/industries",
+      "aspect_ratio": "16:10",
+      "width": 1200,
+      "height": 750,
+      "prompt": "A licensed electrician in navy uniform installs a modern smart electrical panel in a tidy residential garage. The open panel shows neat rows of breakers; the technician is labeling a circuit. Safety-orange tool bag and meter on a ladder nearby. Crisp daylight, shallow depth of field, 16:10 framing."
+    },
+    {
+      "name": "hvac",
+      "output_dir": "public/industries",
+      "aspect_ratio": "16:10",
+      "width": 1200,
+      "height": 750,
+      "prompt": "An HVAC technician in navy coveralls services a rooftop condenser unit on a suburban home. He is reading a manifold gauge set with safety-orange hoses. Bright clear morning sky, soft shadows, professional and approachable mood. 16:10 editorial composition."
+    },
+    {
+      "name": "roofing",
+      "output_dir": "public/industries",
+      "aspect_ratio": "16:10",
+      "width": 1200,
+      "height": 750,
+      "prompt": "A roofer in navy workwear and a safety-orange high-visibility vest inspects asphalt shingles on a pitched residential roof. He holds a clipboard and a phone capturing photos of a damaged section. Warm afternoon light, neighborhood softly blurred behind. 16:10 framing."
+    },
+    {
+      "name": "garage-door",
+      "output_dir": "public/industries",
+      "aspect_ratio": "16:10",
+      "width": 1200,
+      "height": 750,
+      "prompt": "A technician in navy uniform aligns a modern residential garage door spring and track. The two-car garage door is half open, warm safety-orange light spills from inside. Toolbox with safety-orange accents on the driveway. 16:10 editorial composition, shallow depth of field on the hands and spring."
+    },
+    {
+      "name": "pest-control",
+      "output_dir": "public/industries",
+      "aspect_ratio": "16:10",
+      "width": 1200,
+      "height": 750,
+      "prompt": "A pest-control technician in clean navy uniform with a safety-orange backpack sprayer inspects the base of a tidy suburban home exterior. He kneels near a foundation vent with a flashlight, professional and careful. Warm morning light, green shrubs softly out of focus. 16:10 framing."
+    },
+    {
+      "name": "landscaping",
+      "output_dir": "public/industries",
+      "aspect_ratio": "16:10",
+      "width": 1200,
+      "height": 750,
+      "prompt": "A landscaper in navy uniform edges a crisp suburban lawn with a string trimmer, safety-orange accents on the trimmer guard. Freshly striped grass and a tidy flowerbed border. Warm golden-hour light, cinematic shallow depth of field, 16:10 editorial framing."
+    }
+  ]
+}

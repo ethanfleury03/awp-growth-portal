@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="Team photo placeholder: three plumbers laughing in front of a branded van, morning light">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d8c6a6"/>
+      <stop offset="55%" stop-color="#f0d7b0"/>
+      <stop offset="100%" stop-color="#faf7f2"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4a3a26"/>
+      <stop offset="100%" stop-color="#2a1f14"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="600" fill="url(#sky)"/>
+  <rect y="600" width="1600" height="300" fill="url(#ground)"/>
+
+  <g transform="translate(200 220)">
+    <rect width="820" height="360" rx="24" fill="#0e1a2b"/>
+    <rect x="40" y="60" width="200" height="180" rx="8" fill="#1f3558"/>
+    <rect x="260" y="60" width="520" height="180" rx="8" fill="#1f3558"/>
+    <circle cx="180" cy="360" r="56" fill="#0b1422"/>
+    <circle cx="180" cy="360" r="28" fill="#1f3558"/>
+    <circle cx="700" cy="360" r="56" fill="#0b1422"/>
+    <circle cx="700" cy="360" r="28" fill="#1f3558"/>
+    <text x="500" y="160" text-anchor="middle" font-family="Inter, sans-serif" font-size="72" font-weight="900" fill="#f26a1f">CEDAR</text>
+    <text x="500" y="210" text-anchor="middle" font-family="Inter, sans-serif" font-size="32" font-weight="700" fill="#ffffff" opacity="0.85">PLUMBING · DISPATCH</text>
+  </g>
+
+  <g>
+    <g transform="translate(520 600)">
+      <ellipse cx="0" cy="160" rx="60" ry="8" fill="#000000" opacity="0.35"/>
+      <rect x="-34" y="40" width="68" height="120" rx="12" fill="#1f3558"/>
+      <rect x="-36" y="20" width="72" height="44" rx="22" fill="#f26a1f"/>
+      <circle cx="0" cy="0" r="32" fill="#f5d6b3"/>
+      <rect x="-34" y="-22" width="68" height="24" rx="4" fill="#0b1422"/>
+    </g>
+    <g transform="translate(720 600)">
+      <ellipse cx="0" cy="160" rx="60" ry="8" fill="#000000" opacity="0.35"/>
+      <rect x="-34" y="40" width="68" height="120" rx="12" fill="#0e1a2b"/>
+      <rect x="-36" y="20" width="72" height="44" rx="22" fill="#f26a1f"/>
+      <circle cx="0" cy="0" r="34" fill="#8b5a3a"/>
+      <rect x="-34" y="-22" width="68" height="22" rx="4" fill="#0b1422"/>
+    </g>
+    <g transform="translate(920 600)">
+      <ellipse cx="0" cy="160" rx="60" ry="8" fill="#000000" opacity="0.35"/>
+      <rect x="-34" y="40" width="68" height="120" rx="12" fill="#1f3558"/>
+      <rect x="-36" y="20" width="72" height="44" rx="22" fill="#f26a1f"/>
+      <circle cx="0" cy="0" r="32" fill="#d9a87a"/>
+      <path d="M-30 -6 a30 30 0 0 1 60 0" fill="#0b1422"/>
+    </g>
+  </g>
+
+  <rect x="60" y="60" width="4" height="32" fill="#f26a1f"/>
+  <text x="80" y="86" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#0e1a2b" letter-spacing="4">TEAM PHOTO PLACEHOLDER</text>
+  <text x="60" y="830" font-family="Inter, sans-serif" font-size="28" font-weight="800" fill="#ffffff">Three plumbers + branded van · morning</text>
+</svg>

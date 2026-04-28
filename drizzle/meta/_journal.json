@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1776391076132,
+      "tag": "0000_fuzzy_thunderbolt_ross",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776480000000,
+      "tag": "0002_marketing_billing_subscriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776483600000,
+      "tag": "0003_marketing_leads",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777399200000,
+      "tag": "0004_awp_growth_records",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777402800000,
+      "tag": "0005_ai_knowledge_base",
+      "breakpoints": true
+    }
+  ]
+}

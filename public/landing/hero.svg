@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="Hero photo placeholder: plumber and branded service van at golden hour">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0e1a2b"/>
+      <stop offset="55%" stop-color="#16263e"/>
+      <stop offset="100%" stop-color="#0b1422"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.85" cy="0.15" r="0.55">
+      <stop offset="0%" stop-color="#f26a1f" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#f26a1f" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+      <path d="M80 0 L0 0 0 80" fill="none" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.05"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+  <rect width="1600" height="900" fill="url(#sun)"/>
+
+  <g transform="translate(980 280)">
+    <rect x="0" y="100" width="520" height="260" rx="16" fill="#0b1422" stroke="#f26a1f" stroke-width="3"/>
+    <rect x="30" y="140" width="120" height="140" rx="4" fill="#0e1a2b"/>
+    <rect x="170" y="140" width="180" height="140" rx="4" fill="#0e1a2b"/>
+    <circle cx="110" cy="370" r="38" fill="#1f3558" stroke="#0b1422" stroke-width="5"/>
+    <circle cx="110" cy="370" r="18" fill="#0b1422"/>
+    <circle cx="430" cy="370" r="38" fill="#1f3558" stroke="#0b1422" stroke-width="5"/>
+    <circle cx="430" cy="370" r="18" fill="#0b1422"/>
+    <text x="260" y="220" text-anchor="middle" font-family="Inter, sans-serif" font-size="36" font-weight="800" fill="#f26a1f">CEDAR</text>
+    <text x="260" y="260" text-anchor="middle" font-family="Inter, sans-serif" font-size="22" font-weight="600" fill="#ffffff" opacity="0.8">PLUMBING CO.</text>
+  </g>
+
+  <g transform="translate(720 540)">
+    <ellipse cx="0" cy="160" rx="60" ry="8" fill="#000000" opacity="0.35"/>
+    <rect x="-28" y="40" width="56" height="120" rx="12" fill="#1f3558"/>
+    <rect x="-30" y="20" width="60" height="40" rx="20" fill="#f26a1f"/>
+    <circle cx="0" cy="0" r="28" fill="#f5d6b3"/>
+    <path d="M-18 -8 a18 18 0 0 1 36 0" fill="#0b1422"/>
+  </g>
+
+  <rect x="60" y="60" width="4" height="32" fill="#f26a1f"/>
+  <text x="80" y="86" font-family="Inter, sans-serif" font-size="22" font-weight="700" fill="#ffffff" letter-spacing="4">HERO PHOTO PLACEHOLDER</text>
+  <text x="60" y="820" font-family="Inter, sans-serif" font-size="28" font-weight="800" fill="#ffffff" letter-spacing="-0.5">Plumber + branded van at golden hour</text>
+  <text x="60" y="860" font-family="Inter, sans-serif" font-size="16" fill="#ffffff" opacity="0.6">Replaced automatically when /public/landing/hero.jpg is generated.</text>
+</svg>

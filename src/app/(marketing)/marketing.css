@@ -1,0 +1,532 @@
+/**
+ * Marketing-only design system. Scoped to `.marketing-root` so the authed
+ * dashboard stays untouched. Direction: cool premium, restrained accent,
+ * layered light surfaces, and crisper dark hero sections.
+ */
+
+.marketing-root {
+  --marketing-canvas-0: #ebf0f6;
+  --marketing-canvas-1: #e4ebf3;
+  --marketing-canvas-2: #dce4ee;
+  --marketing-surface-1: rgba(248, 250, 253, 0.96);
+  --marketing-surface-2: #f2f6fb;
+  --marketing-surface-3: #e9eff6;
+  --marketing-line-soft: rgba(88, 106, 138, 0.12);
+  --marketing-line: rgba(88, 106, 138, 0.2);
+  --marketing-line-strong: rgba(88, 106, 138, 0.34);
+
+  --marketing-heading: #0d1728;
+  --marketing-body: #324257;
+  --marketing-muted: #627289;
+  --marketing-muted-strong: #495a70;
+
+  --marketing-dark-950: #08111d;
+  --marketing-dark-900: #0d1728;
+  --marketing-dark-850: #122036;
+  --marketing-dark-800: #172944;
+  --marketing-dark-700: #243b5e;
+  --marketing-dark-600: #35517f;
+  --marketing-dark-line: rgba(255, 255, 255, 0.08);
+
+  --marketing-accent-50: #fbf2eb;
+  --marketing-accent-100: #f2ddcf;
+  --marketing-accent-400: #d48b57;
+  --marketing-accent-500: #c9773d;
+  --marketing-accent-600: #ad5f2b;
+  --marketing-accent-700: #8d491f;
+  --marketing-accent-soft: rgba(201, 119, 61, 0.12);
+  --marketing-accent-line: rgba(201, 119, 61, 0.24);
+
+  --marketing-action-500: #325fa8;
+  --marketing-action-600: #264c89;
+  --marketing-action-700: #1c3a69;
+  --marketing-action-soft: rgba(50, 95, 168, 0.14);
+
+  --brand-navy-950: var(--marketing-dark-950);
+  --brand-navy-900: var(--marketing-dark-900);
+  --brand-navy-800: var(--marketing-dark-850);
+  --brand-navy-700: var(--marketing-dark-800);
+  --brand-navy-600: var(--marketing-dark-700);
+  --brand-navy-500: var(--marketing-dark-600);
+
+  --brand-blue-500: var(--marketing-action-500);
+  --brand-blue-600: var(--marketing-action-600);
+  --brand-blue-700: var(--marketing-action-700);
+
+  --brand-orange-50: var(--marketing-accent-50);
+  --brand-orange-100: var(--marketing-accent-100);
+  --brand-orange-500: var(--marketing-accent-500);
+  --brand-orange-600: var(--marketing-accent-600);
+  --brand-orange-700: var(--marketing-accent-700);
+
+  --brand-cream: var(--marketing-canvas-0);
+  --brand-cream-2: var(--marketing-canvas-1);
+  --brand-ink: var(--marketing-heading);
+  --brand-slate: var(--marketing-body);
+  --brand-slate-muted: var(--marketing-muted);
+
+  --brand-radius: 22px;
+  --brand-shadow-lg:
+    0 34px 72px -38px rgba(8, 17, 29, 0.48),
+    0 12px 28px -24px rgba(21, 38, 63, 0.16);
+  --brand-shadow-md:
+    0 22px 48px -34px rgba(8, 17, 29, 0.36),
+    0 10px 24px -20px rgba(21, 38, 63, 0.12);
+  --brand-shadow-sm:
+    0 14px 32px -24px rgba(8, 17, 29, 0.22),
+    0 8px 20px -18px rgba(21, 38, 63, 0.1);
+
+  color-scheme: light;
+  color: var(--marketing-heading);
+  background:
+    radial-gradient(circle at top left, rgba(83, 109, 156, 0.08), transparent 28%),
+    radial-gradient(circle at top right, rgba(148, 164, 190, 0.14), transparent 24%),
+    linear-gradient(180deg, var(--marketing-canvas-0) 0%, var(--marketing-canvas-1) 100%);
+  font-family:
+    var(--font-marketing-sans),
+    var(--font-app-sans),
+    'Segoe UI',
+    sans-serif;
+  --tracking-tight: -0.03em;
+}
+
+.marketing-root h1,
+.marketing-root h2,
+.marketing-root h3,
+.marketing-root h4 {
+  font-family:
+    var(--font-marketing-display),
+    var(--font-marketing-sans),
+    sans-serif;
+  letter-spacing: var(--tracking-tight);
+  color: var(--marketing-heading);
+}
+
+.marketing-root code,
+.marketing-root pre,
+.marketing-root .font-mono,
+.marketing-root .chrome-url,
+.marketing-root .trust-mark {
+  font-family:
+    var(--font-marketing-mono),
+    var(--font-app-mono),
+    monospace;
+}
+
+.marketing-root .bg-white {
+  background-color: var(--marketing-surface-1) !important;
+}
+
+.marketing-root .bg-slate-50 {
+  background-color: var(--marketing-surface-2) !important;
+}
+
+.marketing-root .bg-slate-100 {
+  background-color: var(--marketing-surface-3) !important;
+}
+
+.marketing-root .border-slate-100 {
+  border-color: var(--marketing-line-soft) !important;
+}
+
+.marketing-root .border-slate-200 {
+  border-color: var(--marketing-line) !important;
+}
+
+.marketing-root .border-slate-300 {
+  border-color: var(--marketing-line-strong) !important;
+}
+
+.marketing-root .text-slate-300 {
+  color: rgba(214, 224, 239, 0.6) !important;
+}
+
+.marketing-root .text-slate-600 {
+  color: var(--marketing-muted) !important;
+}
+
+.marketing-root .text-slate-700 {
+  color: var(--marketing-muted-strong) !important;
+}
+
+.marketing-root .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--marketing-line-soft) !important;
+}
+
+.marketing-root .brand-gradient-nav {
+  background: linear-gradient(180deg, rgba(8, 17, 29, 0.92) 0%, rgba(12, 22, 37, 0.78) 100%);
+  backdrop-filter: saturate(1.15) blur(16px);
+  -webkit-backdrop-filter: saturate(1.15) blur(16px);
+}
+
+.marketing-root .brand-hero-bg {
+  background:
+    radial-gradient(1100px 460px at 86% -8%, rgba(201, 119, 61, 0.16), transparent 52%),
+    radial-gradient(900px 620px at 12% 10%, rgba(53, 81, 127, 0.34), transparent 58%),
+    linear-gradient(180deg, #08111d 0%, #0d1728 58%, #091320 100%);
+}
+
+.marketing-root .brand-hairline {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(201, 119, 61, 0.5) 16%,
+    rgba(50, 95, 168, 0.6) 50%,
+    rgba(201, 119, 61, 0.5) 84%,
+    transparent 100%
+  );
+}
+
+.marketing-root .brand-card {
+  background: linear-gradient(180deg, rgba(252, 253, 255, 0.98), rgba(243, 247, 251, 0.98));
+  border: 1px solid var(--marketing-line);
+  border-radius: var(--brand-radius);
+  box-shadow: var(--brand-shadow-sm);
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    background-color 220ms ease;
+}
+
+.marketing-root .brand-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--marketing-line-strong);
+  box-shadow: var(--brand-shadow-md);
+}
+
+.marketing-root .brand-card-dark {
+  background: linear-gradient(160deg, rgba(13, 23, 40, 0.98) 0%, rgba(18, 32, 54, 0.97) 100%);
+  border: 1px solid var(--marketing-dark-line);
+  border-radius: var(--brand-radius);
+  color: #f5f8ff;
+  box-shadow: var(--brand-shadow-md);
+}
+
+.marketing-root .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(180deg, var(--marketing-action-500) 0%, var(--marketing-action-600) 100%);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding: 0.9rem 1.4rem;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 18px 34px -18px rgba(37, 76, 137, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    filter 150ms ease,
+    background-color 150ms ease;
+}
+
+.marketing-root .btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow:
+    0 22px 40px -18px rgba(37, 76, 137, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.marketing-root .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.25rem;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 600;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.marketing-root .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.24);
+  transform: translateY(-1px);
+}
+
+.marketing-root .btn-ghost-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.25rem;
+  border-radius: 13px;
+  border: 1px solid var(--marketing-line-strong);
+  color: var(--marketing-heading);
+  font-weight: 700;
+  background: var(--marketing-surface-1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.marketing-root .btn-ghost-dark:hover {
+  background: var(--marketing-surface-2);
+  border-color: rgba(50, 95, 168, 0.24);
+  transform: translateY(-1px);
+  box-shadow: var(--brand-shadow-sm);
+}
+
+.marketing-root .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--marketing-accent-600);
+}
+
+.marketing-root .eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 2px;
+  display: inline-block;
+  background: linear-gradient(90deg, var(--marketing-action-500), var(--marketing-accent-500));
+}
+
+.marketing-root .eyebrow-on-dark {
+  color: #d7b090;
+}
+
+.marketing-root .glow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.42rem 0.92rem;
+  border-radius: 999px;
+  background: rgba(50, 95, 168, 0.08);
+  color: var(--marketing-action-700);
+  font-weight: 700;
+  font-size: 0.8rem;
+  border: 1px solid rgba(50, 95, 168, 0.16);
+}
+
+.marketing-root .glow-pill-dark {
+  background: rgba(255, 255, 255, 0.06);
+  color: #dce6f8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.marketing-root .section-rule {
+  width: 56px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--marketing-action-500), var(--marketing-accent-500));
+  border-radius: 2px;
+  margin-bottom: 1.25rem;
+}
+
+.marketing-root .chrome-browser {
+  background: linear-gradient(180deg, rgba(251, 253, 255, 0.98), rgba(240, 245, 251, 0.98));
+  border-radius: 18px;
+  border: 1px solid var(--marketing-line);
+  box-shadow: var(--brand-shadow-lg);
+  overflow: hidden;
+}
+
+.marketing-root .chrome-browser .chrome-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, var(--marketing-surface-3), var(--marketing-surface-2));
+  border-bottom: 1px solid var(--marketing-line);
+}
+
+.marketing-root .chrome-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.marketing-root .chrome-url {
+  margin-left: 10px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  color: var(--marketing-muted);
+  background: rgba(255, 255, 255, 0.52);
+  border: 1px solid var(--marketing-line);
+  border-radius: 999px;
+}
+
+.marketing-root .phone-frame {
+  background: linear-gradient(180deg, var(--marketing-dark-850), var(--marketing-dark-900));
+  border-radius: 36px;
+  padding: 10px;
+  box-shadow: var(--brand-shadow-lg);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.marketing-root .phone-frame-inner {
+  background: var(--marketing-surface-1);
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+.marketing-root .trust-mark {
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--marketing-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.marketing-root .grid-dots {
+  background-image: radial-gradient(rgba(20, 35, 58, 0.12) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.marketing-root .orange-underline {
+  background-image: linear-gradient(90deg, rgba(201, 119, 61, 0.52), rgba(201, 119, 61, 0.52));
+  background-repeat: no-repeat;
+  background-size: 100% 38%;
+  background-position: 0 88%;
+  padding: 0 0.08em;
+}
+
+.marketing-root .feature-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.6rem;
+  background: linear-gradient(180deg, rgba(252, 253, 255, 0.96), rgba(242, 246, 251, 0.96));
+  border-radius: 18px;
+  border: 1px solid var(--marketing-line);
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    border-color 200ms ease;
+  box-shadow: var(--brand-shadow-sm);
+}
+
+.marketing-root .feature-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(50, 95, 168, 0.24);
+  box-shadow: var(--brand-shadow-md);
+}
+
+.marketing-root .feature-tile .tile-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, rgba(50, 95, 168, 0.12), rgba(50, 95, 168, 0.04));
+  color: var(--marketing-action-600);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(50, 95, 168, 0.12);
+}
+
+.marketing-root .marketing-label {
+  display: block;
+}
+
+.marketing-root .marketing-label-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--marketing-heading);
+}
+
+.marketing-root .marketing-field,
+.marketing-root .marketing-textarea {
+  width: 100%;
+  margin-top: 0.45rem;
+  border-radius: 14px;
+  border: 1px solid var(--marketing-line-strong);
+  background: var(--marketing-surface-1);
+  color: var(--marketing-heading);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    background-color 140ms ease;
+}
+
+.marketing-root .marketing-field {
+  padding: 0.78rem 0.92rem;
+  font-size: 0.95rem;
+}
+
+.marketing-root .marketing-textarea {
+  min-height: 7rem;
+  padding: 0.88rem 0.92rem;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.marketing-root .marketing-field::placeholder,
+.marketing-root .marketing-textarea::placeholder {
+  color: var(--marketing-muted);
+}
+
+.marketing-root .marketing-field:focus,
+.marketing-root .marketing-textarea:focus {
+  outline: none;
+  border-color: rgba(50, 95, 168, 0.38);
+  box-shadow: 0 0 0 4px var(--marketing-action-soft);
+}
+
+.marketing-root .marketing-dialog {
+  width: 100%;
+  max-width: 42rem;
+  border-radius: 28px;
+  border: 1px solid var(--marketing-line);
+  background: linear-gradient(180deg, rgba(251, 253, 255, 0.98), rgba(242, 246, 251, 0.98));
+  box-shadow: var(--brand-shadow-lg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .marketing-root .fade-up {
+    animation: fadeUp 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-root .brand-card,
+  .marketing-root .feature-tile,
+  .marketing-root .btn-primary,
+  .marketing-root .btn-ghost,
+  .marketing-root .btn-ghost-dark {
+    transition: none !important;
+  }
+
+  .marketing-root .brand-card:hover,
+  .marketing-root .feature-tile:hover,
+  .marketing-root .btn-primary:hover,
+  .marketing-root .btn-ghost:hover,
+  .marketing-root .btn-ghost-dark:hover {
+    transform: none !important;
+  }
+
+  .marketing-root .animate-pulse {
+    animation: none !important;
+  }
+}
