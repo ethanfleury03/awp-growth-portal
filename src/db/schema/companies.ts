@@ -71,6 +71,85 @@ export const companyPaymentSettings = pgTable('company_payment_settings', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const companySettings = pgTable('company_settings', {
+  companyId: uuid('company_id')
+    .primaryKey()
+    .references(() => companies.id, { onDelete: 'cascade' }),
+  displayName: text('display_name').notNull(),
+  legalName: text('legal_name'),
+  industry: text('industry').notNull().default('generic'),
+  timezone: text('timezone').notNull().default('America/New_York'),
+  logoUrl: text('logo_url'),
+  primaryColor: text('primary_color').notNull().default('#f26a1f'),
+  accentColor: text('accent_color').notNull().default('#2563eb'),
+  portalTitle: text('portal_title').notNull().default('WNY Automation Portal'),
+  workspaceLabel: text('workspace_label').notNull().default('Automation workspace'),
+  defaultRoute: text('default_route').notNull().default('/app'),
+  configJson: text('config_json'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const companyCustomFields = pgTable(
+  'company_custom_fields',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    entityType: text('entity_type').notNull(),
+    fieldKey: text('field_key').notNull(),
+    label: text('label').notNull(),
+    fieldType: text('field_type').notNull().default('text'),
+    required: boolean('required').notNull().default(false),
+    optionsJson: text('options_json'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    companyEntityIdx: index('idx_company_custom_fields_company_entity').on(
+      t.companyId,
+      t.entityType,
+    ),
+    uniqueField: uniqueIndex('idx_company_custom_fields_unique').on(
+      t.companyId,
+      t.entityType,
+      t.fieldKey,
+    ),
+  }),
+);
+
+export const companyPipelineStages = pgTable(
+  'company_pipeline_stages',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    entityType: text('entity_type').notNull(),
+    stageKey: text('stage_key').notNull(),
+    label: text('label').notNull(),
+    color: text('color').notNull().default('#2563eb'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    companyEntityIdx: index('idx_company_pipeline_stages_company_entity').on(
+      t.companyId,
+      t.entityType,
+    ),
+    uniqueStage: uniqueIndex('idx_company_pipeline_stages_unique').on(
+      t.companyId,
+      t.entityType,
+      t.stageKey,
+    ),
+  }),
+);
+
 export const invoiceNumberSequences = pgTable(
   'invoice_number_sequences',
   {
@@ -104,13 +183,14 @@ export const featureFlags = pgTable(
   {
     id: uuid('id').defaultRandom().primaryKey(),
     companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }),
-    key: text('key').notNull(),
-    value: text('value').notNull().default('false'),
+    flagKey: text('flag_key').notNull(),
+    enabled: boolean('enabled').notNull().default(false),
+    payloadJson: text('payload_json'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
-    companyKeyIdx: uniqueIndex('idx_feature_flags_company_key').on(t.companyId, t.key),
+    companyKeyIdx: uniqueIndex('idx_feature_flags_company_key').on(t.companyId, t.flagKey),
   }),
 );
 

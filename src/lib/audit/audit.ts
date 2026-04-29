@@ -23,6 +23,13 @@ export type AuditAction =
   | 'connect.onboard_start'
   | 'connect.status_refresh'
   | 'feature_flag.update'
+  | 'tenant.create'
+  | 'tenant.update'
+  | 'tenant.user.assign'
+  | 'tenant.user.update'
+  | 'tenant.modules.update'
+  | 'tenant.branding.update'
+  | 'tenant.crm_config.update'
   | 'super_admin.impersonate'
   | 'webhook.replay';
 
@@ -47,9 +54,9 @@ export async function writeAudit(input: AuditWriteInput): Promise<void> {
     const id = randomUUID();
     const metadataJson = input.metadata ? JSON.stringify(input.metadata) : null;
     await sql`
-      INSERT INTO audit_events (
+      INSERT INTO audit_logs (
         id, company_id, actor_user_id, actor_email, actor_role,
-        action, entity_type, entity_id, summary, metadata,
+        action, entity_type, entity_id, summary, metadata, payload_json,
         ip_address, user_agent
       ) VALUES (
         ${id},
@@ -61,6 +68,7 @@ export async function writeAudit(input: AuditWriteInput): Promise<void> {
         ${input.entityType ?? null},
         ${input.entityId ?? null},
         ${input.summary ?? null},
+        ${metadataJson},
         ${metadataJson},
         ${input.ip ?? null},
         ${input.userAgent ?? null}

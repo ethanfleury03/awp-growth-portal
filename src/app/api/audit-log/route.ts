@@ -10,13 +10,15 @@ export async function GET(request: Request) {
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || '100'), 1), 500);
   const action = url.searchParams.get('action');
   const entityType = url.searchParams.get('entity_type');
+  const requestedCompanyId = url.searchParams.get('companyId');
+  const companyId = auth.role === 'super_admin' && requestedCompanyId ? requestedCompanyId : auth.companyId;
 
   if (action && entityType) {
     const rows = await sql`
       SELECT id, action, entity_type, entity_id, summary, metadata,
              actor_user_id, actor_email, actor_role, ip_address, created_at
-      FROM audit_events
-      WHERE company_id = ${auth.companyId}
+      FROM audit_logs
+      WHERE company_id = ${companyId}
         AND action = ${action}
         AND entity_type = ${entityType}
       ORDER BY datetime(created_at) DESC
@@ -28,8 +30,8 @@ export async function GET(request: Request) {
     const rows = await sql`
       SELECT id, action, entity_type, entity_id, summary, metadata,
              actor_user_id, actor_email, actor_role, ip_address, created_at
-      FROM audit_events
-      WHERE company_id = ${auth.companyId} AND action = ${action}
+      FROM audit_logs
+      WHERE company_id = ${companyId} AND action = ${action}
       ORDER BY datetime(created_at) DESC
       LIMIT ${limit}
     `;
@@ -39,8 +41,8 @@ export async function GET(request: Request) {
     const rows = await sql`
       SELECT id, action, entity_type, entity_id, summary, metadata,
              actor_user_id, actor_email, actor_role, ip_address, created_at
-      FROM audit_events
-      WHERE company_id = ${auth.companyId} AND entity_type = ${entityType}
+      FROM audit_logs
+      WHERE company_id = ${companyId} AND entity_type = ${entityType}
       ORDER BY datetime(created_at) DESC
       LIMIT ${limit}
     `;
@@ -50,8 +52,8 @@ export async function GET(request: Request) {
   const rows = await sql`
     SELECT id, action, entity_type, entity_id, summary, metadata,
            actor_user_id, actor_email, actor_role, ip_address, created_at
-    FROM audit_events
-    WHERE company_id = ${auth.companyId}
+    FROM audit_logs
+    WHERE company_id = ${companyId}
     ORDER BY datetime(created_at) DESC
     LIMIT ${limit}
   `;

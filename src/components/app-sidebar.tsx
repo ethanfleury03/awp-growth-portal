@@ -16,20 +16,38 @@ import {
   Bot,
   Megaphone,
   FolderOpen,
+  BriefcaseBusiness,
+  CalendarDays,
+  CreditCard,
+  FileText,
+  Map,
+  PhoneCall,
+  UserRound,
 } from 'lucide-react';
 import type { SessionUser } from '@/lib/auth/types';
+import type { CompanyWorkspace } from '@/lib/workspace/types';
+import { MODULE_CATALOG, type ModuleKey } from '@/lib/modules/catalog';
 import clsx from 'clsx';
 import { cn } from '@/lib/ops';
 
-const PRIMARY_NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
-  { href: '/app', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/leads', label: 'Leads', icon: Users },
-  { href: '/outreach', label: 'Outreach', icon: Megaphone },
-  { href: '/marketing', label: 'Marketing', icon: FolderOpen },
-  { href: '/ai-assistant', label: 'AI Growth Assistant', icon: Bot },
-  { href: '/reports', label: 'Reports', icon: BarChart3 },
-  { href: '/settings', label: 'Settings', icon: Settings },
-];
+const MODULE_ICONS: Record<ModuleKey, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  leads: Users,
+  crm: BriefcaseBusiness,
+  customers: UserRound,
+  jobs: BriefcaseBusiness,
+  estimates: FileText,
+  invoices: CreditCard,
+  dispatch: Map,
+  calendar: CalendarDays,
+  receptionist: PhoneCall,
+  marketing: FolderOpen,
+  outreach: Megaphone,
+  'ai-assistant': Bot,
+  reports: BarChart3,
+  assets: FolderOpen,
+  settings: Settings,
+};
 
 function navItemIsActive(pathname: string, href: string) {
   if (href === '/app') {
@@ -63,15 +81,25 @@ type AppSidebarProps = {
 export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose }: AppSidebarProps) {
   const pathname = usePathname() || '';
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [workspace, setWorkspace] = useState<CompanyWorkspace | null>(null);
 
   useEffect(() => {
     fetch('/api/auth/me')
       .then((r) => r.json())
-      .then((j: { authenticated: boolean; user?: SessionUser }) => {
+      .then((j: { authenticated: boolean; user?: SessionUser; workspace?: CompanyWorkspace }) => {
         if (j.authenticated && j.user) setUser(j.user);
+        if (j.authenticated && j.workspace) setWorkspace(j.workspace);
       })
       .catch(() => {});
   }, []);
+
+  const enabledModules = new Set(workspace?.enabledModules ?? MODULE_CATALOG.filter((m) => m.defaultEnabled).map((m) => m.key));
+  const navItems = MODULE_CATALOG.filter((module) => enabledModules.has(module.key)).map((module) => ({
+    href: module.route,
+    label: module.label,
+    icon: MODULE_ICONS[module.key],
+  }));
+  const branding = workspace?.branding;
 
   const navLinkClass = (active: boolean) =>
     clsx(
@@ -97,8 +125,12 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
               <span className="text-sm font-bold">WNY</span>
             </div>
             <div>
-              <span className="block text-xl font-semibold tracking-[-0.03em] text-white">WNY Automation Portal</span>
-              <span className="block text-[11px] uppercase tracking-[0.22em] text-slate-400">Client Portal</span>
+              <span className="block text-xl font-semibold tracking-[-0.03em] text-white">
+                {branding?.portalTitle ?? 'WNY Automation Portal'}
+              </span>
+              <span className="block text-[11px] uppercase tracking-[0.22em] text-slate-400">
+                {branding?.displayName ?? 'Client Portal'}
+              </span>
             </div>
           </Link>
           {mobile ? (
@@ -116,7 +148,9 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Workspace</p>
-              <p className="mt-1 text-sm font-semibold text-white">Automation workspace</p>
+              <p className="mt-1 text-sm font-semibold text-white">
+                {branding?.workspaceLabel ?? 'Automation workspace'}
+              </p>
             </div>
             <div className="rounded-full bg-emerald-400/16 px-2.5 py-1 text-[11px] font-semibold text-emerald-200">
               Live
@@ -132,7 +166,7 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
         <div className="mb-3">
           <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Portal</p>
         </div>
-        {PRIMARY_NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           const active = navItemIsActive(pathname, item.href);
           return (
@@ -147,6 +181,16 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
             </Link>
           );
         })}
+        {user?.role === 'super_admin' ? (
+          <Link
+            href="/super-admin"
+            onClick={handleNavigate}
+            className={navLinkClass(navItemIsActive(pathname, '/super-admin'))}
+          >
+            <Settings className="w-[18px] h-[18px] flex-shrink-0 opacity-90" strokeWidth={1.75} aria-hidden />
+            <span className="font-medium leading-none">Super Admin</span>
+          </Link>
+        ) : null}
       </nav>
 
       <div className="mt-auto relative z-10">

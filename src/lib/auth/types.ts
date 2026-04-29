@@ -22,7 +22,11 @@ export type SessionUser = {
 };
 
 export type MeResponse =
-  | { authenticated: true; user: SessionUser }
+  | {
+      authenticated: true;
+      user: SessionUser;
+      workspace?: import('@/lib/workspace/types').CompanyWorkspace;
+    }
   | { authenticated: false };
 
 export const ROLE_RANK: Record<UserRole, number> = {

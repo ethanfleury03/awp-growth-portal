@@ -12,14 +12,14 @@ export async function GET(request: Request) {
 
   if (companyId) {
     const rows = await sql`
-      SELECT company_id, flag_key, enabled, payload, updated_at
+      SELECT company_id, flag_key, enabled, payload_json, updated_at
       FROM feature_flags WHERE company_id = ${companyId}
       ORDER BY flag_key
     `;
     return NextResponse.json({ flags: rows });
   }
   const rows = await sql`
-    SELECT company_id, flag_key, enabled, payload, updated_at
+    SELECT company_id, flag_key, enabled, payload_json, updated_at
     FROM feature_flags ORDER BY company_id, flag_key
   `;
   return NextResponse.json({ flags: rows });
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   const companyId = String(body?.companyId || '').trim();
   const flagKey = String(body?.flagKey || '').trim();
   const enabled = Boolean(body?.enabled);
-  const payload = body?.payload ? JSON.stringify(body.payload) : null;
+  const payloadJson = body?.payload ? JSON.stringify(body.payload) : null;
   if (!companyId || !flagKey) {
     return NextResponse.json({ error: 'companyId + flagKey required' }, { status: 400 });
   }
@@ -46,13 +46,13 @@ export async function POST(request: Request) {
   if (existing.length > 0) {
     await sql`
       UPDATE feature_flags
-      SET enabled = ${enabled ? 1 : 0}, payload = ${payload}, updated_at = datetime('now')
+      SET enabled = ${enabled}, payload_json = ${payloadJson}, updated_at = datetime('now')
       WHERE company_id = ${companyId} AND flag_key = ${flagKey}
     `;
   } else {
     await sql`
-      INSERT INTO feature_flags (company_id, flag_key, enabled, payload)
-      VALUES (${companyId}, ${flagKey}, ${enabled ? 1 : 0}, ${payload})
+      INSERT INTO feature_flags (company_id, flag_key, enabled, payload_json)
+      VALUES (${companyId}, ${flagKey}, ${enabled}, ${payloadJson})
     `;
   }
 

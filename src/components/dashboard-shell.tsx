@@ -6,11 +6,15 @@ import {
   useContext,
   useMemo,
   useState,
+  useEffect,
   type ReactNode,
 } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { AppSidebar } from '@/components/app-sidebar';
 import { CommandPalette } from '@/components/command-palette';
 import { Menu } from 'lucide-react';
+import type { CompanyWorkspace } from '@/lib/workspace/types';
+import { moduleForPath } from '@/lib/modules/catalog';
 
 type SidebarSlotContextValue = {
   setSidebarAboveUserCard: (node: ReactNode | null) => void;
@@ -28,6 +32,8 @@ export function useSetSidebarAboveUserCard() {
 }
 
 export function DashboardShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname() || '';
+  const router = useRouter();
   const [sidebarAboveUserCard, setSidebarAboveUserCard] = useState<ReactNode>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const setSlot = useCallback((node: ReactNode | null) => {
@@ -35,6 +41,21 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(() => ({ setSidebarAboveUserCard: setSlot }), [setSlot]);
+
+  useEffect(() => {
+    fetch('/api/company/workspace')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json: { workspace?: CompanyWorkspace } | null) => {
+        const workspace = json?.workspace;
+        if (!workspace?.assigned) return;
+        const moduleKey = moduleForPath(pathname);
+        if (!moduleKey) return;
+        if (!workspace.enabledModules.includes(moduleKey)) {
+          router.replace(workspace.defaultRoute || '/app');
+        }
+      })
+      .catch(() => {});
+  }, [pathname, router]);
 
   return (
     <SidebarSlotContext.Provider value={value}>

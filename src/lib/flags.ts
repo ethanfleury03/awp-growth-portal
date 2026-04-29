@@ -24,7 +24,8 @@ export async function isFeatureEnabled(
   let rows: Record<string, unknown>[] = [];
   try {
     rows = await sql`
-      SELECT enabled FROM feature_flags
+      SELECT enabled
+      FROM feature_flags
       WHERE company_id = ${companyId} AND flag_key = ${flagKey}
       LIMIT 1
     `;

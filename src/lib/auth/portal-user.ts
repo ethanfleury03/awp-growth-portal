@@ -55,11 +55,6 @@ export async function getPortalUser(): Promise<SessionUser | null> {
     if (membership?.role) role = membership.role as SessionUser['role'];
   }
 
-  if (!companyId) {
-    const c = await sql`SELECT id FROM companies ORDER BY datetime(created_at) LIMIT 1`;
-    companyId = String((c[0] as { id?: string } | undefined)?.id || '');
-  }
-
   if (!branchId && companyId) {
     const branches = await sql`
       SELECT id
