@@ -1,23 +1,52 @@
 # WNY Automation Portal Production Readiness
 
-## First Production Setup
+## Launch Runbook
 
 1. Deploy the latest `awp-growth-portal` branch to Vercel.
-2. Confirm the portal project has the production Neon `DATABASE_URL`.
-3. Run migrations against production:
+2. Confirm Vercel env vars are set for both projects:
+   - portal: Clerk, Neon `DATABASE_URL`, app URLs, Stripe, Twilio, Retell, Sentry, and optional R2.
+   - marketing: `DATABASE_URL`, `BLOG_API_TOKEN`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_CLIENT_PORTAL_URL`, lead webhook, and analytics.
+3. Confirm domains:
+   - `https://wnyautomation.com`
+   - `https://www.wnyautomation.com`
+   - `https://app.wnyautomation.com`
+4. Run migrations against production:
    ```bash
    npm run db:migrate --workspace @wnyautomation/portal
    ```
-4. Run the idempotent seed:
+5. Run the idempotent seed:
    ```bash
    npm run db:seed:production --workspace @wnyautomation/portal
    ```
-5. Verify:
+6. Configure Clerk production:
+   - production publishable/secret keys in Vercel
+   - allowed origins include `https://app.wnyautomation.com`
+   - sign-in/sign-up redirects point to the app domain
+   - Google sign-in enabled if clients will use Google
+   - webhook points to `https://app.wnyautomation.com/api/webhooks/clerk`
+7. Configure provider webhooks:
+   - Stripe: `https://app.wnyautomation.com/api/stripe/webhook`
+   - Twilio voice/status: app-domain receptionist webhook URLs
+   - Retell webhook/functions: app-domain receptionist provider URLs
+8. Verify:
    - `/super-admin` loads for the WNY super admin.
    - Tenant detail pages load.
    - Preview workspace shows the tenant branding/modules.
    - `/app` loads for assigned client users.
    - Disabled module URLs show the module-disabled screen.
+   - `/api/health` returns `ok: true` and `db: "up"`.
+
+## Go / No-Go Checklist
+
+- Super admin login works with the production Clerk app.
+- Client admin login works and lands in the correct tenant.
+- A brand-new unassigned login lands on `/account-unassigned`.
+- The unassigned login appears in `/super-admin` and can be assigned.
+- Core CRM pages load: dashboard, leads, customers, estimates, invoices.
+- Disabled modules are hidden and direct URLs are blocked.
+- Sentry/logging env vars are configured.
+- Stripe, Clerk, Twilio, and Retell webhook URLs all use `app.wnyautomation.com`.
+- `/api/admin/system-health` shows no unexpected missing required service categories.
 
 ## Seed Environment Overrides
 
@@ -43,3 +72,28 @@ SEED_CLIENT_INDUSTRY="generic"
 - Save branding and confirm the sidebar/workspace preview reflects it.
 - Add a custom field and pipeline stage, save, refresh, and confirm they persist.
 - Confirm audit events appear after tenant/user/module/CRM changes.
+
+## First Client Acceptance Checklist
+
+- Client can sign in without seeing Clerk development mode.
+- Client can create a lead and find it again.
+- Client can create or edit a customer.
+- Client can create an estimate.
+- Client can create an invoice or see a clear configuration message if payments are not ready.
+- Client can log out and sign back in.
+- WNY super admin can see client activity in tenant audit/health views.
+
+## Tenant API Classification
+
+- Super-admin APIs: `/api/admin/**`; must require `super_admin`.
+- Company-scoped internal APIs: leads, customers, jobs, estimates, invoices, dispatch, reports, attachments, AI assistant, settings, team, service contracts; must require tenant auth and filter by `company_id`.
+- Module-scoped APIs: same as company-scoped where feature modules apply; must use module guards or have an explicit reason not to.
+- Public token APIs: `/api/public/**`, `/api/public/estimate/**`, `/api/public/invoice/**`; must rely on unguessable tokens and rate limits.
+- Provider webhooks: Clerk, Stripe, Twilio, Retell; must verify provider signatures/secrets and must not rely on user sessions.
+
+## Recovery Notes
+
+- Neon backups are the source of truth for database recovery. Before destructive data work, create or confirm a recent restore point.
+- For a broken deploy, roll back in Vercel first, then inspect `/api/health`, `/api/admin/system-health`, Vercel logs, and Sentry.
+- For stuck webhooks, inspect `/super-admin/webhook-failures` and provider dashboards before replaying events.
+- If auth assignment breaks, do not manually assign unknown users to arbitrary tenants; use the unassigned-user admin flow.

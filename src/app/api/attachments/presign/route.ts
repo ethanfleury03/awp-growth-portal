@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { sql } from '@/lib/db';
-import { isPortalResponse, requirePortalOrRespond } from '@/lib/auth/tenant';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 import { presignPutUrl, publicUrlFor, r2ConfigFromEnv } from '@/lib/attachments/r2';
 
 const ALLOWED_ENTITY_TYPES = new Set([
@@ -15,7 +16,7 @@ const ALLOWED_ENTITY_TYPES = new Set([
 ]);
 
 export async function POST(request: Request) {
-  const auth = await requirePortalOrRespond();
+  const auth = await requireModuleOrRespond('assets');
   if (isPortalResponse(auth)) return auth;
 
   const body = await request.json().catch(() => ({}));

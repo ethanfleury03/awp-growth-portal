@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { isPortalResponse, requirePortalOrRespond } from '@/lib/auth/tenant';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 
 /** Dispatch view: jobs + plumbers with a window of scheduled_at. */
 export async function GET(request: Request) {
-  const auth = await requirePortalOrRespond();
+  const auth = await requireModuleOrRespond('dispatch');
   if (isPortalResponse(auth)) return auth;
 
   const url = new URL(request.url);
@@ -37,8 +38,11 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const auth = await requirePortalOrRespond('dispatcher');
+  const auth = await requireModuleOrRespond('dispatch');
   if (isPortalResponse(auth)) return auth;
+  if (!['dispatcher', 'admin', 'super_admin'].includes(auth.role)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   const body = await request.json().catch(() => ({}));
   const jobId = String(body?.jobId || '');
   const plumberId = body?.plumberId === null ? null : String(body?.plumberId || '');

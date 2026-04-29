@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { isPortalResponse, requirePortalOrRespond } from '@/lib/auth/tenant';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 import { buildAwpAgentContext, buildSystemPrompt } from '@/lib/ai/context';
 import { createOpenRouterChatCompletion } from '@/lib/ai/openrouter';
 import { sql } from '@/lib/db';
@@ -56,7 +57,7 @@ async function ensureConversation(companyId: string, userId: string, conversatio
 }
 
 export async function POST(request: Request) {
-  const auth = await requirePortalOrRespond();
+  const auth = await requireModuleOrRespond('ai-assistant');
   if (isPortalResponse(auth)) return auth;
 
   const body = await request.json();

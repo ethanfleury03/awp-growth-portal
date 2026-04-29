@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { isPortalResponse, requirePortalOrRespond } from '@/lib/auth/tenant';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 import { publicUrlFor, r2ConfigFromEnv } from '@/lib/attachments/r2';
 
 export async function GET(request: Request) {
-  const auth = await requirePortalOrRespond();
+  const auth = await requireModuleOrRespond('assets');
   if (isPortalResponse(auth)) return auth;
 
   const url = new URL(request.url);
