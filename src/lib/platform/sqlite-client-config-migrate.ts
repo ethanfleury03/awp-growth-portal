@@ -112,5 +112,19 @@ export function applyClientConfigMigrations(db: Database.Database) {
       ON company_pipeline_stages(company_id, entity_type);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_company_pipeline_stages_unique
       ON company_pipeline_stages(company_id, entity_type, stage_key);
+
+    CREATE TABLE IF NOT EXISTS unassigned_portal_users (
+      email TEXT PRIMARY KEY,
+      clerk_user_id TEXT,
+      name TEXT,
+      first_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+      last_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+      assigned_at TEXT,
+      assigned_company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
+      assigned_user_id TEXT REFERENCES portal_users(id) ON DELETE SET NULL,
+      metadata_json TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_unassigned_portal_users_last_seen
+      ON unassigned_portal_users(last_seen_at);
   `);
 }

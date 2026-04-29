@@ -19,6 +19,16 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     LIMIT 1
   `;
   if (!rows[0]) return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
+  const metricsRows = await sql`
+    SELECT
+      (SELECT COUNT(*) FROM portal_users WHERE company_id = ${id}) AS user_count,
+      (SELECT COUNT(*) FROM feature_flags WHERE company_id = ${id} AND flag_key LIKE 'module.%' AND enabled = true) AS enabled_module_count,
+      (SELECT COUNT(*) FROM audit_logs WHERE company_id = ${id}) AS audit_event_count,
+      (SELECT MAX(created_at) FROM audit_logs WHERE company_id = ${id}) AS last_activity_at,
+      (SELECT MAX(created_at) FROM leads WHERE company_id = ${id}) AS last_lead_at,
+      (SELECT MAX(updated_at) FROM portal_users WHERE company_id = ${id}) AS last_user_activity_at
+  `;
+  const metrics = metricsRows[0] ?? {};
   const row = rows[0] as Record<string, unknown>;
   return NextResponse.json({
     tenant: {
@@ -42,6 +52,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       workspace_label: row.workspace_label ?? 'Automation workspace',
       default_route: row.default_route ?? '/app',
       config_json: row.config_json ?? null,
+      metrics,
     },
   });
 }

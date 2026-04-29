@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createEstimateBodySchema } from '@/lib/estimates/validation';
 import { createEstimate, listEstimates } from '@/lib/estimates/service';
-import { requirePortalUser } from '@/lib/auth/tenant';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 
 export async function GET(request: Request) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireModuleOrRespond('estimates');
+  if (isPortalResponse(portal)) return portal;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -34,10 +33,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireModuleOrRespond('estimates');
+  if (isPortalResponse(portal)) return portal;
 
   try {
     const body = createEstimateBodySchema.parse(await request.json());

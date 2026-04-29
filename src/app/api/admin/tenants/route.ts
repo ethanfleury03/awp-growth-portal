@@ -28,7 +28,10 @@ export async function GET(request: Request) {
       (SELECT COUNT(*) FROM feature_flags WHERE company_id = c.id AND flag_key LIKE 'module.%' AND enabled = true) AS enabled_module_count,
       (SELECT COUNT(*) FROM invoices WHERE company_id = c.id) AS invoice_count,
       (SELECT COALESCE(SUM(amount_cents), 0) FROM payments WHERE company_id = c.id AND status = 'paid') AS paid_cents,
-      (SELECT MAX(created_at) FROM audit_logs WHERE company_id = c.id) AS last_activity_at
+      (SELECT MAX(created_at) FROM audit_logs WHERE company_id = c.id) AS last_activity_at,
+      (SELECT COUNT(*) FROM audit_logs WHERE company_id = c.id) AS audit_event_count,
+      (SELECT MAX(created_at) FROM leads WHERE company_id = c.id) AS last_lead_at,
+      (SELECT MAX(updated_at) FROM portal_users WHERE company_id = c.id) AS last_user_activity_at
     FROM companies c
     LEFT JOIN company_settings s ON s.company_id = c.id
     WHERE ${q === '%%'} OR lower(c.name) LIKE ${q} OR lower(c.email) LIKE ${q}

@@ -15,6 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:copy": "tsx scripts/migrate-sqlite-to-postgres.ts",
+    "db:seed:production": "tsx scripts/seed-production-workspace.ts",
     "stripe:seed-prices": "tsx scripts/stripe-seed-prices.ts",
     "marketing:check-links": "node scripts/check-marketing-links.mjs",
     "marketing:lhci": "lhci autorun --config=.lighthouserc.json",

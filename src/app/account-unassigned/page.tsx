@@ -1,6 +1,12 @@
 import Link from 'next/link';
+import { currentUser } from '@clerk/nextjs/server';
 
-export default function AccountUnassignedPage() {
+export default async function AccountUnassignedPage() {
+  const user = await currentUser().catch(() => null);
+  const email =
+    user?.primaryEmailAddress?.emailAddress ||
+    user?.emailAddresses?.[0]?.emailAddress ||
+    null;
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-16 text-slate-950">
       <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -15,6 +21,11 @@ export default function AccountUnassignedPage() {
           portal. If you just created an account, send your login email to your WNY Automation
           contact and we will assign the correct workspace.
         </p>
+        {email ? (
+          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            Signed in as <span className="font-medium">{email}</span>
+          </div>
+        ) : null}
         <Link
           href="/sign-in"
           className="mt-6 inline-flex rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700"

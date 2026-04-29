@@ -87,6 +87,24 @@ export const auditLogs = pgTable(
   }),
 );
 
+export const unassignedPortalUsers = pgTable(
+  'unassigned_portal_users',
+  {
+    email: text('email').primaryKey(),
+    clerkUserId: text('clerk_user_id'),
+    name: text('name'),
+    firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).defaultNow().notNull(),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).defaultNow().notNull(),
+    assignedAt: timestamp('assigned_at', { withTimezone: true }),
+    assignedCompanyId: uuid('assigned_company_id').references(() => companies.id, { onDelete: 'set null' }),
+    assignedUserId: uuid('assigned_user_id').references(() => portalUsers.id, { onDelete: 'set null' }),
+    metadataJson: text('metadata_json'),
+  },
+  (t) => ({
+    lastSeenIdx: index('idx_unassigned_portal_users_last_seen').on(t.lastSeenAt),
+  }),
+);
+
 export const apiKeys = pgTable(
   'api_keys',
   {

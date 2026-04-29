@@ -7,7 +7,8 @@ import {
   insertInvoiceLineItems,
   listLineItemsForInvoiceIds,
 } from '@/lib/invoices/invoice-line-items';
-import { requirePortalUser } from '@/lib/auth/tenant';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 import { allocateInvoiceNumber } from '@/lib/invoices/number';
 
 const getErrorMessage = (error: unknown) =>
@@ -19,6 +20,12 @@ const toMoney = (value: unknown, fallback = 0) => {
 };
 
 const todayIsoDate = () => new Date().toISOString().split('T')[0];
+
+async function requireInvoicesAccess() {
+  const portal = await requireModuleOrRespond('invoices');
+  if (isPortalResponse(portal)) return portal;
+  return portal;
+}
 
 function mapInvoiceRow(row: Record<string, unknown>) {
   const cust_name = row.cust_name;
@@ -72,10 +79,8 @@ async function customerExistsInCompany(companyId: string, customerId: string) {
 }
 
 export async function GET(request: Request) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireInvoicesAccess();
+  if (isPortalResponse(portal)) return portal;
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
@@ -138,10 +143,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireInvoicesAccess();
+  if (isPortalResponse(portal)) return portal;
 
   const body = await request.json();
 
@@ -383,10 +386,8 @@ function normalizeInvoiceLineItems(rawLines: LineInBody[]) {
 }
 
 export async function PUT(request: Request) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireInvoicesAccess();
+  if (isPortalResponse(portal)) return portal;
 
   const body = await request.json();
   const { id, line_items: lineItemsInput, ...updates } = body;
@@ -539,10 +540,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireInvoicesAccess();
+  if (isPortalResponse(portal)) return portal;
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');

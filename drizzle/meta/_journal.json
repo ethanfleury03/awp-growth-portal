@@ -43,6 +43,13 @@
       "when": 1777426800000,
       "tag": "0006_multi_client_configuration",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777430400000,
+      "tag": "0007_unassigned_users_and_preview",
+      "breakpoints": true
     }
   ]
 }

@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { receptionistService } from '@/lib/receptionist/service';
 import { getAppBaseUrl } from '@/lib/receptionist/receptionist-live';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Unknown error';
 
 export async function GET() {
+  const portal = await requireModuleOrRespond('receptionist');
+  if (isPortalResponse(portal)) return portal;
   try {
     const stats = await receptionistService.dashboardStats();
     const { calls, total } = await receptionistService.listCalls(1, 12);

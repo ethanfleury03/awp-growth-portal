@@ -21,6 +21,9 @@ type Tenant = {
   invoice_count: number;
   paid_cents: number;
   last_activity_at: string | null;
+  audit_event_count: number;
+  last_lead_at: string | null;
+  last_user_activity_at: string | null;
 };
 
 type Summary = {
@@ -28,6 +31,14 @@ type Summary = {
   active_users?: number;
   recent_activity?: number;
   average_enabled_modules?: number;
+};
+
+type UnassignedUser = {
+  email: string;
+  name: string | null;
+  clerk_user_id: string | null;
+  first_seen_at: string;
+  last_seen_at: string;
 };
 
 const defaultModules = MODULE_CATALOG.filter((m) => m.defaultEnabled).map((m) => m.key);
@@ -46,12 +57,15 @@ function validEmail(value: string) {
 
 export default function SuperAdminHome() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [unassignedUsers, setUnassignedUsers] = useState<UnassignedUser[]>([]);
   const [summary, setSummary] = useState<Summary>({});
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [q, setQ] = useState('');
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [assigning, setAssigning] = useState<string | null>(null);
+  const [assignForms, setAssignForms] = useState<Record<string, { companyId: string; role: string }>>({});
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -76,14 +90,42 @@ export default function SuperAdminHome() {
       const res = await fetch(`/api/admin/tenants?q=${encodeURIComponent(q)}`, {
         cache: 'no-store',
       });
+      const unassignedRes = await fetch('/api/admin/unassigned-users', { cache: 'no-store' });
       const json = await res.json();
+      const unassignedJson = await unassignedRes.json();
       if (!res.ok) throw new Error(json.error || 'Could not load tenants.');
       setTenants(json.tenants || []);
       setSummary(json.summary || {});
+      if (unassignedRes.ok) setUnassignedUsers(unassignedJson.users || []);
     } catch (err) {
       setNotice({ type: 'error', text: err instanceof Error ? err.message : 'Could not load tenants.' });
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function assignUnassigned(email: string) {
+    const form = assignForms[email];
+    if (!form?.companyId) {
+      setNotice({ type: 'error', text: 'Choose a tenant before assigning this user.' });
+      return;
+    }
+    setAssigning(email);
+    setNotice(null);
+    try {
+      const res = await fetch(`/api/admin/unassigned-users/${encodeURIComponent(email)}/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || 'Could not assign user.');
+      setNotice({ type: 'success', text: `${email} assigned.` });
+      await load();
+    } catch (err) {
+      setNotice({ type: 'error', text: err instanceof Error ? err.message : 'Could not assign user.' });
+    } finally {
+      setAssigning(null);
     }
   }
 
@@ -265,6 +307,60 @@ export default function SuperAdminHome() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="mt-5 rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-200 p-4">
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Unassigned users</h2>
+            <p className="mt-1 text-sm text-slate-600">People who signed in but are not connected to a client workspace yet.</p>
+          </div>
+          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">{unassignedUsers.length}</span>
+        </div>
+        {unassignedUsers.length ? (
+          <div className="divide-y divide-slate-100">
+            {unassignedUsers.map((user) => {
+              const form = assignForms[user.email] || { companyId: tenants[0]?.id || '', role: 'staff' };
+              return (
+                <div key={user.email} className="grid gap-3 p-4 lg:grid-cols-[1fr_16rem_9rem_7rem] lg:items-center">
+                  <div>
+                    <div className="font-medium text-slate-950">{user.name || user.email}</div>
+                    <div className="text-xs text-slate-500">{user.email} - last seen {fmtDate(user.last_seen_at)}</div>
+                  </div>
+                  <select
+                    value={form.companyId}
+                    onChange={(e) => setAssignForms((forms) => ({ ...forms, [user.email]: { ...form, companyId: e.target.value } }))}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  >
+                    <option value="">Choose tenant</option>
+                    {tenants.map((tenant) => (
+                      <option key={tenant.id} value={tenant.id}>{tenant.display_name || tenant.name}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={form.role}
+                    onChange={(e) => setAssignForms((forms) => ({ ...forms, [user.email]: { ...form, role: e.target.value } }))}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  >
+                    {['admin', 'dispatcher', 'staff', 'tech', 'viewer'].map((role) => (
+                      <option key={role} value={role}>{role}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => assignUnassigned(user.email)}
+                    disabled={assigning === user.email}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {assigning === user.email ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    Assign
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-6 text-sm text-slate-500">No unassigned users waiting right now.</div>
+        )}
       </section>
 
       {panelOpen ? (

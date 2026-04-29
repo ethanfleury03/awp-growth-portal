@@ -101,3 +101,53 @@ export async function getCompanyWorkspace(user: SessionUser): Promise<CompanyWor
     enabledModules,
   };
 }
+
+export async function getCompanyWorkspaceForCompanyId(
+  companyId: string,
+  role: SessionUser['role'] = 'viewer',
+): Promise<CompanyWorkspace> {
+  await ensureCompanySettings(companyId);
+  const rows = await sql`
+    SELECT
+      c.name,
+      s.display_name,
+      s.legal_name,
+      s.industry,
+      s.timezone,
+      s.logo_url,
+      s.primary_color,
+      s.accent_color,
+      s.portal_title,
+      s.workspace_label,
+      s.default_route
+    FROM companies c
+    LEFT JOIN company_settings s ON s.company_id = c.id
+    WHERE c.id = ${companyId}
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row) {
+    throw new Error('Company not found');
+  }
+  const displayName = String(row.display_name || row.name || DEFAULT_BRANDING.displayName);
+  return {
+    assigned: true,
+    companyId,
+    companyName: String(row.name || displayName),
+    branchId: null,
+    role,
+    industry: String(row.industry || 'generic'),
+    timezone: String(row.timezone || 'America/New_York'),
+    defaultRoute: String(row.default_route || '/app'),
+    branding: {
+      displayName,
+      legalName: row.legal_name ? String(row.legal_name) : null,
+      logoUrl: row.logo_url ? String(row.logo_url) : null,
+      primaryColor: String(row.primary_color || DEFAULT_BRANDING.primaryColor),
+      accentColor: String(row.accent_color || DEFAULT_BRANDING.accentColor),
+      portalTitle: String(row.portal_title || DEFAULT_BRANDING.portalTitle),
+      workspaceLabel: String(row.workspace_label || DEFAULT_BRANDING.workspaceLabel),
+    },
+    enabledModules: await getEnabledModules(companyId),
+  };
+}

@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server';
 import { receptionistService } from '@/lib/receptionist/service';
 import { listCallsQuerySchema } from '@/lib/receptionist/validation';
-import { requirePortalUser } from '@/lib/auth/tenant';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Unknown error';
 
 export async function GET(request: Request) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireModuleOrRespond('receptionist');
+  if (isPortalResponse(portal)) return portal;
 
   try {
     const { searchParams } = new URL(request.url);

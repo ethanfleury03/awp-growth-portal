@@ -1,6 +1,7 @@
 import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requirePortalUser } from '@/lib/auth/tenant';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 import { ensureAwpDemoData } from '@/lib/awp/seed';
 import { sourceToSlug } from '@/lib/awp/config';
 
@@ -8,10 +9,8 @@ const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Unknown error';
 
 export async function GET(request: Request) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireModuleOrRespond('leads');
+  if (isPortalResponse(portal)) return portal;
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
@@ -80,10 +79,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireModuleOrRespond('leads');
+  if (isPortalResponse(portal)) return portal;
 
   const body = await request.json();
 
@@ -186,10 +183,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireModuleOrRespond('leads');
+  if (isPortalResponse(portal)) return portal;
 
   const body = await request.json();
   const { id, ...updates } = body;
@@ -266,10 +261,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireModuleOrRespond('leads');
+  if (isPortalResponse(portal)) return portal;
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');

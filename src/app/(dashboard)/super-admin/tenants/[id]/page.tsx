@@ -41,6 +41,14 @@ type Tenant = {
   created_at: string;
   stripe_connect_status?: string | null;
   subscription_status?: string | null;
+  metrics?: {
+    user_count?: number;
+    enabled_module_count?: number;
+    audit_event_count?: number;
+    last_activity_at?: string | null;
+    last_lead_at?: string | null;
+    last_user_activity_at?: string | null;
+  };
 };
 
 type TenantUser = {
@@ -397,8 +405,8 @@ export default function SuperAdminTenantPage({ params }: { params: Promise<{ id:
             <p className="text-sm text-slate-600">{tenant?.email} - {selectedPreset.label}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/app" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
-              <ExternalLink className="h-4 w-4" /> Portal
+            <Link href={`/super-admin/tenants/${id}/preview`} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
+              <ExternalLink className="h-4 w-4" /> Preview workspace
             </Link>
             <button
               onClick={saveTenant}
@@ -449,6 +457,13 @@ export default function SuperAdminTenantPage({ params }: { params: Promise<{ id:
                 <Metric label="Assigned users" value={users.length} />
                 <Metric label="Custom fields" value={activeFields.length} />
                 <Metric label="Pipeline stages" value={activeStages.length} />
+                <Metric label="Audit events" value={Number(tenant?.metrics?.audit_event_count || audit.length)} />
+                <Metric label="Configured integrations" value={integrations.filter((item) => item.configured).length} />
+              </div>
+              <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+                Last lead: {tenant?.metrics?.last_lead_at ? new Date(tenant.metrics.last_lead_at).toLocaleString() : 'none yet'}
+                <br />
+                Last user update: {tenant?.metrics?.last_user_activity_at ? new Date(tenant.metrics.last_user_activity_at).toLocaleString() : 'none yet'}
               </div>
             </Panel>
             <Panel title="Live preview">

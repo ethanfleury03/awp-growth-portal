@@ -78,6 +78,14 @@ export async function getPortalUser(): Promise<SessionUser | null> {
       .slice(0, 2)
       .toUpperCase() || email.slice(0, 2).toUpperCase();
 
+  if (!companyId) {
+    await recordUnassignedPortalUser({
+      email,
+      clerkUserId: userId,
+      name,
+    }).catch((error) => console.warn('[auth] failed to record unassigned user', error));
+  }
+
   return {
     id: portalRowId || userId,
     email,
@@ -87,4 +95,37 @@ export async function getPortalUser(): Promise<SessionUser | null> {
     branchId: branchId || null,
     avatarInitials: initials,
   };
+}
+
+export async function recordUnassignedPortalUser({
+  email,
+  clerkUserId,
+  name,
+}: {
+  email: string;
+  clerkUserId: string;
+  name: string;
+}) {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return;
+  const existing = await sql`
+    SELECT email FROM unassigned_portal_users
+    WHERE email = ${normalizedEmail}
+    LIMIT 1
+  `;
+  if (existing[0]) {
+    await sql`
+      UPDATE unassigned_portal_users
+      SET
+        clerk_user_id = COALESCE(${clerkUserId || null}, clerk_user_id),
+        name = COALESCE(${name || null}, name),
+        last_seen_at = datetime('now')
+      WHERE email = ${normalizedEmail}
+    `;
+    return;
+  }
+  await sql`
+    INSERT INTO unassigned_portal_users (email, clerk_user_id, name, metadata_json)
+    VALUES (${normalizedEmail}, ${clerkUserId}, ${name}, ${JSON.stringify({ source: 'portal_auth' })})
+  `;
 }
