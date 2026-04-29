@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,6 +6,7 @@ export async function GET() {
   const started = Date.now();
   let dbOk = false;
   try {
+    const { sql } = await import('@/lib/db');
     const rows = await sql`SELECT 1 AS one`;
     dbOk = Array.isArray(rows) && rows.length === 1;
   } catch (err) {
