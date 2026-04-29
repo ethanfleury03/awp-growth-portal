@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { isPortalResponse, requireSuperAdmin } from '@/lib/auth/tenant';
 import { auditFromRequest, writeAudit } from '@/lib/audit/audit';
+import type { UserRole } from '@/lib/auth/types';
+
+const ALLOWED_ROLES: UserRole[] = ['admin', 'dispatcher', 'staff', 'tech', 'viewer'];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireSuperAdmin();
@@ -23,9 +27,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const body = await request.json().catch(() => ({}));
   const email = String(body?.email || '').trim().toLowerCase();
   const name = String(body?.name || '').trim() || email;
-  const role = String(body?.role || 'staff').trim();
+  const role = String(body?.role || 'staff').trim() as UserRole;
   const branchId = String(body?.branchId || '').trim() || null;
-  if (!email) return NextResponse.json({ error: 'email required' }, { status: 400 });
+  if (!email) return NextResponse.json({ error: 'Email is required.' }, { status: 400 });
+  if (!EMAIL_RE.test(email)) return NextResponse.json({ error: 'Enter a valid email.' }, { status: 400 });
+  if (!ALLOWED_ROLES.includes(role)) return NextResponse.json({ error: 'Choose a valid role.' }, { status: 400 });
 
   const existing = await sql`SELECT id FROM portal_users WHERE lower(email) = ${email} LIMIT 1`;
   let userId = String((existing[0] as { id?: string } | undefined)?.id || '');
@@ -43,10 +49,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     `;
     userId = String((inserted[0] as { id?: string }).id);
   }
-  await sql`
-    INSERT INTO user_memberships (user_id, company_id, branch_id, role, status)
-    VALUES (${userId}, ${id}, ${branchId}, ${role}, 'active')
+  const existingMembership = await sql`
+    SELECT user_id FROM user_memberships WHERE user_id = ${userId} AND company_id = ${id} LIMIT 1
   `;
+  if (existingMembership[0]) {
+    await sql`
+      UPDATE user_memberships
+      SET branch_id = ${branchId}, role = ${role}, status = 'active', updated_at = datetime('now')
+      WHERE user_id = ${userId} AND company_id = ${id}
+    `;
+  } else {
+    await sql`
+      INSERT INTO user_memberships (user_id, company_id, branch_id, role, status)
+      VALUES (${userId}, ${id}, ${branchId}, ${role}, 'active')
+    `;
+  }
 
   const meta = auditFromRequest(request);
   await writeAudit({

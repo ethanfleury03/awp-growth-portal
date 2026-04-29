@@ -4,6 +4,8 @@ import { isPortalResponse, requireSuperAdmin } from '@/lib/auth/tenant';
 import { auditFromRequest, writeAudit } from '@/lib/audit/audit';
 import { ensureCompanySettings } from '@/lib/workspace/workspace';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireSuperAdmin();
   if (isPortalResponse(auth)) return auth;
@@ -17,7 +19,31 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     LIMIT 1
   `;
   if (!rows[0]) return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
-  return NextResponse.json({ tenant: rows[0] });
+  const row = rows[0] as Record<string, unknown>;
+  return NextResponse.json({
+    tenant: {
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      stripe_connect_status: row.stripe_connect_status,
+      subscription_tier: row.subscription_tier,
+      subscription_status: row.subscription_status,
+      display_name: row.display_name ?? row.name,
+      legal_name: row.legal_name ?? row.name,
+      industry: row.industry ?? 'generic',
+      timezone: row.timezone ?? 'America/New_York',
+      logo_url: row.logo_url ?? null,
+      primary_color: row.primary_color ?? '#ea580c',
+      accent_color: row.accent_color ?? '#2563eb',
+      portal_title: row.portal_title ?? 'WNY Automation Portal',
+      workspace_label: row.workspace_label ?? 'Automation workspace',
+      default_route: row.default_route ?? '/app',
+      config_json: row.config_json ?? null,
+    },
+  });
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -28,6 +54,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const name = String(body?.name || '').trim();
   const email = String(body?.email || '').trim().toLowerCase();
   const phone = body?.phone === undefined ? undefined : String(body.phone || '').trim() || null;
+
+  if (email && !EMAIL_RE.test(email)) {
+    return NextResponse.json({ error: 'Enter a valid contact email.' }, { status: 400 });
+  }
 
   if (name || email || phone !== undefined) {
     if (phone === undefined) {

@@ -4,6 +4,9 @@ import { isPortalResponse, requireSuperAdmin } from '@/lib/auth/tenant';
 import { auditFromRequest, writeAudit } from '@/lib/audit/audit';
 import { getIndustryPreset } from '@/lib/modules/presets';
 
+const ENTITY_TYPES = ['lead', 'customer', 'job', 'estimate'] as const;
+const FIELD_TYPES = ['text', 'textarea', 'number', 'date', 'select', 'boolean', 'email', 'phone', 'url'] as const;
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireSuperAdmin();
   if (isPortalResponse(auth)) return auth;
@@ -30,7 +33,51 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (body?.preset) {
     await applyPreset(id, String(body.preset));
   }
-  for (const [idx, field] of (Array.isArray(body?.fields) ? body.fields : []).entries()) {
+  const fields = Array.isArray(body?.fields) ? body.fields : [];
+  const stages = Array.isArray(body?.stages) ? body.stages : [];
+  for (const field of fields) {
+    const entityType = String(field.entityType || '').trim();
+    const fieldKey = String(field.fieldKey || '').trim();
+    const label = String(field.label || '').trim();
+    const fieldType = String(field.fieldType || 'text').trim();
+    if (!ENTITY_TYPES.includes(entityType as (typeof ENTITY_TYPES)[number])) {
+      return NextResponse.json({ error: 'Choose a valid custom field entity type.' }, { status: 400 });
+    }
+    if (!fieldKey || !label) {
+      return NextResponse.json({ error: 'Custom fields need a label and key.' }, { status: 400 });
+    }
+    if (!FIELD_TYPES.includes(fieldType as (typeof FIELD_TYPES)[number])) {
+      return NextResponse.json({ error: 'Choose a valid custom field type.' }, { status: 400 });
+    }
+  }
+  for (const stage of stages) {
+    const entityType = String(stage.entityType || '').trim();
+    const stageKey = String(stage.stageKey || '').trim();
+    const label = String(stage.label || '').trim();
+    if (!ENTITY_TYPES.includes(entityType as (typeof ENTITY_TYPES)[number])) {
+      return NextResponse.json({ error: 'Choose a valid pipeline stage entity type.' }, { status: 400 });
+    }
+    if (!stageKey || !label) {
+      return NextResponse.json({ error: 'Pipeline stages need a label and key.' }, { status: 400 });
+    }
+  }
+
+  for (const field of Array.isArray(body?.deleteFields) ? body.deleteFields : []) {
+    await sql`
+      UPDATE company_custom_fields
+      SET is_active = false, updated_at = datetime('now')
+      WHERE company_id = ${id} AND entity_type = ${field.entityType} AND field_key = ${field.fieldKey}
+    `;
+  }
+  for (const stage of Array.isArray(body?.deleteStages) ? body.deleteStages : []) {
+    await sql`
+      UPDATE company_pipeline_stages
+      SET is_active = false, updated_at = datetime('now')
+      WHERE company_id = ${id} AND entity_type = ${stage.entityType} AND stage_key = ${stage.stageKey}
+    `;
+  }
+
+  for (const [idx, field] of fields.entries()) {
     await sql`
       INSERT INTO company_custom_fields (
         company_id, entity_type, field_key, label, field_type, required, options_json, sort_order, is_active
@@ -49,7 +96,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         updated_at = datetime('now')
     `;
   }
-  for (const [idx, stage] of (Array.isArray(body?.stages) ? body.stages : []).entries()) {
+  for (const [idx, stage] of stages.entries()) {
     await sql`
       INSERT INTO company_pipeline_stages (
         company_id, entity_type, stage_key, label, color, sort_order, is_active

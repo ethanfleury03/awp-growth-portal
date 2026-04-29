@@ -5,13 +5,15 @@ import { auditFromRequest, writeAudit } from '@/lib/audit/audit';
 import { getIndustryPreset } from '@/lib/modules/presets';
 import { MODULE_CATALOG, expandModuleDependencies, type ModuleKey } from '@/lib/modules/catalog';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function GET(request: Request) {
   const auth = await requireSuperAdmin();
   if (isPortalResponse(auth)) return auth;
   const url = new URL(request.url);
   const q = `%${(url.searchParams.get('q') || '').trim().toLowerCase()}%`;
 
-  const rows = await sql`
+  const tenants = await sql`
     SELECT
       c.id,
       c.name,
@@ -32,7 +34,19 @@ export async function GET(request: Request) {
     WHERE ${q === '%%'} OR lower(c.name) LIKE ${q} OR lower(c.email) LIKE ${q}
     ORDER BY c.created_at DESC
   `;
-  return NextResponse.json({ tenants: rows });
+  const summaryRows = await sql`
+    SELECT
+      (SELECT COUNT(*) FROM companies) AS total_tenants,
+      (SELECT COUNT(*) FROM portal_users WHERE is_active = true) AS active_users,
+      (SELECT COUNT(*) FROM audit_logs) AS recent_activity,
+      (SELECT COALESCE(AVG(module_count), 0) FROM (
+        SELECT COUNT(*) AS module_count
+        FROM feature_flags
+        WHERE flag_key LIKE 'module.%' AND enabled = true
+        GROUP BY company_id
+      ) m) AS average_enabled_modules
+  `;
+  return NextResponse.json({ tenants, summary: summaryRows[0] ?? {} });
 }
 
 export async function POST(request: Request) {
@@ -55,14 +69,29 @@ export async function POST(request: Request) {
   );
 
   if (!name || !email) {
-    return NextResponse.json({ error: 'name and email are required' }, { status: 400 });
+    return NextResponse.json({ error: 'Company name and contact email are required.' }, { status: 400 });
+  }
+  if (!EMAIL_RE.test(email)) {
+    return NextResponse.json({ error: 'Enter a valid contact email.' }, { status: 400 });
+  }
+  if (adminEmail && !EMAIL_RE.test(adminEmail)) {
+    return NextResponse.json({ error: 'Enter a valid first admin email.' }, { status: 400 });
+  }
+  const duplicate = await sql`SELECT id FROM companies WHERE lower(email) = ${email} LIMIT 1`;
+  if (duplicate[0]) {
+    return NextResponse.json({ error: 'A tenant with that contact email already exists.' }, { status: 409 });
   }
 
-  const companyRows = await sql`
-    INSERT INTO companies (name, email, phone)
-    VALUES (${name}, ${email}, ${phone})
-    RETURNING id, name, email, phone, created_at
-  `;
+  let companyRows;
+  try {
+    companyRows = await sql`
+      INSERT INTO companies (name, email, phone)
+      VALUES (${name}, ${email}, ${phone})
+      RETURNING id, name, email, phone, created_at
+    `;
+  } catch {
+    return NextResponse.json({ error: 'Could not create tenant. Check for duplicate company details and try again.' }, { status: 400 });
+  }
   const company = companyRows[0] as { id: string };
 
   await sql`

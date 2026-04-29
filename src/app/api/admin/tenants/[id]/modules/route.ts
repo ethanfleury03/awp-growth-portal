@@ -21,7 +21,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const body = await request.json().catch(() => ({}));
   const requested = (Array.isArray(body?.enabledModules) ? body.enabledModules : []) as ModuleKey[];
-  const valid = requested.filter((key) => MODULE_CATALOG.some((m) => m.key === key));
+  const validKeys = new Set(MODULE_CATALOG.map((m) => m.key));
+  const invalid = requested.filter((key) => !validKeys.has(key));
+  if (invalid.length) {
+    return NextResponse.json({ error: `Unknown module: ${invalid[0]}` }, { status: 400 });
+  }
+  const valid = requested.filter((key) => validKeys.has(key));
   const enabledModules = expandModuleDependencies(valid);
 
   for (const mod of MODULE_CATALOG) {

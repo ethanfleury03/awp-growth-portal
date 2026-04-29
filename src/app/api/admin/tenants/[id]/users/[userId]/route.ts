@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { isPortalResponse, requireSuperAdmin } from '@/lib/auth/tenant';
 import { auditFromRequest, writeAudit } from '@/lib/audit/audit';
+import type { UserRole } from '@/lib/auth/types';
+
+const ALLOWED_ROLES: UserRole[] = ['admin', 'dispatcher', 'staff', 'tech', 'viewer'];
 
 export async function PATCH(
   request: Request,
@@ -14,6 +17,9 @@ export async function PATCH(
   const role = body?.role === undefined ? null : String(body.role || 'staff');
   const isActive = body?.isActive === undefined ? null : Boolean(body.isActive);
   const name = body?.name === undefined ? null : String(body.name || '');
+  if (role && !ALLOWED_ROLES.includes(role as UserRole)) {
+    return NextResponse.json({ error: 'Choose a valid role.' }, { status: 400 });
+  }
   await sql`
     UPDATE portal_users
     SET
