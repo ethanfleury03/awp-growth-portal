@@ -9,7 +9,7 @@ const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Unknown error';
 
 export async function GET(request: Request) {
-  const portal = await requireModuleOrRespond('leads');
+  const portal = await requireModuleOrRespond('crm');
   if (isPortalResponse(portal)) return portal;
 
   const { searchParams } = new URL(request.url);
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const portal = await requireModuleOrRespond('leads');
+  const portal = await requireModuleOrRespond('crm');
   if (isPortalResponse(portal)) return portal;
 
   const body = await request.json();
@@ -183,7 +183,7 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const portal = await requireModuleOrRespond('leads');
+  const portal = await requireModuleOrRespond('crm');
   if (isPortalResponse(portal)) return portal;
 
   const body = await request.json();
@@ -261,7 +261,7 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const portal = await requireModuleOrRespond('leads');
+  const portal = await requireModuleOrRespond('crm');
   if (isPortalResponse(portal)) return portal;
 
   const { searchParams } = new URL(request.url);

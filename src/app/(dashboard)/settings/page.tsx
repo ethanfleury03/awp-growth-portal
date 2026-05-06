@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import {
   AppPageHeader,
   ConsolePanel,
-  DataTable,
   KpiStrip,
   OpsButton,
   OpsInput,
@@ -13,6 +12,8 @@ import {
   StatusBadge,
 } from '@/components/ops/ui';
 import { KnowledgeBasePanel } from '@/components/awp/knowledge-base-panel';
+import { ReusableArchitecturePanel } from '@/components/awp/reusable-architecture-panel';
+import { AiUsageCostPanel } from '@/components/awp/ai-usage-cost-panel';
 import { awpBusinessProfile } from '@/lib/awp/config';
 import { Building2, Check, KeyRound, Save, Settings, Sparkles, Wrench } from 'lucide-react';
 
@@ -121,33 +122,12 @@ export default function SettingsPage() {
 
               <KnowledgeBasePanel />
 
-              <ConsolePanel title="Reusable Architecture" description="AWP-specific defaults are centralized so future client forks can swap business config and seed data.">
-                <DataTable
-                  columns={[
-                    { key: 'area', label: 'Area' },
-                    { key: 'location', label: 'Source' },
-                    { key: 'purpose', label: 'Purpose' },
-                  ]}
-                  minWidthClassName="min-w-[760px]"
-                  className="border-0 shadow-none"
-                >
-                  {[
-                    ['Business profile, options, prompts', 'src/lib/awp/config.ts', 'One place for AWP labels, pipeline stages, lead options, module fields, defaults, and prompts.'],
-                    ['Demo bootstrap', 'src/lib/awp/seed.ts', 'Seeds AWP demo leads, stages, campaigns, lists, assets, SEO tasks, projects, and prompts without duplicates.'],
-                    ['Growth modules', 'growth_records table', 'Generic record storage for campaigns, lists, assets, SEO, projects, and AI templates.'],
-                    ['Lead qualification fields', 'leads.lead_context_json', 'Stores cabin-specific qualification data while preserving the reusable lead model.'],
-                  ].map(([area, location, purpose]) => (
-                    <tr key={area}>
-                      <td className="px-5 py-4 text-sm font-semibold text-[var(--ops-text)]">{area}</td>
-                      <td className="px-5 py-4 text-sm text-[var(--ops-muted)]">{location}</td>
-                      <td className="px-5 py-4 text-sm text-[var(--ops-muted)]">{purpose}</td>
-                    </tr>
-                  ))}
-                </DataTable>
-              </ConsolePanel>
+              <ReusableArchitecturePanel />
             </div>
 
             <div className="space-y-6 xl:sticky xl:top-6">
+              <AiUsageCostPanel />
+
               <ConsolePanel title="Business Contact" description="Default AWP contact details.">
                 <div className="space-y-3 text-sm leading-6 text-[var(--ops-muted)]">
                   <p>
@@ -171,10 +151,10 @@ export default function SettingsPage() {
               <ConsolePanel title="Owner Portal Scope" description="The AWP portal is intentionally focused on growth work.">
                 <div className="space-y-3 text-sm leading-6 text-[var(--ops-muted)]">
                   <p>
-                    Calls, receptionist, dispatch, jobs, map, calendar, team, and service catalog modules are hidden from normal owner navigation.
+                    Calls, receptionist, dispatch, map, calendar, team, jobs, and service catalog modules are outside the normal cabin-owner navigation.
                   </p>
                   <p>
-                    They have not been deleted, so reusable CRM code remains available for a future client or a later AWP operations phase.
+                    The active owner workspace focuses on CRM pipeline, customers, estimates, invoices, marketing, outreach, AI assistance, reports, and settings.
                   </p>
                 </div>
               </ConsolePanel>

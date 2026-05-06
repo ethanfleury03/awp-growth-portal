@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { SessionUser } from '@/lib/auth/types';
 
 vi.mock('@/lib/workspace/workspace', () => ({
-  getEnabledModules: vi.fn(async () => ['dashboard', 'leads']),
+  getEnabledModules: vi.fn(async () => ['dashboard', 'crm']),
 }));
 
 import { getModuleAccess } from '@/lib/modules/access';
@@ -19,13 +19,13 @@ const user: SessionUser = {
 
 describe('module access', () => {
   it('rejects unassigned users', async () => {
-    const access = await getModuleAccess({ ...user, companyId: '' }, 'leads');
+    const access = await getModuleAccess({ ...user, companyId: '' }, 'crm');
     expect(access.ok).toBe(false);
     if (!access.ok) expect(access.status).toBe(401);
   });
 
   it('allows enabled modules', async () => {
-    const access = await getModuleAccess(user, 'leads');
+    const access = await getModuleAccess(user, 'crm');
     expect(access.ok).toBe(true);
   });
 

@@ -20,10 +20,8 @@ export type IndustryPreset = {
 
 const serviceModules: ModuleKey[] = [
   'dashboard',
-  'leads',
   'crm',
   'customers',
-  'jobs',
   'estimates',
   'invoices',
   'marketing',
@@ -113,7 +111,7 @@ export const INDUSTRY_PRESETS: IndustryPreset[] = [
   {
     key: 'agency',
     label: 'Agency',
-    modules: ['dashboard', 'leads', 'crm', 'customers', 'marketing', 'outreach', 'ai-assistant', 'reports', 'settings'],
+    modules: ['dashboard', 'crm', 'customers', 'marketing', 'outreach', 'ai-assistant', 'reports', 'settings'],
     leadStages: [
       { key: 'new', label: 'New', color: '#2563eb' },
       { key: 'discovery', label: 'Discovery', color: '#7c3aed' },
@@ -133,7 +131,7 @@ export const INDUSTRY_PRESETS: IndustryPreset[] = [
   {
     key: 'custom',
     label: 'Custom',
-    modules: ['dashboard', 'leads', 'customers', 'settings'],
+    modules: ['dashboard', 'crm', 'customers', 'settings'],
     leadStages: [],
     jobStages: [],
     customFields: [],

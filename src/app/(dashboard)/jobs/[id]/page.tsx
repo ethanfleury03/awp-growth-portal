@@ -102,7 +102,7 @@ export default function JobDetailPage() {
           ) : null}
           {leadId ? (
             <p className="text-sm pt-2">
-              <Link href={`/leads/${leadId}`} className="text-blue-600 hover:underline">
+              <Link href={`/crm/leads/${leadId}`} className="text-blue-600 hover:underline">
                 View lead
               </Link>
             </p>

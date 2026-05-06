@@ -1,22 +1,15 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs/promises';
 import { sql } from '@/lib/db';
 import { isPortalResponse, requirePortalOrRespond } from '@/lib/auth/tenant';
 import { parseJsonSafely } from '@/lib/ops';
+import { KNOWLEDGE_ITEM_TYPES, KNOWLEDGE_STATUSES } from '@/lib/ai/knowledge-types';
+import { isLocalAttachmentKey, localAttachmentPath } from '@/lib/attachments/r2';
 
-const KB_TYPES = new Set([
-  'Company Facts',
-  'Services',
-  'Sales Rules',
-  'FAQs',
-  'Website Notes',
-  'Marketing Voice',
-  'Images/Files',
-  'Do Not Say',
-  'Pricing/Warranty Guardrails',
-  'Other',
-]);
+export const runtime = 'nodejs';
 
-const STATUSES = new Set(['Active', 'Draft', 'Archived']);
+const KB_TYPES = new Set<string>(KNOWLEDGE_ITEM_TYPES);
+const STATUSES = new Set<string>(KNOWLEDGE_STATUSES);
 
 function normalizeTags(value: unknown) {
   if (Array.isArray(value)) return value.map(String).map((tag) => tag.trim()).filter(Boolean);
@@ -31,6 +24,7 @@ function normalizeRow(row: Record<string, unknown>) {
     tags: Array.isArray(tags) ? tags.map(String) : [],
     sourceMetadata: parseJsonSafely<Record<string, unknown>>(String(row.source_metadata_json || '')) || {},
     is_pinned: Boolean(row.is_pinned),
+    attachmentCount: Number(row.attachment_count || 0),
   };
 }
 
@@ -40,7 +34,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
 
   const rows = await sql`
-    SELECT *
+    SELECT knowledge_items.*,
+      (
+        SELECT COUNT(*)
+        FROM attachments
+        WHERE attachments.company_id = knowledge_items.company_id
+          AND attachments.entity_type = 'knowledge_item'
+          AND attachments.entity_id = knowledge_items.id
+      ) AS attachment_count
     FROM knowledge_items
     WHERE id = ${id} AND company_id = ${auth.companyId}
     LIMIT 1
@@ -59,6 +60,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     SELECT id FROM knowledge_items WHERE id = ${id} AND company_id = ${auth.companyId} LIMIT 1
   `;
   if (!existing.length) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  if (body.title !== undefined && !String(body.title || '').trim()) {
+    return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+  }
 
   const itemType = body.itemType && KB_TYPES.has(body.itemType) ? body.itemType : null;
   const status = body.status && STATUSES.has(body.status) ? body.status : null;
@@ -87,6 +92,17 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const auth = await requirePortalOrRespond();
   if (isPortalResponse(auth)) return auth;
   const { id } = await params;
+  const attachments = await sql`
+    SELECT file_key FROM attachments
+    WHERE entity_type = 'knowledge_item' AND entity_id = ${id} AND company_id = ${auth.companyId}
+  `;
+  await sql`DELETE FROM attachments WHERE entity_type = 'knowledge_item' AND entity_id = ${id} AND company_id = ${auth.companyId}`;
+  for (const attachment of attachments) {
+    const key = String(attachment.file_key || '');
+    if (isLocalAttachmentKey(key)) {
+      await fs.unlink(localAttachmentPath(key)).catch(() => undefined);
+    }
+  }
   await sql`DELETE FROM knowledge_items WHERE id = ${id} AND company_id = ${auth.companyId}`;
   return NextResponse.json({ ok: true });
 }

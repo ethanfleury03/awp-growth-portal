@@ -53,6 +53,9 @@ function navItemIsActive(pathname: string, href: string) {
   if (href === '/app') {
     return pathname === '/app';
   }
+  if (href === '/crm') {
+    return pathname === '/crm' || pathname.startsWith('/crm/') || pathname.startsWith('/leads/');
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -157,7 +160,7 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
             </div>
           </div>
           <p className="mt-2 text-xs leading-5 text-slate-300">
-            Leads, automations, workflow status, reporting, and account activity in one shared portal.
+            CRM pipeline, automations, workflow status, reporting, and account activity in one shared portal.
           </p>
         </div>
       </div>

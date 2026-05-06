@@ -20,7 +20,7 @@ describe('admin validation', () => {
   });
 
   it('validates module keys', () => {
-    expect(isModuleKey('leads')).toBe(true);
+    expect(isModuleKey('crm')).toBe(true);
     expect(isModuleKey('definitely-not-real')).toBe(false);
   });
 

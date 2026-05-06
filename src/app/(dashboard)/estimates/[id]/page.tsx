@@ -775,23 +775,13 @@ export default function EstimateDetailPage() {
 
       <div className="text-xs text-gray-500 no-print pb-4 flex flex-wrap gap-x-4 gap-y-1">
         {e.lead_id ? (
-          <Link className="text-blue-600 hover:text-blue-700 hover:underline" href={`/leads/${e.lead_id}`}>
+          <Link className="text-blue-600 hover:text-blue-700 hover:underline" href={`/crm/leads/${e.lead_id}`}>
             Lead detail
           </Link>
         ) : null}
         {e.customer_id ? (
           <Link className="text-blue-600 hover:text-blue-700 hover:underline" href={`/customers/${e.customer_id}`}>
             Customer detail
-          </Link>
-        ) : null}
-        {e.converted_to_job_id ? (
-          <Link className="text-blue-600 hover:text-blue-700 hover:underline" href={`/jobs/${e.converted_to_job_id}`}>
-            Converted job
-          </Link>
-        ) : null}
-        {e.job_id ? (
-          <Link className="text-blue-600 hover:text-blue-700 hover:underline" href={`/jobs/${e.job_id}`}>
-            Linked job
           </Link>
         ) : null}
         {e.receptionist_call_id ? (

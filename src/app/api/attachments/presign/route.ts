@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { sql } from '@/lib/db';
-import { isPortalResponse } from '@/lib/auth/tenant';
-import { requireModuleOrRespond } from '@/lib/modules/access';
+import { isPortalResponse, requirePortalOrRespond } from '@/lib/auth/tenant';
 import { presignPutUrl, publicUrlFor, r2ConfigFromEnv } from '@/lib/attachments/r2';
 
 const ALLOWED_ENTITY_TYPES = new Set([
@@ -15,8 +14,20 @@ const ALLOWED_ENTITY_TYPES = new Set([
   'knowledge_item',
 ]);
 
+async function ensureEntityAccess(companyId: string, entityType: string, entityId: string) {
+  if (entityType === 'knowledge_item') {
+    const rows = await sql`
+      SELECT id FROM knowledge_items
+      WHERE id = ${entityId} AND company_id = ${companyId}
+      LIMIT 1
+    `;
+    return rows.length > 0;
+  }
+  return true;
+}
+
 export async function POST(request: Request) {
-  const auth = await requireModuleOrRespond('assets');
+  const auth = await requirePortalOrRespond('staff');
   if (isPortalResponse(auth)) return auth;
 
   const body = await request.json().catch(() => ({}));
@@ -32,6 +43,9 @@ export async function POST(request: Request) {
   }
   if (sizeBytes && sizeBytes > 50 * 1024 * 1024) {
     return NextResponse.json({ error: 'File too large (50MB max)' }, { status: 400 });
+  }
+  if (!(await ensureEntityAccess(auth.companyId, entityType, entityId))) {
+    return NextResponse.json({ error: 'Related record not found' }, { status: 404 });
   }
 
   const config = r2ConfigFromEnv();

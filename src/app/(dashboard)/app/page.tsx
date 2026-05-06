@@ -11,7 +11,7 @@ import {
   StatusBadge,
   opsButtonClass,
 } from '@/components/ops/ui';
-import { awpBusinessProfile, awpPipelineStages, pipelineLabel, sourceFromSlug } from '@/lib/awp/config';
+import { awpBusinessProfile, pipelineLabel, sourceFromSlug, sourceToSlug } from '@/lib/awp/config';
 import { formatCurrency, formatDateLabel, parseJsonSafely } from '@/lib/ops';
 import { BarChart3, CalendarClock, FileText, Mail, Megaphone, Sparkles, TrendingUp, Users } from 'lucide-react';
 
@@ -37,6 +37,13 @@ type GrowthRecord = {
   status: string;
   payload?: Record<string, unknown>;
   is_demo?: boolean;
+};
+
+type Bucket = {
+  id: string;
+  title: string;
+  color?: string | null;
+  position: number;
 };
 
 function getContext(lead: Lead) {
@@ -69,6 +76,7 @@ export default function Dashboard() {
   const [campaigns, setCampaigns] = useState<GrowthRecord[]>([]);
   const [seoTasks, setSeoTasks] = useState<GrowthRecord[]>([]);
   const [assets, setAssets] = useState<GrowthRecord[]>([]);
+  const [buckets, setBuckets] = useState<Bucket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -77,24 +85,27 @@ export default function Dashboard() {
     (async () => {
       try {
         setLoading(true);
-        const [leadsRes, campaignsRes, seoRes, assetsRes] = await Promise.all([
+        const [leadsRes, bucketsRes, campaignsRes, seoRes, assetsRes] = await Promise.all([
           fetch('/api/leads?limit=200', { cache: 'no-store' }),
+          fetch('/api/buckets', { cache: 'no-store' }),
           fetch('/api/growth-records?type=campaign', { cache: 'no-store' }),
           fetch('/api/growth-records?type=seo_task', { cache: 'no-store' }),
           fetch('/api/growth-records?type=asset', { cache: 'no-store' }),
         ]);
-        const [leadsJson, campaignsJson, seoJson, assetsJson] = await Promise.all([
+        const [leadsJson, bucketsJson, campaignsJson, seoJson, assetsJson] = await Promise.all([
           leadsRes.json(),
+          bucketsRes.json(),
           campaignsRes.json(),
           seoRes.json(),
           assetsRes.json(),
         ]);
 
-        const firstError = leadsJson.error || campaignsJson.error || seoJson.error || assetsJson.error;
+        const firstError = leadsJson.error || bucketsJson.error || campaignsJson.error || seoJson.error || assetsJson.error;
         if (firstError) throw new Error(firstError);
 
         if (!cancelled) {
           setLeads(leadsJson.leads || []);
+          setBuckets(bucketsJson.buckets || []);
           setCampaigns(campaignsJson.records || []);
           setSeoTasks(seoJson.records || []);
           setAssets(assetsJson.records || []);
@@ -135,11 +146,14 @@ export default function Dashboard() {
 
   const pipelineCounts = useMemo(
     () =>
-      awpPipelineStages.map((stage) => ({
-        ...stage,
-        count: leads.filter((lead) => lead.status === stage.value).length,
+      [...buckets].sort((a, b) => a.position - b.position).map((bucket) => ({
+        id: bucket.id,
+        value: sourceToSlug(bucket.title),
+        label: bucket.title,
+        color: bucket.color || '#2f6f53',
+        count: leads.filter((lead) => lead.status === sourceToSlug(bucket.title)).length,
       })),
-    [leads],
+    [buckets, leads],
   );
 
   const sourceCounts = useMemo(() => {
@@ -183,13 +197,9 @@ export default function Dashboard() {
             description={`${awpBusinessProfile.shortName} dashboard for cabin leads, partner outreach, sales assets, website growth, and monthly follow-up discipline.`}
             actions={
               <>
-                <Link href="/leads" className={opsButtonClass('secondary')}>
+                <Link href="/crm" className={opsButtonClass('primary')}>
                   <Users className="h-4 w-4" />
-                  Cabin Leads
-                </Link>
-                <Link href="/leads?view=pipeline" className={opsButtonClass('primary')}>
-                  <BarChart3 className="h-4 w-4" />
-                  Cabin Pipeline
+                  Cabin CRM
                 </Link>
               </>
             }
@@ -240,7 +250,7 @@ export default function Dashboard() {
                       return (
                         <tr key={lead.id} className="transition-colors hover:bg-[var(--ops-surface-subtle)]">
                           <td className="px-5 py-4">
-                            <Link href={`/leads/${lead.id}`} className="text-sm font-semibold text-[var(--ops-text)] hover:text-[var(--ops-brand)]">
+                            <Link href={`/crm/leads/${lead.id}`} className="text-sm font-semibold text-[var(--ops-text)] hover:text-[var(--ops-brand)]">
                               {lead.customer_name || 'Cabin lead'}
                             </Link>
                             <p className="mt-1 text-xs text-[var(--ops-muted)]">{lead.customer_phone || lead.customer_email || lead.location || 'No contact yet'}</p>
@@ -267,7 +277,7 @@ export default function Dashboard() {
               <ConsolePanel title="Pipeline Overview" description="A compact view of the Cabin Lead Pipeline stages.">
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {pipelineCounts.map((stage) => (
-                    <Link key={stage.value} href="/leads?view=pipeline" className="rounded-[22px] border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 transition-colors hover:bg-[var(--ops-surface-subtle)]">
+                    <Link key={stage.id} href="/crm" className="rounded-lg border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 transition-colors hover:bg-[var(--ops-surface-subtle)]">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <span className="h-3 w-3 rounded-full" style={{ backgroundColor: stage.color }} />
@@ -310,7 +320,7 @@ export default function Dashboard() {
                       </p>
                     ) : (
                       followUpsDue.map((lead) => (
-                        <Link key={lead.id} href={`/leads/${lead.id}`} className="block rounded-[22px] border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 hover:bg-[var(--ops-surface-subtle)]">
+                        <Link key={lead.id} href={`/crm/leads/${lead.id}`} className="block rounded-[22px] border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 hover:bg-[var(--ops-surface-subtle)]">
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="text-sm font-semibold text-[var(--ops-text)]">{lead.customer_name || lead.issue}</p>

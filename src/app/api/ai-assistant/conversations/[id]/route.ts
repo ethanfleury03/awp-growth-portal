@@ -4,6 +4,7 @@ import { sql } from '@/lib/db';
 import { parseJsonSafely } from '@/lib/ops';
 
 function normalizeMessage(row: Record<string, unknown>) {
+  const contextSnapshot = parseJsonSafely<Record<string, unknown>>(String(row.context_snapshot_json || '')) || null;
   return {
     id: String(row.id),
     role: String(row.role),
@@ -12,7 +13,10 @@ function normalizeMessage(row: Record<string, unknown>) {
     inputTokens: row.input_tokens,
     outputTokens: row.output_tokens,
     estimatedCostUsd: row.estimated_cost_usd,
-    contextSnapshot: parseJsonSafely<Record<string, unknown>>(String(row.context_snapshot_json || '')) || null,
+    contextSnapshot,
+    sources: Array.isArray(contextSnapshot?.sources) ? contextSnapshot.sources : [],
+    images: Array.isArray(contextSnapshot?.images) ? contextSnapshot.images : [],
+    responseMode: String(contextSnapshot?.responseMode || 'text'),
     createdAt: row.created_at,
   };
 }
@@ -70,4 +74,25 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     messages: messages.map(normalizeMessage),
     actionDrafts: drafts.map(normalizeDraft),
   });
+}
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requirePortalOrRespond();
+  if (isPortalResponse(auth)) return auth;
+  const { id } = await params;
+
+  const existing = await sql`
+    SELECT id
+    FROM ai_conversations
+    WHERE id = ${id} AND company_id = ${auth.companyId}
+    LIMIT 1
+  `;
+  if (!existing.length) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  await sql`
+    DELETE FROM ai_conversations
+    WHERE id = ${id} AND company_id = ${auth.companyId}
+  `;
+
+  return NextResponse.json({ ok: true });
 }

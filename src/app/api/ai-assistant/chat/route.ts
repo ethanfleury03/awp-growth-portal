@@ -3,6 +3,7 @@ import { isPortalResponse } from '@/lib/auth/tenant';
 import { requireModuleOrRespond } from '@/lib/modules/access';
 import { buildAwpAgentContext, buildSystemPrompt } from '@/lib/ai/context';
 import { createOpenRouterChatCompletion } from '@/lib/ai/openrouter';
+import { estimateAssistantCostUsd, IMAGE_ASSISTANT_MODEL_ID, normalizeAssistantModelId } from '@/lib/ai/models';
 import { sql } from '@/lib/db';
 
 type Draft = {
@@ -13,28 +14,49 @@ type Draft = {
   relatedRecordId?: string;
 };
 
-function parseAssistantContent(content: string): { reply: string; actionDrafts: Draft[] } {
+function parsedAssistantJson(value: string): { reply?: string; actionDrafts?: Draft[] } | null {
   try {
-    const parsed = JSON.parse(content) as { reply?: string; actionDrafts?: Draft[] };
-    return {
-      reply: parsed.reply || content,
-      actionDrafts: Array.isArray(parsed.actionDrafts) ? parsed.actionDrafts : [],
-    };
+    const parsed = JSON.parse(value) as { reply?: string; actionDrafts?: Draft[] };
+    if (typeof parsed.reply === 'string' || Array.isArray(parsed.actionDrafts)) return parsed;
   } catch {
-    const fenced = content.match(/```json\s*([\s\S]*?)```/i);
-    if (fenced?.[1]) {
-      try {
-        const parsed = JSON.parse(fenced[1]) as { reply?: string; actionDrafts?: Draft[] };
-        return {
-          reply: parsed.reply || content.replace(fenced[0], '').trim(),
-          actionDrafts: Array.isArray(parsed.actionDrafts) ? parsed.actionDrafts : [],
-        };
-      } catch {
-        /* fall through */
-      }
-    }
-    return { reply: content, actionDrafts: [] };
+    /* fall through */
   }
+  return null;
+}
+
+function parseAssistantContent(content: string): { reply: string; actionDrafts: Draft[] } {
+  const strict = parsedAssistantJson(content);
+  if (strict) {
+    return {
+      reply: strict.reply || content,
+      actionDrafts: Array.isArray(strict.actionDrafts) ? strict.actionDrafts : [],
+    };
+  }
+
+  const fenced = content.match(/```json\s*([\s\S]*?)```/i);
+  if (fenced?.[1]) {
+    const parsed = parsedAssistantJson(fenced[1]);
+    if (parsed) {
+      return {
+        reply: content.replace(fenced[0], '').trim() || parsed.reply || '',
+        actionDrafts: Array.isArray(parsed.actionDrafts) ? parsed.actionDrafts : [],
+      };
+    }
+  }
+
+  const replyJsonIndex = content.lastIndexOf('{"reply"');
+  if (replyJsonIndex >= 0) {
+    const jsonCandidate = content.slice(replyJsonIndex).trim();
+    const parsed = parsedAssistantJson(jsonCandidate);
+    if (parsed) {
+      return {
+        reply: content.slice(0, replyJsonIndex).trim() || parsed.reply || '',
+        actionDrafts: Array.isArray(parsed.actionDrafts) ? parsed.actionDrafts : [],
+      };
+    }
+  }
+
+  return { reply: content, actionDrafts: [] };
 }
 
 async function ensureConversation(companyId: string, userId: string, conversationId: string | null, model: string, prompt: string) {
@@ -62,7 +84,8 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const prompt = String(body.message || '').trim();
-  const model = String(body.model || 'openrouter/auto');
+  const imageMode = Boolean(body.imageMode);
+  const model = imageMode ? IMAGE_ASSISTANT_MODEL_ID : normalizeAssistantModelId(body.model);
   const conversationId = body.conversationId ? String(body.conversationId) : null;
 
   if (!prompt) return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -75,8 +98,7 @@ export async function POST(request: Request) {
       SELECT role, content
       FROM ai_messages
       WHERE conversation_id = ${activeConversationId} AND company_id = ${auth.companyId}
-      ORDER BY created_at DESC
-      LIMIT 10
+      ORDER BY created_at ASC
     `;
 
     const userMessage = await sql`
@@ -88,20 +110,28 @@ export async function POST(request: Request) {
     const completion = await createOpenRouterChatCompletion({
       model,
       messages: [
-        { role: 'system', content: buildSystemPrompt(context) },
+        { role: 'system', content: buildSystemPrompt(context, { mode: imageMode ? 'image' : 'text' }) },
         ...previous
-          .reverse()
           .map((row) => ({
             role: String(row.role) === 'assistant' ? 'assistant' as const : 'user' as const,
             content: String(row.content || ''),
           })),
         { role: 'user', content: prompt },
       ],
+      ...(imageMode ? {
+        modalities: ['image', 'text'],
+        imageConfig: { aspect_ratio: '1:1', image_size: '1K' },
+      } : {}),
     });
 
-    const raw = completion.choices?.[0]?.message?.content || 'I could not generate a response.';
-    const parsed = parseAssistantContent(raw);
+    const assistantPayload = completion.choices?.[0]?.message;
+    const raw = assistantPayload?.content || (imageMode ? 'Generated image.' : 'I could not generate a response.');
+    const images = (assistantPayload?.images || [])
+      .map((image) => image.image_url?.url || image.imageUrl?.url || '')
+      .filter(Boolean);
+    const parsed = imageMode ? { reply: raw, actionDrafts: [] } : parseAssistantContent(raw);
     const usage = completion.usage || {};
+    const estimatedCostUsd = estimateAssistantCostUsd(model, usage.prompt_tokens, usage.completion_tokens);
 
     const assistantMessage = await sql`
       INSERT INTO ai_messages (
@@ -112,6 +142,7 @@ export async function POST(request: Request) {
         model,
         input_tokens,
         output_tokens,
+        estimated_cost_usd,
         context_snapshot_json
       )
       VALUES (
@@ -122,10 +153,19 @@ export async function POST(request: Request) {
         ${model},
         ${usage.prompt_tokens ?? null},
         ${usage.completion_tokens ?? null},
+        ${estimatedCostUsd ? estimatedCostUsd.toFixed(8) : null},
         ${JSON.stringify({
           knowledgeIds: context.knowledge.map((item) => item.id),
-          leadCount: context.leads.length,
-          growthCount: context.growth.length,
+          summary: context.summary,
+          pipeline: context.pipeline,
+          sources: context.sources,
+          images,
+          responseMode: imageMode ? 'image' : 'text',
+          leadCount: context.summary.counts.leads,
+          customerCount: context.summary.counts.customers,
+          estimateCount: context.summary.counts.estimates,
+          invoiceCount: context.summary.counts.invoices,
+          growthCount: context.summary.counts.growthRecords,
         })}
       )
       RETURNING id
@@ -176,6 +216,12 @@ export async function POST(request: Request) {
         role: 'assistant',
         content: parsed.reply,
         model,
+        inputTokens: usage.prompt_tokens ?? null,
+        outputTokens: usage.completion_tokens ?? null,
+        estimatedCostUsd: estimatedCostUsd ? estimatedCostUsd.toFixed(8) : null,
+        sources: context.sources,
+        images,
+        responseMode: imageMode ? 'image' : 'text',
       },
       actionDrafts: actionDrafts.map((draft) => ({
         id: String(draft.id),
@@ -185,9 +231,18 @@ export async function POST(request: Request) {
         payload: draft.payload_json ? JSON.parse(String(draft.payload_json)) : {},
       })),
       context: {
+        summary: context.summary,
+        pipeline: context.pipeline,
         knowledge: context.knowledge,
-        leadCount: context.leads.length,
-        growthCount: context.growth.length,
+        sources: context.sources,
+        leadCount: context.summary.counts.leads,
+        customerCount: context.summary.counts.customers,
+        estimateCount: context.summary.counts.estimates,
+        invoiceCount: context.summary.counts.invoices,
+        growthCount: context.summary.counts.growthRecords,
+        knowledgeCount: context.summary.counts.knowledgeItems,
+        reusableArchitectureCount: context.summary.counts.reusableArchitecture,
+        attachmentCount: context.summary.counts.attachments,
       },
     });
   } catch (error) {

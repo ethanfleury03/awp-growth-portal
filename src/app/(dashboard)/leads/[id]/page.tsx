@@ -30,7 +30,6 @@ export default function LeadDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [lead, setLead] = useState<Row | null>(null);
   const [estimates, setEstimates] = useState<Row[]>([]);
-  const [jobs, setJobs] = useState<Row[]>([]);
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +43,6 @@ export default function LeadDetailPage() {
         if (!cancelled) {
           setLead(j.lead as Row);
           setEstimates((j.estimates as Row[]) || []);
-          setJobs((j.jobs as Row[]) || []);
         }
       } catch (e) {
         if (!cancelled) setErr(e instanceof Error ? e.message : 'Error');
@@ -71,8 +69,8 @@ export default function LeadDetailPage() {
         <div className="rounded-[24px] border border-[var(--ops-danger-soft-border)] bg-[var(--ops-danger-soft)] px-4 py-3 text-sm text-[var(--ops-danger-ink)]">
           {err || 'Lead not found'}
         </div>
-        <Link href="/leads" className="mt-4 text-sm font-semibold text-[var(--ops-brand)] hover:underline">
-          Back to leads
+        <Link href="/crm" className="mt-4 text-sm font-semibold text-[var(--ops-brand)] hover:underline">
+          Back to CRM
         </Link>
       </div>
     );
@@ -85,9 +83,9 @@ export default function LeadDetailPage() {
     <div className="flex min-h-0 flex-1 flex-col bg-[var(--ops-bg)]">
       <main className="min-h-0 flex-1 overflow-auto px-4 py-6 sm:px-6 xl:px-8">
         <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-6">
-          <Link href="/leads" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ops-brand)] hover:underline">
+          <Link href="/crm" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ops-brand)] hover:underline">
             <ArrowLeft className="h-4 w-4" />
-            Cabin Leads
+            Cabin CRM
           </Link>
 
           <AppPageHeader
@@ -97,8 +95,8 @@ export default function LeadDetailPage() {
             description={String(lead.issue || 'Cabin project opportunity')}
             actions={
               <>
-                <Link href="/leads" className={opsButtonClass('secondary')}>
-                  Edit in Leads
+                <Link href="/crm" className={opsButtonClass('secondary')}>
+                  Back to CRM
                 </Link>
                 <Link href="/ai-assistant" className={opsButtonClass('primary')}>
                   <Bot className="h-4 w-4" />
@@ -212,22 +210,6 @@ export default function LeadDetailPage() {
                 </div>
               </ConsolePanel>
 
-              <ConsolePanel title="Related Jobs" description="Operational records created from this lead.">
-                {jobs.length === 0 ? (
-                  <p className="rounded-[20px] border border-dashed border-[var(--ops-border-strong)] bg-[var(--ops-surface-subtle)] px-4 py-6 text-center text-sm text-[var(--ops-muted)]">
-                    No jobs from this lead.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {jobs.map((job) => (
-                      <Link key={String(job.id)} href={`/jobs/${job.id}`} className="block rounded-[20px] border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 hover:bg-[var(--ops-surface-subtle)]">
-                        <p className="text-sm font-semibold text-[var(--ops-text)]">{String(job.type || 'Job')}</p>
-                        <p className="mt-1 text-xs text-[var(--ops-muted)]">{String(job.status || '')}</p>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </ConsolePanel>
             </div>
           </div>
         </div>

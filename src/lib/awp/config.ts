@@ -51,6 +51,61 @@ export const awpPipelineStages = [
   { value: 'nurture', label: 'Nurture', color: '#475569' },
 ] as const;
 
+export const awpReusableArchitectureDefaults = [
+  {
+    key: 'business-profile-options-prompts',
+    title: 'Business profile, options, prompts',
+    source: 'src/lib/awp/config.ts',
+    purpose: 'One place for AWP labels, pipeline stages, lead options, module fields, defaults, and prompts.',
+    body:
+      'Use this artifact as the source of truth for company labels, core offer, service region, differentiators, lead qualification options, and prompt guardrails. If a claim is not represented here or in another verified artifact, avoid inventing it.',
+    aiUse:
+      'Prefer this artifact when deciding how to describe the company, its offer, its region, and the allowed tone of generated content.',
+    owner: 'Portal configuration',
+    tags: ['business profile', 'prompts', 'guardrails'],
+    confidence: 'Verified',
+  },
+  {
+    key: 'demo-bootstrap',
+    title: 'Demo bootstrap',
+    source: 'src/lib/awp/seed.ts',
+    purpose: 'Seeds AWP demo leads, stages, campaigns, lists, assets, SEO tasks, projects, prompts, and architecture artifacts without duplicates.',
+    body:
+      'Demo seed data should be treated as scaffolding. Real client-entered CRM, estimate, marketing, and knowledge records should take priority over demo data whenever there is a conflict.',
+    aiUse:
+      'Use this artifact to identify which records are sample defaults and avoid treating seeded examples as guaranteed real customer facts.',
+    owner: 'Portal configuration',
+    tags: ['seed data', 'demo data', 'defaults'],
+    confidence: 'Verified',
+  },
+  {
+    key: 'growth-modules',
+    title: 'Growth modules',
+    source: 'growth_records table',
+    purpose: 'Generic record storage for campaigns, lists, assets, SEO, projects, reports, and AI templates.',
+    body:
+      'Growth records are flexible client workspace artifacts. The AI assistant can reference them for marketing work, outreach planning, SEO tasks, reports, and campaign status, but should propose drafts instead of mutating data directly.',
+    aiUse:
+      'Use this artifact when deciding where marketing, outreach, SEO, report, and template records belong.',
+    owner: 'Growth workspace',
+    tags: ['growth records', 'marketing', 'outreach', 'seo'],
+    confidence: 'Verified',
+  },
+  {
+    key: 'lead-qualification-fields',
+    title: 'Lead qualification fields',
+    source: 'leads.lead_context_json',
+    purpose: 'Stores cabin-specific qualification data while preserving the reusable lead model.',
+    body:
+      'Cabin lead qualification should live in structured lead context where possible: lead type, land ownership, site access, utilities, intended use, budget, timeline, interest level, notes, owner, and AI summary.',
+    aiUse:
+      'Use this artifact when qualifying leads, summarizing opportunities, and deciding what follow-up questions are missing.',
+    owner: 'CRM workspace',
+    tags: ['crm', 'lead qualification', 'structured context'],
+    confidence: 'Verified',
+  },
+] as const;
+
 export const awpLeadTypeOptions = [
   'Homeowner',
   'Landowner',
@@ -901,7 +956,7 @@ export const awpDefaultGrowthRecords: Record<GrowthRecordType, {
 
 export function pipelineLabel(value?: string | null) {
   const stage = awpPipelineStages.find((item) => item.value === value);
-  return stage?.label || 'New Lead';
+  return stage?.label || sourceFromSlug(value) || 'New Lead';
 }
 
 export function sourceToSlug(source?: string | null) {

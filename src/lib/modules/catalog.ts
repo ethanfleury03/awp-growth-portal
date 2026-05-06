@@ -40,22 +40,13 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     requiredRole: 'viewer',
   },
   {
-    key: 'leads',
-    flagKey: 'module.leads',
-    label: 'Leads',
-    route: '/leads',
-    description: 'Lead intake, pipeline, and lead detail screens.',
-    defaultEnabled: true,
-    requiredRole: 'viewer',
-  },
-  {
     key: 'crm',
     flagKey: 'module.crm',
     label: 'CRM',
     route: '/crm',
-    description: 'CRM workspace and service catalog.',
+    description: 'Cabin buyer pipeline, opportunity details, and service catalog.',
     defaultEnabled: true,
-    requiredRole: 'staff',
+    requiredRole: 'viewer',
   },
   {
     key: 'customers',
@@ -65,16 +56,6 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     description: 'Customer records and customer history.',
     defaultEnabled: true,
     requiredRole: 'staff',
-  },
-  {
-    key: 'jobs',
-    flagKey: 'module.jobs',
-    label: 'Jobs',
-    route: '/jobs',
-    description: 'Job scheduling, status, and operations.',
-    defaultEnabled: true,
-    requiredRole: 'staff',
-    dependencies: ['customers'],
   },
   {
     key: 'estimates',
@@ -104,7 +85,7 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     description: 'Dispatch board and field operations.',
     defaultEnabled: false,
     requiredRole: 'dispatcher',
-    dependencies: ['jobs'],
+    dependencies: ['customers'],
   },
   {
     key: 'calendar',
@@ -114,7 +95,7 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     description: 'Calendar view for scheduled work.',
     defaultEnabled: false,
     requiredRole: 'staff',
-    dependencies: ['jobs'],
+    dependencies: ['customers'],
   },
   {
     key: 'receptionist',
@@ -124,7 +105,7 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     description: 'Call intake, Retell flows, and call review.',
     defaultEnabled: false,
     requiredRole: 'admin',
-    dependencies: ['leads'],
+    dependencies: ['crm'],
   },
   {
     key: 'marketing',
@@ -143,7 +124,7 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     description: 'Outbound campaigns and follow-up workflows.',
     defaultEnabled: true,
     requiredRole: 'staff',
-    dependencies: ['leads'],
+    dependencies: ['crm'],
   },
   {
     key: 'ai-assistant',
@@ -216,4 +197,3 @@ export function expandModuleDependencies(keys: Iterable<ModuleKey>): ModuleKey[]
   }
   return [...enabled];
 }
-

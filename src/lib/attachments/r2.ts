@@ -7,6 +7,7 @@
  */
 
 import crypto from 'crypto';
+import path from 'path';
 
 export interface R2Config {
   accountId: string;
@@ -127,4 +128,25 @@ export function publicUrlFor(config: R2Config, key: string): string {
     return `${config.publicBaseUrl.replace(/\/$/, '')}/${key}`;
   }
   return `https://${config.accountId}.r2.cloudflarestorage.com/${config.bucket}/${key}`;
+}
+
+export function isLocalAttachmentKey(key: string): boolean {
+  return key.startsWith('local/');
+}
+
+export function localAttachmentRoot(): string {
+  return path.resolve(process.cwd(), 'data', 'uploads');
+}
+
+export function localAttachmentPath(key: string): string {
+  if (!isLocalAttachmentKey(key)) {
+    throw new Error('Not a local attachment key');
+  }
+  const root = localAttachmentRoot();
+  const relative = key.replace(/^local\//, '');
+  const resolved = path.resolve(root, relative);
+  if (resolved !== root && !resolved.startsWith(`${root}${path.sep}`)) {
+    throw new Error('Invalid attachment path');
+  }
+  return resolved;
 }

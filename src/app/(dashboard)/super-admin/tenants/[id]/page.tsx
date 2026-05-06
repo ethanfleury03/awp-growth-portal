@@ -128,7 +128,7 @@ const roles = ['admin', 'dispatcher', 'staff', 'tech', 'viewer'];
 const entityTypes = ['lead', 'customer', 'job', 'estimate'];
 const fieldTypes = ['text', 'textarea', 'number', 'date', 'select', 'boolean', 'email', 'phone', 'url'];
 const moduleGroups = [
-  { label: 'Core CRM', keys: ['dashboard', 'leads', 'crm', 'customers', 'jobs', 'estimates', 'invoices'] },
+  { label: 'Core CRM', keys: ['dashboard', 'crm', 'customers', 'estimates', 'invoices'] },
   { label: 'Operations', keys: ['dispatch', 'calendar', 'assets'] },
   { label: 'Growth and AI', keys: ['receptionist', 'marketing', 'outreach', 'ai-assistant'] },
   { label: 'Reporting and Settings', keys: ['reports', 'settings'] },

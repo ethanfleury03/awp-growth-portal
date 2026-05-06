@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       id: String(r.id),
       title: String(r.customer_name || 'Lead'),
       subtitle: [r.issue, r.phone].filter(Boolean).join(' • '),
-      href: `/leads/${r.id}`,
+      href: `/crm/leads/${r.id}`,
     })),
     ...customers.map((r: Record<string, unknown>) => ({
       type: 'customer',

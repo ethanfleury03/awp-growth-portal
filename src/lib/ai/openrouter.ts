@@ -150,6 +150,8 @@ export async function createOpenRouterChatCompletion(input: {
   model: string;
   messages: { role: 'system' | 'user' | 'assistant'; content: string }[];
   temperature?: number;
+  modalities?: ('text' | 'image')[];
+  imageConfig?: Record<string, unknown>;
 }) {
   if (!process.env.OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY is not configured. Add it to your environment to enable live AI chat.');
@@ -162,6 +164,8 @@ export async function createOpenRouterChatCompletion(input: {
       model: input.model,
       messages: input.messages,
       temperature: input.temperature ?? 0.3,
+      ...(input.modalities ? { modalities: input.modalities } : {}),
+      ...(input.imageConfig ? { image_config: input.imageConfig } : {}),
     }),
   });
   const json = await response.json();
@@ -169,7 +173,12 @@ export async function createOpenRouterChatCompletion(input: {
     throw new Error(json.error?.message || json.error || 'OpenRouter chat request failed');
   }
   return json as {
-    choices?: { message?: { content?: string } }[];
+    choices?: {
+      message?: {
+        content?: string;
+        images?: { type?: string; image_url?: { url?: string }; imageUrl?: { url?: string } }[];
+      };
+    }[];
     usage?: { prompt_tokens?: number; completion_tokens?: number };
   };
 }

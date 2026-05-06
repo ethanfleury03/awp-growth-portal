@@ -3,6 +3,7 @@ import {
   awpBusinessProfile,
   awpDefaultGrowthRecords,
   awpPipelineStages,
+  awpReusableArchitectureDefaults,
   sourceToSlug,
   type GrowthRecordType,
 } from '@/lib/awp/config';
@@ -198,26 +199,19 @@ async function ensureAwpCompanyProfile(companyId: string) {
 }
 
 async function ensureAwpPipeline(companyId: string) {
+  const existingBuckets = await sql`
+    SELECT id FROM buckets
+    WHERE company_id = ${companyId}
+    LIMIT 1
+  `;
+  if (existingBuckets.length > 0) return;
+
   for (const [index, stage] of awpPipelineStages.entries()) {
     const position = index + 1;
-    const existing = await sql`
-      SELECT id FROM buckets
-      WHERE company_id = ${companyId} AND position = ${position}
-      LIMIT 1
+    await sql`
+      INSERT INTO buckets (company_id, title, color, position)
+      VALUES (${companyId}, ${stage.label}, ${stage.color}, ${position})
     `;
-
-    if (existing.length > 0) {
-      await sql`
-        UPDATE buckets
-        SET title = ${stage.label}, color = ${stage.color}, updated_at = datetime('now')
-        WHERE id = ${existing[0].id}
-      `;
-    } else {
-      await sql`
-        INSERT INTO buckets (company_id, title, color, position)
-        VALUES (${companyId}, ${stage.label}, ${stage.color}, ${position})
-      `;
-    }
   }
 }
 
@@ -352,11 +346,55 @@ async function ensureGrowthDefaults(companyId: string) {
   }
 }
 
+async function ensureReusableArchitectureDefaults(companyId: string) {
+  const anyExisting = await sql`
+    SELECT id FROM knowledge_items
+    WHERE company_id = ${companyId}
+      AND item_type = 'Reusable Architecture'
+    LIMIT 1
+  `;
+  if (anyExisting.length > 0) return;
+
+  for (const artifact of awpReusableArchitectureDefaults) {
+    await sql`
+      INSERT INTO knowledge_items (
+        company_id,
+        title,
+        item_type,
+        status,
+        body,
+        url,
+        tags_json,
+        source_metadata_json,
+        is_pinned
+      ) VALUES (
+        ${companyId},
+        ${artifact.title},
+        ${'Reusable Architecture'},
+        ${'Active'},
+        ${artifact.body},
+        ${artifact.source},
+        ${JSON.stringify(artifact.tags)},
+        ${JSON.stringify({
+          key: artifact.key,
+          source: artifact.source,
+          purpose: artifact.purpose,
+          confidence: artifact.confidence,
+          aiUse: artifact.aiUse,
+          owner: artifact.owner,
+        })},
+        ${true}
+      )
+    `;
+  }
+}
+
 async function runAwpDemoSeed(companyId: string, branchId?: string | null) {
   await ensureAwpCompanyProfile(companyId);
   await ensureAwpPipeline(companyId);
   await ensureAwpLeads(companyId, branchId);
   await ensureGrowthDefaults(companyId);
+  await ensureReusableArchitectureDefaults(companyId);
 }
 
 export async function ensureAwpDemoData(companyId: string, branchId?: string | null) {
