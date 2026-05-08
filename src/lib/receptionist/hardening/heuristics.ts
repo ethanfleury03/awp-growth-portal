@@ -63,10 +63,6 @@ export function parseBookingRulesExtended(json: string | null | undefined): Book
   }
 }
 
-function normalizeIssueText(s: string) {
-  return s.trim().toLowerCase().replace(/\s+/g, ' ');
-}
-
 /**
  * Heuristic: likely mis-transcription or useless label (e.g. SyncLeague).
  */
@@ -80,7 +76,6 @@ export function detectSuspiciousIssueDescription(issue: string | null | undefine
     return { suspicious: true, reasons };
   }
   const t = issue.trim();
-  const n = normalizeIssueText(t);
   if (t.length < 6) {
     reasons.push('too_short');
   }

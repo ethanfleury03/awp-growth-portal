@@ -108,24 +108,12 @@ export async function recordUnassignedPortalUser({
 }) {
   const normalizedEmail = email.trim().toLowerCase();
   if (!normalizedEmail) return;
-  const existing = await sql`
-    SELECT email FROM unassigned_portal_users
-    WHERE email = ${normalizedEmail}
-    LIMIT 1
-  `;
-  if (existing[0]) {
-    await sql`
-      UPDATE unassigned_portal_users
-      SET
-        clerk_user_id = COALESCE(${clerkUserId || null}, clerk_user_id),
-        name = COALESCE(${name || null}, name),
-        last_seen_at = datetime('now')
-      WHERE email = ${normalizedEmail}
-    `;
-    return;
-  }
   await sql`
     INSERT INTO unassigned_portal_users (email, clerk_user_id, name, metadata_json)
-    VALUES (${normalizedEmail}, ${clerkUserId}, ${name}, ${JSON.stringify({ source: 'portal_auth' })})
+    VALUES (${normalizedEmail}, ${clerkUserId || null}, ${name || null}, ${JSON.stringify({ source: 'portal_auth' })})
+    ON CONFLICT (email) DO UPDATE SET
+      clerk_user_id = COALESCE(EXCLUDED.clerk_user_id, unassigned_portal_users.clerk_user_id),
+      name = COALESCE(EXCLUDED.name, unassigned_portal_users.name),
+      last_seen_at = datetime('now')
   `;
 }

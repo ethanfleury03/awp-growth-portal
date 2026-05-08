@@ -129,9 +129,11 @@ Respond in JSON with action items.`;
   }
 }
 
-export default {
+const openClawClient = {
   sendToAgent,
   createAgentSession,
   processLeadWithAI,
   handleIncomingCall
 };
+
+export default openClawClient;

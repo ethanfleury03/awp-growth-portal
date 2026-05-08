@@ -24,7 +24,6 @@ describe('clerk sync', () => {
   it('records unknown Clerk users as unassigned instead of assigning a company', async () => {
     sqlMock
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
     const result = await syncClerkUser({
@@ -36,9 +35,10 @@ describe('clerk sync', () => {
     });
 
     expect(result).toEqual({ ok: true, unassigned: true, email: 'new@example.com' });
-    expect(sqlMock).toHaveBeenCalledTimes(3);
+    expect(sqlMock).toHaveBeenCalledTimes(2);
     const allSql = sqlMock.mock.calls.map((call) => call[0].join(' ')).join(' ');
     expect(allSql).toContain('unassigned_portal_users');
+    expect(allSql).toContain('ON CONFLICT (email) DO UPDATE');
     expect(allSql).not.toContain('ORDER BY datetime(created_at) ASC LIMIT 1');
   });
 

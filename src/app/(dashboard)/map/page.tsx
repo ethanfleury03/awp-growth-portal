@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Bell, Layers, Filter, Phone, MapPin, Calendar, User, X, Navigation } from 'lucide-react';
+import { Search, Bell } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 type LeafletModule = typeof import('leaflet');
@@ -73,42 +73,56 @@ const createIcon = (leaflet: LeafletModule, color: string) => {
 
 const statusColors: Record<string, string> = {
   new: '#3b82f6',
+  new_lead: '#2563eb',
+  contacted: '#0ea5e9',
   qualified: '#8b5cf6',
+  planning_call_scheduled: '#7c3aed',
+  site_details_needed: '#d97706',
+  design_layout_discussion: '#db2777',
+  estimate_needed: '#ea580c',
   quoted: '#eab308',
+  proposal_sent: '#ca8a04',
+  follow_up_needed: '#dc2626',
   booked: '#f97316',
   in_progress: '#f59e0b',
   completed: '#22c55e',
+  won: '#15803d',
   lost: '#6b7280',
+  nurture: '#475569',
 };
 
 const statusLabels: Record<string, string> = {
   new: 'New Lead',
+  new_lead: 'New Lead',
+  contacted: 'Contacted',
   qualified: 'Qualified',
+  planning_call_scheduled: 'Planning Call Scheduled',
+  site_details_needed: 'Site Details Needed',
+  design_layout_discussion: 'Design / Layout Discussion',
+  estimate_needed: 'Estimate Needed',
   quoted: 'Quoted',
+  proposal_sent: 'Proposal Sent',
+  follow_up_needed: 'Follow-Up Needed',
   booked: 'Booked',
   in_progress: 'In Progress',
   completed: 'Completed',
+  won: 'Won',
   lost: 'Lost',
+  nurture: 'Nurture',
 };
 
 
 
-// Sample data with NYC coordinates
+// Cabin CRM fallback data for local map demos when the authenticated API is unavailable.
 const sampleLeads: MapLead[] = [
-  { id: '1', customerName: 'Robert S.', customerPhone: '(555) 123-4567', location: 'Brooklyn, NY', service: 'Drain Cleaning', status: 'new', source: 'website', date: 'Feb 23', lat: 40.6782, lng: -73.9442 },
-  { id: '2', customerName: 'Jennifer L.', customerPhone: '(555) 456-7890', location: 'Bronx, NY', service: 'Pipe Installation', status: 'qualified', source: 'angi', date: 'Feb 20', lat: 40.8448, lng: -73.8648 },
-  { id: '3', customerName: 'Mike T.', customerPhone: '(555) 345-6789', location: 'Manhattan, NY', service: 'Leak Repair', status: 'quoted', source: 'thumbtack', date: 'Feb 21', lat: 40.7831, lng: -73.9712 },
-  { id: '4', customerName: 'Sarah M.', customerPhone: '(555) 234-5678', location: 'Queens, NY', service: 'Water Heater', status: 'booked', source: 'phone', date: 'Feb 22', lat: 40.7282, lng: -73.7949 },
-  { id: '5', customerName: 'David B.', customerPhone: '(555) 567-8901', location: 'Brooklyn, NY', service: 'Water Heater', status: 'in_progress', source: 'website', date: 'Feb 22', lat: 40.6501, lng: -73.9496 },
-  { id: '6', customerName: 'Lisa K.', customerPhone: '(555) 678-9012', location: 'Queens, NY', service: 'Toilet Repair', status: 'completed', source: 'referral', date: 'Feb 19', lat: 40.7614, lng: -73.8302 },
-  { id: '7', customerName: 'Tom H.', customerPhone: '(555) 789-0123', location: 'Manhattan, NY', service: 'Faucet Repair', status: 'completed', source: 'google', date: 'Feb 18', lat: 40.7580, lng: -73.9855 },
-  { id: '8', customerName: 'Emma W.', customerPhone: '(555) 111-2222', location: 'Brooklyn, NY', service: 'Sump Pump', status: 'new', source: 'website', date: 'Feb 24', lat: 40.6892, lng: -73.9857 },
-  { id: '9', customerName: 'James K.', customerPhone: '(555) 222-3333', location: 'Bronx, NY', service: 'Boiler Repair', status: 'quoted', source: 'phone', date: 'Feb 23', lat: 40.9176, lng: -73.8549 },
-  { id: '10', customerName: 'Maria G.', customerPhone: '(555) 333-4444', location: 'Staten Island, NY', service: 'Gas Line', status: 'booked', source: 'angi', date: 'Feb 24', lat: 40.5795, lng: -74.1502 },
+  { id: '1', customerName: 'Robert S.', customerPhone: '(555) 123-4567', location: 'Saranac Lake, NY', service: 'Four-season cabin inquiry', status: 'new_lead', source: 'website', date: 'Feb 23', lat: 44.3295, lng: -74.1313 },
+  { id: '2', customerName: 'Jennifer L.', customerPhone: '(555) 456-7890', location: 'Lake Placid, NY', service: 'Guest house planning call', status: 'qualified', source: 'referral', date: 'Feb 20', lat: 44.2795, lng: -73.9799 },
+  { id: '3', customerName: 'Pine Ridge Campground', customerPhone: '(555) 345-6789', location: 'Tupper Lake, NY', service: 'Campground unit expansion', status: 'proposal_sent', source: 'outreach', date: 'Feb 21', lat: 44.2239, lng: -74.4641 },
+  { id: '4', customerName: 'Sarah M.', customerPhone: '(555) 234-5678', location: 'Keene, NY', service: 'Site details needed', status: 'site_details_needed', source: 'phone', date: 'Feb 22', lat: 44.2564, lng: -73.7912 },
 ];
 
 // Simple MapBounds - just return null for now
-function MapBounds({ leads }: { leads: MapLead[] }) {
+function MapBounds() {
   return null;
 }
 
@@ -131,12 +145,13 @@ const geocodeAddress = async (address: string): Promise<{ lat: number; lng: numb
 
 // Default NYC coordinates for common areas
 const defaultCoords: Record<string, { lat: number; lng: number }> = {
-  'brooklyn': { lat: 40.6782, lng: -73.9442 },
-  'manhattan': { lat: 40.7831, lng: -73.9712 },
-  'queens': { lat: 40.7282, lng: -73.7949 },
-  'bronx': { lat: 40.8448, lng: -73.8648 },
-  'staten island': { lat: 40.5795, lng: -74.1502 },
-  'new york': { lat: 40.7128, lng: -74.0060 },
+  'saranac lake': { lat: 44.3295, lng: -74.1313 },
+  'lake placid': { lat: 44.2795, lng: -73.9799 },
+  'tupper lake': { lat: 44.2239, lng: -74.4641 },
+  'keene': { lat: 44.2564, lng: -73.7912 },
+  'adirondack': { lat: 44.1126, lng: -74.1561 },
+  'upstate new york': { lat: 43.2994, lng: -74.2179 },
+  'new york': { lat: 43.2994, lng: -74.2179 },
 };
 
 const getDefaultCoords = (location: string): { lat: number; lng: number } | null => {
@@ -247,13 +262,13 @@ export default function MapPage() {
   // Stats
   const stats = {
     total: leads.length,
-    new: leads.filter(l => l.status === 'new').length,
-    inProgress: leads.filter(l => l.status === 'in_progress' || l.status === 'booked').length,
-    completed: leads.filter(l => l.status === 'completed').length,
+    new: leads.filter(l => l.status === 'new' || l.status === 'new_lead').length,
+    inProgress: leads.filter(l => ['contacted', 'qualified', 'planning_call_scheduled', 'site_details_needed', 'design_layout_discussion', 'estimate_needed', 'booked', 'in_progress'].includes(l.status)).length,
+    completed: leads.filter(l => l.status === 'completed' || l.status === 'won').length,
   };
 
-  // NYC center
-  const center: [number, number] = [40.7128, -74.0060];
+  // Adirondack region center
+  const center: [number, number] = [44.2795, -74.1313];
 
   if (!isClient) {
     return (
@@ -272,8 +287,8 @@ export default function MapPage() {
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">📍 Service Map</h1>
-            <p className="text-gray-500 text-sm">Visualize all your jobs on a map</p>
+            <h1 className="text-2xl font-bold text-gray-900">Service Map</h1>
+            <p className="text-gray-500 text-sm">Visualize cabin opportunities and site locations</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -292,12 +307,12 @@ export default function MapPage() {
               className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Status</option>
-              <option value="new">New</option>
+              <option value="new_lead">New Lead</option>
+              <option value="contacted">Contacted</option>
               <option value="qualified">Qualified</option>
-              <option value="quoted">Quoted</option>
-              <option value="booked">Booked</option>
-              <option value="in_progress">In Progress</option>
-              <option value="completed">Completed</option>
+              <option value="proposal_sent">Proposal Sent</option>
+              <option value="follow_up_needed">Follow-Up Needed</option>
+              <option value="won">Won</option>
             </select>
             <button className="p-2 hover:bg-gray-100 rounded-xl relative">
               <Bell className="w-5 h-5 text-gray-600" />
@@ -328,6 +343,11 @@ export default function MapPage() {
 
         {/* Map Container */}
         <div className="flex-1 relative">
+          {loading ? (
+            <div className="absolute inset-x-0 top-0 z-[1000] bg-white/90 px-4 py-2 text-center text-sm font-medium text-gray-600 shadow-sm">
+              Loading cabin locations...
+            </div>
+          ) : null}
           <MapContainer 
             center={center} 
             zoom={11} 
@@ -338,7 +358,7 @@ export default function MapPage() {
               attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <MapBounds leads={filteredLeads} />
+            <MapBounds />
             
             {filteredLeads.map(lead => (
               <Marker 
@@ -360,15 +380,15 @@ export default function MapPage() {
                     <p className="text-sm text-blue-600 font-medium mb-2">{lead.service}</p>
                     <div className="space-y-1 text-xs text-gray-600">
                       <div className="flex items-center gap-1">
-                        <span>📞</span>
+                        <span>Phone</span>
                         <span>{lead.customerPhone}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span>📍</span>
+                        <span>Site</span>
                         <span>{lead.location}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span>📅</span>
+                        <span>Date</span>
                         <span>{lead.date}</span>
                       </div>
                     </div>
@@ -398,7 +418,7 @@ export default function MapPage() {
           <div className="absolute top-4 right-4 bottom-4 w-80 bg-white rounded-2xl shadow-xl border border-gray-200 z-[1000] flex flex-col overflow-hidden">
             <div className="p-4 border-b border-gray-200">
               <h3 className="font-bold text-gray-900">Locations</h3>
-              <p className="text-sm text-gray-500">{filteredLeads.length} jobs</p>
+              <p className="text-sm text-gray-500">{filteredLeads.length} locations</p>
             </div>
             <div className="flex-1 overflow-auto">
               {filteredLeads.map(lead => (
@@ -418,7 +438,7 @@ export default function MapPage() {
                       <h4 className="font-medium text-gray-900 truncate">{lead.customerName}</h4>
                       <p className="text-sm text-blue-600 truncate">{lead.service}</p>
                       <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                        <span>📍</span>
+                        <span>Site</span>
                         <span className="truncate">{lead.location}</span>
                       </div>
                     </div>

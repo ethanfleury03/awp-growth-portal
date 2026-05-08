@@ -2,7 +2,8 @@ import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { isPortalResponse } from '@/lib/auth/tenant';
 import { requireModuleOrRespond } from '@/lib/modules/access';
-import { awpPipelineStages, sourceToSlug } from '@/lib/awp/config';
+import { sourceToSlug } from '@/lib/awp/config';
+import { ensureAwpPipeline } from '@/lib/awp/seed';
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Unknown error';
@@ -28,19 +29,7 @@ function validateBucketTitle(value: unknown): { title: string; error?: never } |
 }
 
 async function ensureCompanyBuckets(companyId: string) {
-  const existing = await sql`
-    SELECT id FROM buckets
-    WHERE company_id = ${companyId}
-    LIMIT 1
-  `;
-  if (existing.length) return;
-
-  for (const [index, stage] of awpPipelineStages.entries()) {
-    await sql`
-      INSERT INTO buckets (company_id, title, color, position)
-      VALUES (${companyId}, ${stage.label}, ${stage.color}, ${index + 1})
-    `;
-  }
+  await ensureAwpPipeline(companyId);
 }
 
 async function listBuckets(companyId: string): Promise<BucketRow[]> {

@@ -1,5 +1,5 @@
 export const awpBusinessProfile = {
-  businessName: 'WNY Automation clients, Inc.',
+  businessName: 'Adirondack White Pine Cabins',
   shortName: 'AWP Cabins',
   productName: 'WNY Automation Portal',
   website: 'https://www.adirondackwhitepinecabins.com/',

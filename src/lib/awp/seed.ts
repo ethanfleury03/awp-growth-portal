@@ -26,6 +26,22 @@ type SampleLead = {
   context: Record<string, unknown>;
 };
 
+type PipelineBucketRow = {
+  id: string;
+  title: string;
+  color?: string | null;
+  position: number;
+};
+
+const legacyPipelineSlugs = new Set([
+  'new',
+  'new_leads',
+  'quoted',
+  'booked',
+  'in_progress',
+  'completed',
+]);
+
 const sampleLeads: SampleLead[] = [
   {
     key: 'john-miller-lake-placid',
@@ -198,21 +214,245 @@ async function ensureAwpCompanyProfile(companyId: string) {
   `;
 }
 
-async function ensureAwpPipeline(companyId: string) {
-  const existingBuckets = await sql`
-    SELECT id FROM buckets
+function legacyCustomerIds(companyId: string) {
+  return sql`
+    SELECT id FROM customers
     WHERE company_id = ${companyId}
-    LIMIT 1
+      AND (
+        lower(email) IN (
+          'customer@example.com',
+          'sarah.bennett@example.com',
+          'marcus.hill@example.com',
+          'priya.shah@example.com',
+          'elena.torres@example.com',
+          'tom.gallagher@example.com',
+          'naomi.carter@example.com',
+          'ben.alvarez@example.com',
+          'madison.reed@example.com',
+          'henry.cole@example.com',
+          'olivia.brooks@example.com'
+        )
+        OR (name = 'Jordan Lee' AND phone = '(555) 201-4488')
+        OR (
+          name = 'Ethan Fleury'
+          AND (
+            phone IN ('use caller''s current number', '6073731926')
+            OR address IN (
+              '2840 Mecoon Avenue, Niagara Falls, New York',
+              '2840 mckoon ave niagara falls ny'
+            )
+          )
+        )
+      )
   `;
-  if (existingBuckets.length > 0) return;
+}
+
+function legacyLeadIds(companyId: string) {
+  return sql`
+    SELECT id FROM leads
+    WHERE company_id = ${companyId}
+      AND customer_id IN (${legacyCustomerIds(companyId)})
+  `;
+}
+
+function legacyJobIds(companyId: string) {
+  return sql`
+    SELECT id FROM jobs
+    WHERE company_id = ${companyId}
+      AND customer_id IN (${legacyCustomerIds(companyId)})
+  `;
+}
+
+function legacyInvoiceIds(companyId: string) {
+  return sql`
+    SELECT id FROM invoices
+    WHERE company_id = ${companyId}
+      AND (
+        invoice_number LIKE 'INV-2026-010%'
+        OR customer_id IN (${legacyCustomerIds(companyId)})
+      )
+  `;
+}
+
+function legacyEstimateIds(companyId: string) {
+  return sql`
+    SELECT id FROM estimates
+    WHERE company_id = ${companyId}
+      AND (
+        estimate_number LIKE 'EST-2026-010%'
+        OR lower(title) = 'plumbing estimate'
+        OR lower(customer_name_snapshot) = 'customer'
+        OR customer_id IN (${legacyCustomerIds(companyId)})
+        OR lead_id IN (${legacyLeadIds(companyId)})
+        OR job_id IN (${legacyJobIds(companyId)})
+      )
+  `;
+}
+
+function legacyPaymentIds(companyId: string) {
+  return sql`
+    SELECT id FROM payments
+    WHERE company_id = ${companyId}
+      AND (
+        stripe_payment_intent_id LIKE 'pi_demo_%'
+        OR lower(customer_email) IN (
+          'sarah.bennett@example.com',
+          'marcus.hill@example.com',
+          'priya.shah@example.com',
+          'elena.torres@example.com',
+          'tom.gallagher@example.com',
+          'naomi.carter@example.com',
+          'ben.alvarez@example.com',
+          'madison.reed@example.com',
+          'henry.cole@example.com',
+          'olivia.brooks@example.com'
+        )
+      )
+  `;
+}
+
+function legacyServiceContractIds(companyId: string) {
+  return sql`
+    SELECT id FROM service_contracts
+    WHERE company_id = ${companyId}
+      AND customer_id IN (${legacyCustomerIds(companyId)})
+  `;
+}
+
+async function removeLegacyPlumbingDemoData(companyId: string) {
+  await sql`DELETE FROM payment_events WHERE payment_id IN (${legacyPaymentIds(companyId)})`;
+  await sql`DELETE FROM payments WHERE id IN (${legacyPaymentIds(companyId)})`;
+
+  await sql`DELETE FROM estimate_delivery WHERE estimate_id IN (${legacyEstimateIds(companyId)})`;
+  await sql`DELETE FROM estimate_activity WHERE estimate_id IN (${legacyEstimateIds(companyId)})`;
+  await sql`DELETE FROM estimate_line_items WHERE estimate_id IN (${legacyEstimateIds(companyId)})`;
+  await sql`DELETE FROM estimates WHERE id IN (${legacyEstimateIds(companyId)})`;
+
+  await sql`DELETE FROM invoice_line_items WHERE invoice_id IN (${legacyInvoiceIds(companyId)})`;
+  await sql`DELETE FROM invoices WHERE id IN (${legacyInvoiceIds(companyId)})`;
+
+  await sql`DELETE FROM service_contract_schedules WHERE contract_id IN (${legacyServiceContractIds(companyId)})`;
+  await sql`DELETE FROM service_contracts WHERE id IN (${legacyServiceContractIds(companyId)})`;
+
+  await sql`DELETE FROM call_logs WHERE company_id = ${companyId} AND lead_id IN (${legacyLeadIds(companyId)})`;
+  await sql`DELETE FROM call_logs WHERE company_id = ${companyId} AND job_id IN (${legacyJobIds(companyId)})`;
+  await sql`DELETE FROM call_logs WHERE company_id = ${companyId} AND customer_id IN (${legacyCustomerIds(companyId)})`;
+
+  await sql`DELETE FROM jobs WHERE id IN (${legacyJobIds(companyId)})`;
+  await sql`DELETE FROM leads WHERE id IN (${legacyLeadIds(companyId)})`;
+
+  await sql`
+    DELETE FROM estimate_catalog_services
+    WHERE company_id = ${companyId}
+      AND lower(name) IN (
+        'standard diagnostic visit',
+        'water heater diagnostic',
+        'tankless flush service',
+        'main drain cleaning',
+        'commercial grease line jetting',
+        'faucet installation',
+        'sump pump replacement'
+      )
+  `;
+
+  await sql`DELETE FROM customers WHERE id IN (${legacyCustomerIds(companyId)})`;
+  await sql`
+    DELETE FROM plumbers
+    WHERE company_id = ${companyId}
+      AND lower(email) LIKE '%@plumberos.demo'
+  `;
+
+  await sql`
+    DELETE FROM audit_events
+    WHERE company_id = ${companyId}
+      AND (
+        summary LIKE '%plumbing%'
+        OR summary LIKE '%Water Heater%'
+        OR summary LIKE '%Tankless%'
+        OR summary LIKE '%Sump pump%'
+        OR entity_id LIKE 'demo-%'
+      )
+  `;
+}
+
+async function listPipelineBuckets(companyId: string): Promise<PipelineBucketRow[]> {
+  const rows = await sql`
+    SELECT id, title, color, position
+    FROM buckets
+    WHERE company_id = ${companyId}
+    ORDER BY position ASC
+  `;
+
+  return rows.map((row) => ({
+    id: String(row.id),
+    title: String(row.title),
+    color: row.color ? String(row.color) : null,
+    position: Number(row.position || 0),
+  }));
+}
+
+async function normalizeLegacyLeadStatuses(companyId: string) {
+  await sql`
+    UPDATE leads
+    SET status = ${'new_lead'}, updated_at = datetime('now')
+    WHERE company_id = ${companyId} AND status IN ('new', 'new_leads')
+  `;
+  await sql`
+    UPDATE leads
+    SET status = ${'planning_call_scheduled'}, updated_at = datetime('now')
+    WHERE company_id = ${companyId} AND status = 'booked'
+  `;
+  await sql`
+    UPDATE leads
+    SET status = ${'proposal_sent'}, updated_at = datetime('now')
+    WHERE company_id = ${companyId} AND status = 'quoted'
+  `;
+  await sql`
+    UPDATE leads
+    SET status = ${'site_details_needed'}, updated_at = datetime('now')
+    WHERE company_id = ${companyId} AND status = 'in_progress'
+  `;
+  await sql`
+    UPDATE leads
+    SET status = ${'won'}, updated_at = datetime('now')
+    WHERE company_id = ${companyId} AND status = 'completed'
+  `;
+}
+
+export async function ensureAwpPipeline(companyId: string) {
+  const existingBuckets = await listPipelineBuckets(companyId);
+  const existingSlugs = new Set(existingBuckets.map((bucket) => sourceToSlug(bucket.title)));
+  const legacyBuckets = existingBuckets.filter((bucket) => legacyPipelineSlugs.has(sourceToSlug(bucket.title)));
+
+  if (!existingSlugs.has('new_lead') && legacyBuckets.length > 0) {
+    for (const [index, bucket] of legacyBuckets.entries()) {
+      const stage = awpPipelineStages[index];
+      if (!stage) break;
+      await sql`
+        UPDATE buckets
+        SET title = ${stage.label},
+            color = ${stage.color},
+            position = ${index + 1},
+            updated_at = datetime('now')
+        WHERE id = ${bucket.id} AND company_id = ${companyId}
+      `;
+    }
+  }
+
+  const refreshedBuckets = await listPipelineBuckets(companyId);
+  const refreshedSlugs = new Set(refreshedBuckets.map((bucket) => sourceToSlug(bucket.title)));
+  let nextPosition = refreshedBuckets.reduce((max, bucket) => Math.max(max, bucket.position), 0);
 
   for (const [index, stage] of awpPipelineStages.entries()) {
-    const position = index + 1;
+    if (refreshedSlugs.has(stage.value)) continue;
+    nextPosition += 1;
     await sql`
       INSERT INTO buckets (company_id, title, color, position)
-      VALUES (${companyId}, ${stage.label}, ${stage.color}, ${position})
+      VALUES (${companyId}, ${stage.label}, ${stage.color}, ${nextPosition || index + 1})
     `;
   }
+
+  await normalizeLegacyLeadStatuses(companyId);
 }
 
 async function ensureAwpLeads(companyId: string, branchId?: string | null) {
@@ -391,6 +631,7 @@ async function ensureReusableArchitectureDefaults(companyId: string) {
 
 async function runAwpDemoSeed(companyId: string, branchId?: string | null) {
   await ensureAwpCompanyProfile(companyId);
+  await removeLegacyPlumbingDemoData(companyId);
   await ensureAwpPipeline(companyId);
   await ensureAwpLeads(companyId, branchId);
   await ensureGrowthDefaults(companyId);

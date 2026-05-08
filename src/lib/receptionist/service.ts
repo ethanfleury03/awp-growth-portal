@@ -10,7 +10,6 @@ import { parseReceptionistMeta } from '@/lib/receptionist/hardening/merge-meta';
 import type {
   DuplicateResolutionInfo,
   InternalBookingOutcome,
-  ReceptionistCallMeta,
 } from '@/lib/receptionist/hardening/types';
 import {
   createCustomerAndLeadFromExtracted,

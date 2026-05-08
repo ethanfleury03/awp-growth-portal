@@ -35,21 +35,14 @@ export async function syncClerkUser(data: ClerkUserEventData) {
   `;
 
   if (existing.length === 0) {
-    const unassigned = await sql`
-      SELECT email FROM unassigned_portal_users WHERE email = ${email} LIMIT 1
+    await sql`
+      INSERT INTO unassigned_portal_users (email, clerk_user_id, name, metadata_json)
+      VALUES (${email}, ${data.id}, ${name || null}, ${JSON.stringify({ source: 'clerk_webhook' })})
+      ON CONFLICT (email) DO UPDATE SET
+        clerk_user_id = COALESCE(EXCLUDED.clerk_user_id, unassigned_portal_users.clerk_user_id),
+        name = COALESCE(EXCLUDED.name, unassigned_portal_users.name),
+        last_seen_at = datetime('now')
     `;
-    if (unassigned[0]) {
-      await sql`
-        UPDATE unassigned_portal_users
-        SET clerk_user_id = ${data.id}, name = ${name || null}, last_seen_at = datetime('now')
-        WHERE email = ${email}
-      `;
-    } else {
-      await sql`
-        INSERT INTO unassigned_portal_users (email, clerk_user_id, name, metadata_json)
-        VALUES (${email}, ${data.id}, ${name}, ${JSON.stringify({ source: 'clerk_webhook' })})
-      `;
-    }
     return { ok: true, unassigned: true as const, email };
   }
 

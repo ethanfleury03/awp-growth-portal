@@ -5,6 +5,29 @@ import "./globals.css";
 import { absoluteUrl, getSiteUrl } from "@/lib/marketing/site";
 import { ConsentManager } from "@/components/consent/ConsentManager";
 
+const clerkLocalization = {
+  signIn: {
+    start: {
+      title: 'Sign in to WNY Automation Portal',
+      subtitle: 'Use your company account to access the CRM workspace.',
+      titleCombined: 'Sign in to WNY Automation Portal',
+      subtitleCombined: 'Use your company account to access the CRM workspace.',
+    },
+    password: {
+      title: 'Enter your WNY Automation Portal password',
+      subtitle: 'Continue to your secure workspace.',
+    },
+  },
+  signUp: {
+    start: {
+      title: 'Create your WNY Automation Portal account',
+      subtitle: 'Create an account for your company workspace.',
+      titleCombined: 'Create your WNY Automation Portal account',
+      subtitleCombined: 'Create an account for your company workspace.',
+    },
+  },
+} as const;
+
 const appSans = Manrope({
   variable: "--font-app-sans",
   subsets: ["latin"],
@@ -63,7 +86,7 @@ export default async function RootLayout({
       <body
         className={`${appSans.variable} ${appMono.variable} antialiased min-h-screen flex flex-col bg-white`}
       >
-        <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
+        <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" localization={clerkLocalization}>
           <div className="flex-1 min-h-0">{children}</div>
           <ConsentManager />
         </ClerkProvider>

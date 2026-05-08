@@ -33,8 +33,8 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = patchSchema.parse(await request.json());
-    const companyId = (body.company_id || (await getDefaultCompanyId())) as string;
-    const { company_id: _c, ...patch } = body;
+    const { company_id: companyIdFromBody, ...patch } = body;
+    const companyId = (companyIdFromBody || (await getDefaultCompanyId())) as string;
     const settings = await patchEstimateSettings(companyId, patch);
     return NextResponse.json({ settings });
   } catch (e) {

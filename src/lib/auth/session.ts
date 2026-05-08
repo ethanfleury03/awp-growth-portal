@@ -6,14 +6,14 @@
  */
 
 import type { SessionUser } from '@/lib/auth/types';
-import { SESSION_COOKIE } from '@/lib/auth/constants';
 export { SESSION_COOKIE } from '@/lib/auth/constants';
 
 /**
  * @deprecated Sessions are managed by Clerk. This throws to prevent writing
  * shadow sessions to the database.
  */
-export async function createSession(_userId: string): Promise<string> {
+export async function createSession(userId?: string): Promise<string> {
+  void userId;
   throw new Error(
     'createSession is deprecated. Authentication is handled by Clerk; use @clerk/nextjs instead.',
   );

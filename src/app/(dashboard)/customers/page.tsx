@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { Search, Bell, Plus, MoreHorizontal, MapPin, Phone, Mail, X, FileSpreadsheet } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, Bell, Plus, MapPin, Phone, Mail, X, FileSpreadsheet } from 'lucide-react';
 
 interface Customer {
   id: string;
@@ -49,9 +49,10 @@ export default function CustomersPage() {
   });
 
   // Fetch customers from API
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
+      setError('');
       const params = new URLSearchParams();
       if (search) params.set('search', search);
       
@@ -70,16 +71,15 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search]);
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [fetchCustomers]);
 
   // Handle search
   const handleSearch = (value: string) => {
     setSearch(value);
-    fetchCustomers();
   };
 
   // Handle create customer
@@ -110,6 +110,7 @@ export default function CustomersPage() {
         fetchCustomers();
       }
     } catch (err) {
+      console.error('Failed to create customer:', err);
       alert('Failed to create customer');
     } finally {
       setSubmitting(false);
@@ -127,7 +128,7 @@ export default function CustomersPage() {
         fetchCustomers();
       }
     } catch (err) {
-      console.error('Failed to delete customer');
+      console.error('Failed to delete customer:', err);
     }
   };
 
