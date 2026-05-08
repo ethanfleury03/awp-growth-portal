@@ -1,5 +1,5 @@
 /**
- * Path resolution for /industries trade photography.
+ * Path resolution for /industries use-case photography.
  *
  * Mirrors `landing-images.ts`: each slot has a preferred JPG / PNG that the
  * Gemini generation script can drop into `public/industries/`, with an SVG
@@ -31,37 +31,37 @@ const IMAGE_META: Record<
   { alt: string; width: number; height: number }
 > = {
   plumbing: {
-    alt: 'Plumber in navy uniform tightening a copper fitting under a modern kitchen sink.',
+    alt: 'Custom cabin buyer reviewing a proposal outside a white pine cabin.',
     width: 1200,
     height: 750,
   },
   electrical: {
-    alt: 'Electrician in navy uniform installing a smart panel in a residential garage.',
+    alt: 'Realtor and land buyer reviewing a rural parcel listing beside a laptop.',
     width: 1200,
     height: 750,
   },
   hvac: {
-    alt: 'HVAC technician servicing a rooftop condenser unit on a clear morning.',
+    alt: 'Campground owner reviewing cabin expansion plans with a project manager.',
     width: 1200,
     height: 750,
   },
   roofing: {
-    alt: 'Roofer inspecting asphalt shingles on a pitched residential roof.',
+    alt: 'Short-term rental investor reviewing cabin layouts and site notes.',
     width: 1200,
     height: 750,
   },
   'garage-door': {
-    alt: 'Technician aligning a modern residential garage door track and spring.',
+    alt: 'Excavation contractor and cabin builder reviewing site access and foundation notes.',
     width: 1200,
     height: 750,
   },
   'pest-control': {
-    alt: 'Pest control technician with a backpack sprayer inspecting a home exterior.',
+    alt: 'Marketing assets and buyer guides organized on a cabin office desk.',
     width: 1200,
     height: 750,
   },
   landscaping: {
-    alt: 'Landscaper edging a tidy suburban lawn on a warm summer morning.',
+    alt: 'Client workspace dashboard shown on a laptop during an operations review.',
     width: 1200,
     height: 750,
   },

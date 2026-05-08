@@ -5,7 +5,7 @@ import { absoluteUrl } from '@/lib/marketing/site';
 export const metadata: Metadata = {
   title: 'About — WNY Automation Portal',
   description:
-    'WNY Automation Portal builds practical software for trade businesses: AI reception, dispatch, estimates, invoices, and payments in one operating system.',
+    'WNY Automation Portal builds practical CRM workspaces for teams that need clean handoffs, customer context, estimates, reporting, and AI assistance.',
   alternates: { canonical: '/about' },
   openGraph: {
     title: 'About — WNY Automation Portal',
@@ -30,26 +30,27 @@ export default function AboutPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <p className="eyebrow">About WNY Automation Portal</p>
         <h1 className="mt-4 text-4xl sm:text-5xl font-extrabold tracking-tight text-[var(--brand-ink)]">
-          Built for service teams that run on trust and speed.
+          Built for teams that win by staying organized.
         </h1>
         <p className="mt-6 text-lg text-[var(--brand-slate)] leading-relaxed">
-          WNY Automation Portal exists to help trade operators run cleaner handoffs: call to booking, booking to dispatch, and
-          job closeout to payment. We focus on practical workflows that reduce admin load and keep crews moving.
+          WNY Automation Portal exists to help operators run cleaner handoffs: inquiry to lead, lead to proposal,
+          proposal to invoice, and follow-up to repeatable growth. We focus on practical workflows that reduce admin
+          load and keep account context in one place.
         </p>
 
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           <article className="brand-card p-6">
             <h2 className="text-xl font-bold text-[var(--brand-ink)]">Our mission</h2>
             <p className="mt-3 text-[var(--brand-slate)] leading-relaxed">
-              Give field-service businesses modern software without forcing them into enterprise complexity. The goal
-              is simple: fewer missed calls, fewer manual updates, faster collection.
+              Give growing teams modern software without forcing them into enterprise complexity. The goal is simple:
+              fewer missed handoffs, fewer manual updates, clearer customer context.
             </p>
           </article>
           <article className="brand-card p-6">
             <h2 className="text-xl font-bold text-[var(--brand-ink)]">Who we build for</h2>
             <p className="mt-3 text-[var(--brand-slate)] leading-relaxed">
-              Independent shops, growing multi-crew teams, and operations leads who need one place to run customer,
-              job, estimate, invoice, and payment workflows.
+              Cabin builders, growth teams, and operations leads who need one place to run customer, lead, estimate,
+              invoice, outreach, reporting, and AI-assisted workflows.
             </p>
           </article>
         </div>

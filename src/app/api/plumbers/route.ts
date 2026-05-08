@@ -16,7 +16,7 @@ async function getOrCreateCompanyId(explicitCompanyId?: string | null) {
 
   const newCompany = await sql`
     INSERT INTO companies (name, email)
-    VALUES ('Demo Company', 'demo@plumberos.com')
+    VALUES ('Demo Company', 'demo@wnyautomation.com')
     RETURNING id
   `;
 
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
         ${body.name},
         ${body.email},
         ${body.phone || null},
-        ${body.role || 'Plumber'},
+        ${body.role || 'Team Member'},
         ${body.active ?? true},
         datetime('now')
       )

@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Menu, X, Wrench } from 'lucide-react';
+import { Building2, Menu, X } from 'lucide-react';
 
 const NAV_LINKS: { label: string; href: string }[] = [
   { label: 'Features', href: '/features' },
-  { label: 'Industries', href: '/industries' },
+  { label: 'Use Cases', href: '/industries' },
   { label: 'Pricing', href: '/pricing' },
 ];
 
@@ -75,7 +75,7 @@ export function MarketingNav() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2.5 text-white">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--brand-blue-500)] to-[var(--brand-blue-600)] text-white shadow-[0_14px_32px_-16px_rgba(37,76,137,0.72)]">
-              <Wrench className="h-5 w-5" />
+              <Building2 className="h-5 w-5" />
             </span>
             <span className="text-lg font-bold tracking-tight">WNY Automation Portal</span>
           </Link>

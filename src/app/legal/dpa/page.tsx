@@ -57,8 +57,8 @@ export default function DpaPage() {
           <h2 className="text-lg font-semibold text-slate-900 mb-2">Requesting a signed copy</h2>
           <p>
             For enterprise procurement, request a signed DPA at{' '}
-            <a className="text-[var(--brand-orange-600)] hover:underline" href="mailto:legal@plumber.os">
-              legal@plumber.os
+            <a className="text-[var(--brand-orange-600)] hover:underline" href="mailto:legal@wnyautomation.com">
+              legal@wnyautomation.com
             </a>
             .
           </p>

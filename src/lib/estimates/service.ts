@@ -63,8 +63,8 @@ export async function ensureEstimateSettings(companyId: string): Promise<Record<
       ${name},
       'EST',
       30,
-      ${'Payment due as agreed. Prices valid for the period shown on this estimate.'},
-      ${'Thank you for choosing us for your plumbing needs.'}
+      ${'Proposal details are valid for the period shown. Final pricing, schedule, taxes, and customer responsibilities must be confirmed in writing before work begins.'},
+      ${'Thank you for considering us for your project.'}
     )
   `;
   const again = await sql`SELECT * FROM estimate_settings WHERE company_id = ${companyId} LIMIT 1`;

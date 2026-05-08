@@ -1,11 +1,11 @@
 export const FAQ_ITEMS = [
   {
     q: 'How long does setup take?',
-    a: 'Most shops are live in under 20 minutes. You sign up with Clerk, connect Stripe, import customers from CSV (optional), and forward your main business line to the AI receptionist number. We stay on-call during your first week.',
+    a: 'Most teams are live the same day. You sign up with Clerk, configure the workspace, import customers from CSV if needed, connect Stripe when payments are ready, and tune the AI context around your real business data.',
   },
   {
-    q: 'Do I have to replace my existing phone number?',
-    a: "No. You can forward your existing Twilio, RingCentral, or cell number to WNY Automation Portal. Customers keep calling the number they already know; the AI just answers when your front desk can't.",
+    q: 'Can I keep my existing sales process?',
+    a: 'Yes. The CRM stages, lead context, outreach records, estimate defaults, and AI guardrails can be adapted around your current workflow instead of forcing a generic sales pipeline.',
   },
   {
     q: 'What payment processors do you support?',
@@ -16,12 +16,12 @@ export const FAQ_ITEMS = [
     a: 'Yes. Every query is scoped by `company_id` at the application layer, and Postgres Row-Level Security enforces the same boundary at the database layer. An internal guard test fails CI if anyone writes an unscoped tenant query.',
   },
   {
-    q: 'Can I bring my own voice / brand for the receptionist?',
-    a: 'On Pro and Scale, yes. We clone your greeting, tune the voice, and swap in your brand name + hours. Demo mode lets you hear the AI before you forward a single call.',
+    q: 'Can I bring my own brand and business context?',
+    a: 'On Pro and Scale, yes. Your workspace can use brand-specific labels, company details, content guidelines, and AI guardrails so generated work matches the account instead of a generic template.',
   },
   {
-    q: "What happens if the AI receptionist doesn't understand the caller?",
-    a: 'It escalates. Based on rules you configure, the call transfers to your on-call rotation, drops a voicemail into your lead inbox, or texts the customer a booking link. You always see the full transcript.',
+    q: "What happens if the AI doesn't have enough information?",
+    a: 'It should say what is missing instead of inventing facts. The assistant is guided to use CRM records, knowledge items, growth records, and explicit guardrails before making recommendations.',
   },
   {
     q: 'Do you handle SMS opt-out for me?',
@@ -29,6 +29,6 @@ export const FAQ_ITEMS = [
   },
   {
     q: 'What happens to my data if I cancel?',
-    a: 'You can export a full JSON dump of every customer, job, invoice, estimate, payment, and attachment at any time. GDPR/CCPA privacy endpoints are built in for individual customer requests too.',
+    a: 'You can export a full JSON dump of every customer, lead, invoice, estimate, payment, and attachment at any time. GDPR/CCPA privacy endpoints are built in for individual customer requests too.',
   },
 ] as const;

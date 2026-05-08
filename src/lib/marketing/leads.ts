@@ -93,7 +93,7 @@ export async function notifyLeadSlack(input: MarketingLeadInput, leadId: string)
     `Email: ${input.email}`,
     input.company ? `Company: ${input.company}` : '',
     input.phone ? `Phone: ${input.phone}` : '',
-    input.trade ? `Trade: ${input.trade}` : '',
+    input.trade ? `Workflow: ${input.trade}` : '',
     input.message ? `Message: ${input.message}` : '',
     input.utmSource ? `UTM Source: ${input.utmSource}` : '',
     input.utmMedium ? `UTM Medium: ${input.utmMedium}` : '',
@@ -119,7 +119,7 @@ export async function notifyLeadEmail(input: MarketingLeadInput, leadId: string)
     `Email: ${input.email}`,
     input.company ? `Company: ${input.company}` : '',
     input.phone ? `Phone: ${input.phone}` : '',
-    input.trade ? `Trade: ${input.trade}` : '',
+    input.trade ? `Workflow: ${input.trade}` : '',
     input.message ? `Message: ${input.message}` : '',
   ]
     .filter(Boolean)

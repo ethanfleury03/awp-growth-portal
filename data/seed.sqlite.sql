@@ -32,6 +32,107 @@ ON CONFLICT(company_id, position) DO UPDATE SET
   color = excluded.color,
   updated_at = datetime('now');
 
+INSERT INTO estimate_settings (
+  company_id,
+  company_name,
+  estimate_prefix,
+  default_expiration_days,
+  default_terms_text,
+  estimate_footer_text
+)
+VALUES (
+  '00000000-0000-4000-8000-000000000001',
+  'Adirondack White Pine Cabins',
+  'AWP',
+  30,
+  'Proposal details are valid for the period shown. Final pricing, schedule, delivery, site prep, utilities, permits, taxes, and customer responsibilities must be confirmed in writing before work begins.',
+  'Thank you for considering Adirondack White Pine Cabins. We will confirm site readiness, design details, and scope before any final commitment.'
+)
+ON CONFLICT(company_id) DO UPDATE SET
+  company_name = excluded.company_name,
+  estimate_prefix = excluded.estimate_prefix,
+  default_terms_text = excluded.default_terms_text,
+  estimate_footer_text = excluded.estimate_footer_text,
+  updated_at = datetime('now');
+
+INSERT INTO estimate_catalog_services (company_id, name, description, unit_price_cents, sort_order)
+SELECT
+  '00000000-0000-4000-8000-000000000001',
+  'Cabin planning consultation',
+  'Initial buyer consultation covering intended use, location, timeline, budget range, and next steps.',
+  0,
+  0
+WHERE NOT EXISTS (
+  SELECT 1 FROM estimate_catalog_services
+  WHERE company_id = '00000000-0000-4000-8000-000000000001'
+    AND lower(name) = 'cabin planning consultation'
+);
+
+INSERT INTO estimate_catalog_services (company_id, name, description, unit_price_cents, sort_order)
+SELECT
+  '00000000-0000-4000-8000-000000000001',
+  'Site readiness review',
+  'Review of land ownership, access, utilities, slab/foundation readiness, delivery path, and open site questions.',
+  0,
+  1
+WHERE NOT EXISTS (
+  SELECT 1 FROM estimate_catalog_services
+  WHERE company_id = '00000000-0000-4000-8000-000000000001'
+    AND lower(name) = 'site readiness review'
+);
+
+INSERT INTO estimate_catalog_services (company_id, name, description, unit_price_cents, sort_order)
+SELECT
+  '00000000-0000-4000-8000-000000000001',
+  'Design and layout discussion',
+  'Discussion of cabin size, layout goals, four-season needs, materials preferences, and required follow-up.',
+  0,
+  2
+WHERE NOT EXISTS (
+  SELECT 1 FROM estimate_catalog_services
+  WHERE company_id = '00000000-0000-4000-8000-000000000001'
+    AND lower(name) = 'design and layout discussion'
+);
+
+INSERT INTO estimate_catalog_services (company_id, name, description, unit_price_cents, sort_order)
+SELECT
+  '00000000-0000-4000-8000-000000000001',
+  'Permit and delivery coordination',
+  'Coordination notes for permitting guidance, delivery requirements, customer responsibilities, and local constraints.',
+  0,
+  3
+WHERE NOT EXISTS (
+  SELECT 1 FROM estimate_catalog_services
+  WHERE company_id = '00000000-0000-4000-8000-000000000001'
+    AND lower(name) = 'permit and delivery coordination'
+);
+
+INSERT INTO estimate_catalog_services (company_id, name, description, unit_price_cents, sort_order)
+SELECT
+  '00000000-0000-4000-8000-000000000001',
+  'Custom cabin proposal placeholder',
+  'Placeholder for final scoped cabin proposal. Replace with verified pricing before sending to a customer.',
+  0,
+  4
+WHERE NOT EXISTS (
+  SELECT 1 FROM estimate_catalog_services
+  WHERE company_id = '00000000-0000-4000-8000-000000000001'
+    AND lower(name) = 'custom cabin proposal placeholder'
+);
+
+INSERT INTO estimate_catalog_services (company_id, name, description, unit_price_cents, sort_order)
+SELECT
+  '00000000-0000-4000-8000-000000000001',
+  'Referral partner follow-up',
+  'Non-billable follow-up item for realtor, campground, contractor, or partner referral opportunities.',
+  0,
+  5
+WHERE NOT EXISTS (
+  SELECT 1 FROM estimate_catalog_services
+  WHERE company_id = '00000000-0000-4000-8000-000000000001'
+    AND lower(name) = 'referral partner follow-up'
+);
+
 INSERT INTO customers (id, company_id, name, email, phone, address, notes)
 VALUES (
   'c0000001-0000-4000-8000-000000000001',

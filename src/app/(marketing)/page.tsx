@@ -7,14 +7,14 @@ import { CTABanner } from './_components/CTABanner';
 import { absoluteUrl } from '@/lib/marketing/site';
 
 export const metadata: Metadata = {
-  title: 'WNY Automation Portal — The operating system for modern plumbing companies',
+  title: 'WNY Automation Portal — CRM for custom cabin builders',
   description:
-    'Capture every call, dispatch the right tech, send estimates, collect payment, and keep customers coming back.',
+    'Organize cabin buyers, site-readiness details, estimates, marketing outreach, reporting, and AI-assisted follow-up in one secure workspace.',
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'WNY Automation Portal — The operating system for modern plumbing companies',
+    title: 'WNY Automation Portal — CRM for custom cabin builders',
     description:
-      'Capture every call, dispatch the right tech, send estimates, collect payment, and keep customers coming back.',
+      'Organize cabin buyers, site-readiness details, estimates, marketing outreach, reporting, and AI-assisted follow-up in one secure workspace.',
     url: '/',
     type: 'website',
     images: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'WNY Automation Portal',
     description:
-      'Capture every call, dispatch the right tech, send estimates, collect payment, and keep customers coming back.',
+      'Organize cabin buyers, estimates, outreach, reporting, and AI-assisted follow-up.',
     images: [absoluteUrl('/twitter-image')],
   },
 };

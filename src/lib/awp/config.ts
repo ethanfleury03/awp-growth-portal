@@ -51,6 +51,47 @@ export const awpPipelineStages = [
   { value: 'nurture', label: 'Nurture', color: '#475569' },
 ] as const;
 
+export const awpEstimateDefaults = {
+  prefix: 'AWP',
+  terms:
+    'Proposal details are valid for the period shown. Final pricing, schedule, delivery, site prep, utilities, permits, taxes, and customer responsibilities must be confirmed in writing before work begins.',
+  footer:
+    'Thank you for considering Adirondack White Pine Cabins. We will confirm site readiness, design details, and scope before any final commitment.',
+} as const;
+
+export const awpEstimateCatalogDefaults = [
+  {
+    name: 'Cabin planning consultation',
+    description: 'Initial buyer consultation covering intended use, location, timeline, budget range, and next steps.',
+    unitPriceCents: 0,
+  },
+  {
+    name: 'Site readiness review',
+    description: 'Review of land ownership, access, utilities, slab/foundation readiness, delivery path, and open site questions.',
+    unitPriceCents: 0,
+  },
+  {
+    name: 'Design and layout discussion',
+    description: 'Discussion of cabin size, layout goals, four-season needs, materials preferences, and required follow-up.',
+    unitPriceCents: 0,
+  },
+  {
+    name: 'Permit and delivery coordination',
+    description: 'Coordination notes for permitting guidance, delivery requirements, customer responsibilities, and local constraints.',
+    unitPriceCents: 0,
+  },
+  {
+    name: 'Custom cabin proposal placeholder',
+    description: 'Placeholder for final scoped cabin proposal. Replace with verified pricing before sending to a customer.',
+    unitPriceCents: 0,
+  },
+  {
+    name: 'Referral partner follow-up',
+    description: 'Non-billable follow-up item for realtor, campground, contractor, or partner referral opportunities.',
+    unitPriceCents: 0,
+  },
+] as const;
+
 export const awpReusableArchitectureDefaults = [
   {
     key: 'business-profile-options-prompts',

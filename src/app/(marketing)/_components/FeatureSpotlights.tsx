@@ -5,30 +5,30 @@ import { getLandingImage } from './landing-images';
 function ReceptionistMockup() {
   return (
     <div className="hidden md:block absolute -left-10 bottom-8 w-80">
-      <BrowserFrame url="app.plumber.os/receptionist">
+      <BrowserFrame url="portal.wnyautomation.com/crm">
         <div className="p-4 text-[var(--brand-ink)] bg-white">
           <div className="flex items-center gap-2 mb-3">
-            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-red-500">Live</span>
-            <span className="ml-auto text-xs text-[var(--brand-slate-muted)]">00:47</span>
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Qualified</span>
+            <span className="ml-auto text-xs text-[var(--brand-slate-muted)]">New inquiry</span>
           </div>
-          <p className="text-xs font-semibold text-[var(--brand-slate-muted)] mb-1">Transcript</p>
+          <p className="text-xs font-semibold text-[var(--brand-slate-muted)] mb-1">AI summary</p>
           <div className="space-y-2 text-sm">
             <div className="bg-slate-50 rounded-md p-2">
-              <b className="text-[var(--brand-orange-600)]">AI:</b> Hi, this is your service desk. How can I help?
+              <b className="text-[var(--brand-orange-600)]">Buyer:</b> Wants a four-season cabin near Lake Placid.
             </div>
             <div className="bg-slate-50 rounded-md p-2">
-              <b>Caller:</b> We have a water heater leak in the basement. Can someone come today?
+              <b>Site:</b> Land owned, access unknown, utilities need confirmation.
             </div>
             <div className="rounded-md border border-[var(--brand-blue-500)]/25 bg-[var(--brand-blue-500)]/10 p-2">
-              <b className="text-[var(--brand-blue-600)]">AI:</b> I can get a tech out between 2–4 PM. Address?
+              <b className="text-[var(--brand-blue-600)]">Next:</b> Planning call around layout, budget, and delivery path.
             </div>
           </div>
           <div className="mt-3 flex items-center justify-between text-[11px]">
             <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-              Intent: book_service
+              Type: homeowner
             </span>
-            <span className="text-[var(--brand-slate-muted)]">Priority: emergency</span>
+            <span className="text-[var(--brand-slate-muted)]">Score: 78</span>
           </div>
         </div>
       </BrowserFrame>
@@ -42,24 +42,24 @@ function DispatchMockup() {
       <PhoneFrame>
         <div className="bg-[var(--brand-cream)] p-4 text-[var(--brand-ink)]">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold">Tue, 2:14 PM</span>
-            <span className="text-xs text-emerald-600 font-semibold">On route</span>
+            <span className="text-xs font-semibold">Lead details</span>
+            <span className="text-xs text-emerald-600 font-semibold">Updated</span>
           </div>
           <div className="bg-white border border-slate-200 rounded-lg p-3 mb-2">
-            <p className="text-xs text-[var(--brand-slate-muted)]">Next stop</p>
-            <p className="text-sm font-bold">Emergency leak · 14 Elm St</p>
-            <p className="text-xs text-[var(--brand-slate-muted)]">Water heater — emergency</p>
+            <p className="text-xs text-[var(--brand-slate-muted)]">Site readiness</p>
+            <p className="text-sm font-bold">Lake Placid parcel</p>
+            <p className="text-xs text-[var(--brand-slate-muted)]">Access road and utilities need review</p>
             <div className="mt-2 flex gap-1.5">
               <span className="text-[10px] bg-red-50 text-red-700 font-semibold px-1.5 py-0.5 rounded">
-                Leak
+                Site access
               </span>
               <span className="text-[10px] bg-slate-100 text-slate-700 font-semibold px-1.5 py-0.5 rounded">
-                2–4 PM
+                Utilities
               </span>
             </div>
           </div>
           <div className="w-full rounded-lg bg-[var(--brand-blue-500)] py-2.5 text-center text-sm font-semibold text-white">
-            Arrival status synced
+            Planning call scheduled
           </div>
         </div>
       </PhoneFrame>
@@ -70,22 +70,22 @@ function DispatchMockup() {
 function PaymentsMockup() {
   return (
     <div className="hidden md:block absolute -left-8 -bottom-10 w-80">
-      <BrowserFrame url="app.plumber.os/invoices">
+      <BrowserFrame url="portal.wnyautomation.com/estimates">
         <div className="p-5 bg-white text-[var(--brand-ink)]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-[var(--brand-slate-muted)]">Invoice payment</p>
-              <p className="font-bold text-xl">Collected online</p>
+              <p className="text-xs text-[var(--brand-slate-muted)]">Estimate package</p>
+              <p className="font-bold text-xl">Ready for review</p>
             </div>
             <span className="text-[11px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
-              PAID
+              SENT
             </span>
           </div>
           <div className="mt-4 space-y-2 text-sm">
             {[
-              ['Water heater replace (40 gal)', '$980.00'],
-              ['Emergency after-hours service', '$180.00'],
-              ['Permit + haul-away', '$124.00'],
+              ['Design consultation', '$0.00'],
+              ['Site-readiness review', '$0.00'],
+              ['Custom cabin proposal', 'TBD'],
             ].map(([l, v]) => (
               <div key={l} className="flex justify-between">
                 <span className="text-[var(--brand-slate)]">{l}</span>
@@ -94,8 +94,8 @@ function PaymentsMockup() {
             ))}
           </div>
           <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-[var(--brand-slate-muted)]">Collected via Stripe · Visa ••4512</span>
-            <span className="text-[var(--brand-slate-muted)]">Payout in 2 days</span>
+            <span className="text-[var(--brand-slate-muted)]">Public approval link ready</span>
+            <span className="text-[var(--brand-slate-muted)]">Follow-up queued</span>
           </div>
         </div>
       </BrowserFrame>
@@ -106,13 +106,13 @@ function PaymentsMockup() {
 function PortalMockup() {
   return (
     <div className="hidden md:block absolute -right-6 -top-8 w-72">
-      <BrowserFrame url="portal.plumber.os/customer">
+      <BrowserFrame url="portal.wnyautomation.com/customer">
         <div className="p-5 bg-white text-[var(--brand-ink)]">
           <p className="text-xs text-[var(--brand-slate-muted)]">Customer portal</p>
-          <p className="font-bold mt-1">Your upcoming visit</p>
+          <p className="font-bold mt-1">Your cabin proposal</p>
           <div className="mt-3 p-3 rounded-lg bg-[var(--brand-cream)] border border-slate-200">
-            <p className="text-sm font-bold">Thursday · 2–4 PM window</p>
-            <p className="text-xs text-[var(--brand-slate-muted)]">Tech: Assigned crew member</p>
+            <p className="text-sm font-bold">Planning call complete</p>
+            <p className="text-xs text-[var(--brand-slate-muted)]">Site details and estimate summary attached</p>
           </div>
           <div className="mt-3 grid grid-cols-3 gap-2 text-xs font-semibold text-center">
             <div className="bg-slate-100 py-1.5 rounded">Reschedule</div>
@@ -130,17 +130,17 @@ export function FeatureSpotlights() {
     <>
       <FeatureSpotlight
         id="spotlight-receptionist"
-        eyebrow="AI Receptionist"
+        eyebrow="AI Assistant"
         title={
           <>
-            Pick up <span className="orange-underline">every single call</span> — without hiring a front desk.
+            Give the AI <span className="orange-underline">the same context</span> your team has.
           </>
         }
-        body="Powered by Retell + Twilio with a safety net of human-readable transcripts, emergency flagging, and mock mode for demos. Your AI receptionist qualifies the lead, books the slot, and hands a clean job card to dispatch."
+        body="The assistant can reference the business profile, buyer pipeline, customers, estimates, invoices, campaigns, assets, reports, and knowledge items while staying inside explicit guardrails."
         bullets={[
-          'Answers 24/7 in a voice that matches your brand — no robotic hold music.',
-          'Structured leads land in the pipeline with customer, issue, priority, and booking preferences.',
-          'Emergency detection escalates leaks and shutoffs to on-call in under 30 seconds.',
+          'Structured context explains the cabin offer, region, differentiators, and claims the AI must not invent.',
+          'CRM summaries include lead type, source, intended use, land ownership, site access, utilities, and budget.',
+          'Growth records give the assistant campaign, asset, SEO, report, and outreach context.',
         ]}
         image={getLandingImage('receptionist')}
         variant="soft"
@@ -149,17 +149,17 @@ export function FeatureSpotlights() {
 
       <FeatureSpotlight
         id="spotlight-dispatch"
-        eyebrow="Dispatch + Mobile"
+        eyebrow="Pipeline + Follow-Up"
         title={
           <>
-            The whiteboard, but your techs can see it from the truck.
+            The spreadsheet, but every buyer has a next step.
           </>
         }
-        body="Your dispatcher drags jobs across the day; your techs see them on the mobile app. Every status change, photo, and note lands on one timeline — no more three-way text threads about 'where are you?'."
+        body="Move buyers through the cabin-specific pipeline and keep planning calls, site constraints, estimate needs, and nurture timing visible."
         bullets={[
-          'Map-aware dispatch board with drag-and-drop, route optimization, and ETA math.',
-          'Mobile tech view with job details, status, signature capture, and photo uploads.',
-          'Automatic customer text updates for on-the-way, delayed, and completed.',
+          'Stages match the real cabin sales process, not a generic task board.',
+          'Lead details capture site access, utilities, intended use, budget, and buyer type.',
+          'Owner dashboard and reports summarize active pipeline, follow-ups, and source quality.',
         ]}
         image={getLandingImage('dispatch')}
         reverse
@@ -169,17 +169,17 @@ export function FeatureSpotlights() {
 
       <FeatureSpotlight
         id="spotlight-payments"
-        eyebrow="Estimates → Payments"
+        eyebrow="Estimates → Invoices"
         title={
           <>
-            From quote to <span className="orange-underline">paid-in-full</span> in one thread.
+            From planning call to <span className="orange-underline">proposal-ready</span> in one thread.
           </>
         }
-        body="Build a line-item estimate on the truck, send it as a branded link, take the signature, convert to invoice, and collect by Apple Pay or ACH. Stripe Connect keeps deposits, refunds, disputes, and payouts on rails."
+        body="Build a line-item estimate from reusable catalog items, send a branded approval link, capture signatures, convert to invoice, and keep payment settings clear."
         bullets={[
-          'Stripe Connect destination charges with multi-branch payouts and clean 1099-K reporting.',
+          'Stripe Connect support for deposits, refunds, disputes, and payout tracking.',
           'Customer-facing estimate + invoice links with e-signature and token-authed portal.',
-          'Deposits, bulk actions, PDF export, and a unified payments ledger tied to every job.',
+          'PDF export, bulk invoice actions, and a unified ledger tied to customer records.',
         ]}
         image={getLandingImage('payments')}
         mockup={<PaymentsMockup />}
@@ -193,10 +193,10 @@ export function FeatureSpotlights() {
             Give homeowners a front door that isn&apos;t your cell phone.
           </>
         }
-        body="Every customer gets a private portal to see upcoming visits, past invoices, estimates, signed documents, and warranty info. Less answering texts after dinner. More repeat bookings."
+        body="Every customer gets a private portal to review estimates, invoices, signed documents, and shared project context. Less scattered texting. More organized follow-through."
         bullets={[
           'Token-authed portal — no passwords, just a magic link from the invoice.',
-          'Self-serve reschedule, message-your-tech, and one-click re-book for annual services.',
+          'Central place for estimate approvals, invoices, documents, and status context.',
           'SMS + email notifications with consent tracking and full STOP keyword compliance.',
         ]}
         image={getLandingImage('portal')}
@@ -209,10 +209,10 @@ export function FeatureSpotlights() {
         <div className="max-w-7xl mx-auto">
           <div className="grid gap-3">
             {[
-              'AI receptionist: captures caller intent and booking windows.',
-              'Dispatch + mobile: crew status sync with customer ETAs.',
-              'Estimates + payments: send, sign, invoice, and collect online.',
-              'Customer portal: reschedule, message, and view service history.',
+              'AI assistant: answers with CRM and growth context.',
+              'Pipeline: tracks buyer type, site readiness, budget, and follow-up.',
+              'Estimates + invoices: send, sign, approve, and collect online.',
+              'Customer portal: share proposal and account history from one secure link.',
             ].map((line) => (
               <div key={line} className="brand-card p-3.5 text-sm text-[var(--brand-ink)]">
                 {line}

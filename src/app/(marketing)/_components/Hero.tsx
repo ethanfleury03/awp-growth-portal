@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Show } from '@clerk/nextjs';
-import { ArrowRight, CheckCircle2, PhoneCall, Sparkles, Clock3 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ClipboardCheck, Sparkles, Clock3 } from 'lucide-react';
 import { BrowserFrame } from './BrowserFrame';
 import { getLandingImage } from './landing-images';
 
@@ -23,17 +23,17 @@ export function Hero() {
           <div className="lg:col-span-6 text-white fade-up">
             <span className="glow-pill glow-pill-dark">
               <Sparkles className="h-3.5 w-3.5" />
-              AI receptionist · Dispatch · Payments
+              Cabin CRM · Estimates · AI context
             </span>
 
             <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight text-white">
-              Run your plumbing business on{' '}
-              <span className="text-[var(--brand-orange-500)]">autopilot</span>.
+              Run every cabin buyer conversation from{' '}
+              <span className="text-[var(--brand-orange-500)]">one workspace</span>.
             </h1>
 
             <p className="mt-6 text-lg text-white/75 max-w-xl leading-relaxed">
-              WNY Automation Portal is the all-in-one operating system for modern plumbing companies. Every call becomes a
-              lead, every lead becomes a job, every job gets paid — without the late-night Excel sheet.
+              WNY Automation Portal gives custom cabin builders a polished CRM for leads, customers, site-readiness
+              details, estimates, outreach, reporting, and an AI assistant that understands the whole account.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -60,19 +60,19 @@ export function Hero() {
             <ul className="mt-8 grid grid-cols-2 gap-y-2 gap-x-6 text-sm text-white/70 max-w-md">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-[var(--brand-orange-500)]" />
-                No credit card required
+                Cabin-specific pipeline
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-[var(--brand-orange-500)]" />
-                Launch in one afternoon
+                AI with CRM context
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-[var(--brand-orange-500)]" />
-                Built-in online payments
+                Estimate workflow
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-[var(--brand-orange-500)]" />
-                Works on every device
+                Outreach and reporting
               </li>
             </ul>
           </div>
@@ -91,28 +91,28 @@ export function Hero() {
 
               <div className="hidden sm:block absolute -left-10 top-10 w-72 brand-card p-4 text-[var(--brand-ink)]">
                 <div className="flex items-center gap-2 text-xs font-semibold text-[var(--brand-orange-600)]">
-                  <PhoneCall className="h-3.5 w-3.5" />
-                  Live receptionist handoff
+                  <ClipboardCheck className="h-3.5 w-3.5" />
+                  New buyer inquiry
                 </div>
-                <p className="mt-2 text-sm font-semibold">Incoming emergency request</p>
+                <p className="mt-2 text-sm font-semibold">Lake Placid second-home cabin</p>
                 <p className="text-xs text-[var(--brand-slate-muted)] leading-snug mt-1">
-                  &ldquo;Water heater leak reported. Preferred arrival window: today.&rdquo;
+                  &ldquo;Owns land, needs site-access review, target budget $300k-$400k.&rdquo;
                 </p>
                 <div className="mt-3 inline-flex items-center gap-1 rounded-md bg-[var(--brand-blue-500)] px-2 py-1 text-[11px] font-semibold text-white">
-                  Auto-creating lead card
+                  Routed to planning call
                 </div>
               </div>
 
               <div className="hidden sm:block absolute -right-8 -bottom-8 w-72 brand-card p-4 text-[var(--brand-ink)]">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[var(--brand-slate-muted)]">Invoice payment</span>
+                  <span className="text-xs font-semibold text-[var(--brand-slate-muted)]">Proposal status</span>
                   <span className="text-[11px] bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded-full">
-                    COLLECTED
+                    READY
                   </span>
                 </div>
-                <p className="mt-2 text-2xl font-bold">Status: Paid</p>
+                <p className="mt-2 text-2xl font-bold">Estimate prepared</p>
                 <div className="flex items-center gap-1 text-xs text-[var(--brand-slate-muted)] mt-1">
-                  <Clock3 className="h-3 w-3" /> Customer paid through secure checkout
+                  <Clock3 className="h-3 w-3" /> Customer history, notes, and site details attached
                 </div>
                 <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                   <div className="h-full w-full bg-gradient-to-r from-[var(--brand-blue-500)] to-[var(--brand-blue-600)]" />
@@ -124,9 +124,9 @@ export function Hero() {
 
         <div className="md:hidden mt-10 grid gap-3">
           {[
-            'AI answers every inbound call and captures intent.',
-            'Dispatch updates crews and customers in one timeline.',
-            'Invoices and payments are tracked end to end.',
+            'AI assistant answers with live CRM context.',
+            'Pipeline stages match the cabin sales process.',
+            'Estimates, outreach, and reports stay connected.',
           ].map((line) => (
             <div key={line} className="brand-card p-3.5 text-sm text-[var(--brand-ink)]">
               {line}
@@ -136,7 +136,7 @@ export function Hero() {
 
         <div className="mt-16 pt-10 border-t border-white/10 text-center">
           <p className="trust-mark text-white/60">
-            Onboarding early access plumbing shops now. Join the waitlist to reserve your rollout window.
+            Built for Adirondack White Pine Cabins and reusable for serious client workspaces.
           </p>
         </div>
       </div>
@@ -151,7 +151,7 @@ export function Hero() {
 function BrowserFrameMock() {
   return (
     <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mb-20 -mt-8 hidden md:block">
-      <BrowserFrame url="app.plumber.os/dashboard">
+      <BrowserFrame url="portal.wnyautomation.com/app">
         <div className="grid grid-cols-12 h-[360px]">
           <aside className="col-span-3 bg-[var(--brand-navy-900)] text-white/80 p-5">
             <div className="flex items-center gap-2 mb-6">
@@ -161,12 +161,12 @@ function BrowserFrameMock() {
             <ul className="space-y-1.5 text-sm">
               {[
                 ['Dashboard', true],
-                ['Leads', false],
-                ['Jobs', false],
-                ['Dispatch', false],
+                ['CRM', false],
+                ['Customers', false],
                 ['Estimates', false],
                 ['Invoices', false],
-                ['Payments', false],
+                ['Outreach', false],
+                ['AI Assistant', false],
                 ['Reports', false],
               ].map(([label, active]) => (
                 <li
@@ -181,9 +181,9 @@ function BrowserFrameMock() {
           <div className="col-span-9 p-6 bg-[var(--brand-cream)]">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-bold text-lg text-[var(--brand-ink)]">Today&apos;s operations</h3>
+                <h3 className="font-bold text-lg text-[var(--brand-ink)]">Cabin buyer workspace</h3>
                 <p className="text-xs text-[var(--brand-slate-muted)]">
-                  Live calls, active jobs, and invoices in one shared timeline
+                  Leads, customers, site readiness, outreach, and proposals in one place
                 </p>
               </div>
               <div className="hidden sm:flex gap-2">
@@ -198,10 +198,10 @@ function BrowserFrameMock() {
 
             <div className="grid grid-cols-4 gap-3 mb-5">
               {[
-                ['Leads', '48', '+12 today'],
-                ['Jobs', '12', '3 in progress'],
-                ['Invoices', '$18,420', 'pending'],
-                ['Revenue', '$112k', 'this month'],
+                ['Leads', '48', '12 active'],
+                ['Qualified', '16', 'site-ready'],
+                ['Estimates', '$842k', 'pipeline value'],
+                ['Campaigns', '9', 'in motion'],
               ].map(([label, value, sub]) => (
                 <div key={label as string} className="bg-white rounded-lg p-3 border border-slate-200">
                   <div className="text-[11px] text-[var(--brand-slate-muted)]">{label as string}</div>
@@ -217,9 +217,9 @@ function BrowserFrameMock() {
               </div>
               <ul className="divide-y divide-slate-100 text-sm">
                 {[
-                  ['Emergency leak request', 'Water heater issue', 'Booked', 'bg-emerald-50 text-emerald-700'],
-                  ['Inspection request', 'Slab leak assessment', 'Quoted', 'bg-amber-50 text-amber-700'],
-                  ['Service request', 'Kitchen drain clog', 'New', 'bg-sky-50 text-sky-700'],
+                  ['Second-home cabin', 'Lake Placid buyer', 'Planning call', 'bg-emerald-50 text-emerald-700'],
+                  ['Campground expansion', 'Multi-unit rental cabins', 'Qualified', 'bg-amber-50 text-amber-700'],
+                  ['Realtor partner', 'Land-buyer referrals', 'Contacted', 'bg-sky-50 text-sky-700'],
                 ].map(([name, issue, status, cls]) => (
                   <li key={name as string} className="px-4 py-2.5 flex items-center justify-between">
                     <div>

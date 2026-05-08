@@ -54,7 +54,7 @@ function NewEstimateForm() {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
-  const [title, setTitle] = useState('Plumbing estimate');
+  const [title, setTitle] = useState('Cabin proposal estimate');
   const [rows, setRows] = useState<DraftLine[]>([newRow()]);
   const [estimateDiscountDisplay, setEstimateDiscountDisplay] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -289,9 +289,9 @@ function NewEstimateForm() {
           <p className="text-gray-500 text-sm mt-1">{contextLine}</p>
           <p className="text-sm mt-2">
             <Link href="/crm/service-catalog" className="text-blue-600 hover:underline font-medium">
-              Manage service catalog
+              Manage estimate catalog
             </Link>
-            <span className="text-gray-500"> — add or edit reusable services and default prices.</span>
+            <span className="text-gray-500"> — add or edit reusable proposal items and default prices.</span>
           </p>
         </header>
 
@@ -313,7 +313,7 @@ function NewEstimateForm() {
                     <div>
                       <h2 className="text-sm font-semibold text-gray-900">Line items</h2>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        Pick a catalog service to fill name and price, then adjust as needed. Or choose “Custom” and
+                        Pick a catalog item to fill name and price, then adjust as needed. Or choose “Custom” and
                         type your own.
                       </p>
                     </div>
@@ -331,9 +331,9 @@ function NewEstimateForm() {
                     <p className="text-sm text-gray-500 mt-4">Loading catalog…</p>
                   ) : catalog.length === 0 ? (
                     <p className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-4">
-                      No catalog services yet.{' '}
+                      No catalog items yet.{' '}
                       <Link href="/crm/service-catalog" className="font-medium text-blue-700 hover:underline">
-                        Create services in the catalog
+                        Create items in the catalog
                       </Link>{' '}
                       first, or use custom lines only.
                     </p>
@@ -359,7 +359,7 @@ function NewEstimateForm() {
                           ) : null}
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600">Catalog service</label>
+                          <label className="block text-xs font-medium text-gray-600">Catalog item</label>
                           <select
                             className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             value={row.catalog_service_id || ''}

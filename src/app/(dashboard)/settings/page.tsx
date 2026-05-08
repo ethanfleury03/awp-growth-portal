@@ -151,7 +151,7 @@ export default function SettingsPage() {
               <ConsolePanel title="Owner Portal Scope" description="The AWP portal is intentionally focused on growth work.">
                 <div className="space-y-3 text-sm leading-6 text-[var(--ops-muted)]">
                   <p>
-                    Calls, receptionist, dispatch, map, calendar, team, jobs, and service catalog modules are outside the normal cabin-owner navigation.
+                    Calls, receptionist, dispatch, map, calendar, team, and jobs are outside the normal cabin-owner navigation.
                   </p>
                   <p>
                     The active owner workspace focuses on CRM pipeline, customers, estimates, invoices, marketing, outreach, AI assistance, reports, and settings.

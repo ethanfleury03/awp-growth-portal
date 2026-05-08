@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 export function BrowserFrame({
-  url = 'app.plumber.os',
+  url = 'portal.wnyautomation.com',
   children,
   className = '',
 }: {

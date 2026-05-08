@@ -508,14 +508,14 @@ export default function EstimateDetailPage() {
                   href="/crm/service-catalog"
                   className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
                 >
-                  Manage services
+                  Manage catalog
                 </Link>
               </div>
               {catalogServices.length === 0 ? (
                 <p className="text-sm text-gray-700">
-                  No catalog services yet.{' '}
+                  No catalog items yet.{' '}
                   <Link href="/crm/service-catalog" className="font-medium text-blue-600 hover:underline">
-                    Add services
+                    Add items
                   </Link>{' '}
                   to use quick add.
                 </p>

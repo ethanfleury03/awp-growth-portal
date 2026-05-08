@@ -49,8 +49,8 @@ export default function SecurityPage() {
           <h2 className="text-lg font-semibold text-slate-900 mb-2">Reporting security concerns</h2>
           <p>
             Please report vulnerabilities to{' '}
-            <a className="text-[var(--brand-orange-600)] hover:underline" href="mailto:security@plumber.os">
-              security@plumber.os
+            <a className="text-[var(--brand-orange-600)] hover:underline" href="mailto:security@wnyautomation.com">
+              security@wnyautomation.com
             </a>
             . Please do not disclose vulnerabilities publicly before coordinated remediation.
           </p>

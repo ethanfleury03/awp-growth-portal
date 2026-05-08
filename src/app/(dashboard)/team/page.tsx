@@ -33,7 +33,7 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [newPlumber, setNewPlumber] = useState({ name: '', email: '', phone: '', role: 'Plumber' });
+  const [newPlumber, setNewPlumber] = useState({ name: '', email: '', phone: '', role: 'Team Member' });
 
   useEffect(() => {
     const fetchPlumbers = async () => {
@@ -94,10 +94,10 @@ export default function TeamPage() {
       }
 
       setPlumbers((current) => [{ ...data.plumber, jobs_today: 0, completed_this_week: 0 }, ...current]);
-      setNewPlumber({ name: '', email: '', phone: '', role: 'Plumber' });
+      setNewPlumber({ name: '', email: '', phone: '', role: 'Team Member' });
       setShowAddModal(false);
     } catch {
-      setError('Failed to add plumber');
+      setError('Failed to add team member');
     } finally {
       setSubmitting(false);
     }
@@ -121,12 +121,12 @@ export default function TeamPage() {
         current.map((entry) => (entry.id === plumber.id ? { ...entry, active: data.plumber.active } : entry))
       );
     } catch {
-      setError('Failed to update plumber');
+      setError('Failed to update team member');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this plumber?')) {
+    if (!confirm('Delete this team member?')) {
       return;
     }
 
@@ -141,7 +141,7 @@ export default function TeamPage() {
 
       setPlumbers((current) => current.filter((plumber) => plumber.id !== id));
     } catch {
-      setError('Failed to delete plumber');
+      setError('Failed to delete team member');
     }
   };
 
@@ -151,7 +151,7 @@ export default function TeamPage() {
         <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Team</h1>
-            <p className="text-gray-500 text-sm">Manage your plumbers and field workers</p>
+            <p className="text-gray-500 text-sm">Manage CRM users, sales staff, and field contacts</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -169,7 +169,7 @@ export default function TeamPage() {
               className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-xl font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30"
             >
               <Plus className="w-4 h-4" />
-              Add Plumber
+              Add Team Member
             </button>
           </div>
         </header>
@@ -288,7 +288,7 @@ export default function TeamPage() {
               <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
                 <Plus className="w-8 h-8" />
               </div>
-              <p className="font-medium">Add New Plumber</p>
+              <p className="font-medium">Add New Team Member</p>
             </button>
           </div>
 
@@ -302,7 +302,7 @@ export default function TeamPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Add New Plumber</h2>
+              <h2 className="text-xl font-bold text-gray-900">Add New Team Member</h2>
               <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-gray-100 rounded-xl">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
@@ -326,7 +326,7 @@ export default function TeamPage() {
                   value={newPlumber.email}
                   onChange={(e) => setNewPlumber({ ...newPlumber, email: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="john@plumberos.com"
+                  placeholder="john@wnyautomation.com"
                 />
               </div>
               <div>
@@ -346,11 +346,11 @@ export default function TeamPage() {
                   onChange={(e) => setNewPlumber({ ...newPlumber, role: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="Apprentice">Apprentice</option>
-                  <option value="Journeyman">Journeyman</option>
-                  <option value="Plumber">Plumber</option>
-                  <option value="Senior Plumber">Senior Plumber</option>
-                  <option value="Master Plumber">Master Plumber</option>
+                  <option value="Team Member">Team Member</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Office Manager">Office Manager</option>
+                  <option value="Project Coordinator">Project Coordinator</option>
+                  <option value="Field Lead">Field Lead</option>
                 </select>
               </div>
             </div>
@@ -367,7 +367,7 @@ export default function TeamPage() {
                 disabled={submitting}
                 className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 disabled:opacity-50"
               >
-                {submitting ? 'Adding...' : 'Add Plumber'}
+                {submitting ? 'Adding...' : 'Add Team Member'}
               </button>
             </div>
           </div>

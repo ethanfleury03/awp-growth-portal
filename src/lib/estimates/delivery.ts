@@ -51,7 +51,7 @@ ${input.publicUrl}
 If you have questions, reply to this email or call our office.
 
 Thank you,
-Your plumbing team`;
+Your project team`;
   return { subject, body };
 }
 

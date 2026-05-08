@@ -1,33 +1,33 @@
-import { PhoneIncoming, KanbanSquare, Wrench, BadgeDollarSign, ArrowRight } from 'lucide-react';
+import { PhoneIncoming, KanbanSquare, ClipboardCheck, BadgeDollarSign, ArrowRight } from 'lucide-react';
 
 const STEPS = [
   {
     icon: PhoneIncoming,
     step: '01',
-    title: 'Call comes in',
-    body: 'AI receptionist answers, qualifies, books the slot, drops a structured lead.',
-    bullets: ['Retell + Twilio voice', 'Emergency triage', 'Mock mode for demos'],
+    title: 'Inquiry comes in',
+    body: 'A buyer, realtor, campground, or partner is captured with source, intent, budget, location, and context.',
+    bullets: ['Website, phone, email, referral', 'Cabin-specific fields', 'AI summary'],
   },
   {
     icon: KanbanSquare,
     step: '02',
-    title: 'Dispatch assigns a tech',
-    body: 'Drag the job onto the board; the nearest tech gets the route + ETA math.',
-    bullets: ['Map + schedule view', 'Drag-and-drop', 'Customer ETA texts'],
+    title: 'Pipeline sets the next step',
+    body: 'Move the opportunity through qualification, planning call, site details, proposal, won, lost, or nurture.',
+    bullets: ['Drag-and-drop CRM', 'Follow-up timing', 'Pipeline reporting'],
   },
   {
-    icon: Wrench,
+    icon: ClipboardCheck,
     step: '03',
-    title: 'Tech works the job',
-    body: 'Mobile app with status, signature, photos, and an on-the-spot estimate + invoice.',
-    bullets: ['Built for gloves', 'Signature + photo upload', 'Offline-friendly'],
+    title: 'Proposal gets prepared',
+    body: 'Use customer history, site-readiness notes, catalog items, and guardrails to prepare a clean estimate.',
+    bullets: ['Reusable catalog', 'Customer snapshots', 'Public approval link'],
   },
   {
     icon: BadgeDollarSign,
     step: '04',
-    title: 'Payment hits the bank',
-    body: 'Stripe Connect settles the invoice; you see the payout, the fees, and the ledger.',
-    bullets: ['Apple Pay + ACH', '2-day payouts', 'Unified ledger'],
+    title: 'Follow-up stays organized',
+    body: 'Invoices, payment links, campaign source, next action, and AI context stay tied to the same account.',
+    bullets: ['Invoice tracking', 'Outreach context', 'Owner reporting'],
   },
 ];
 
@@ -38,10 +38,10 @@ export function Workflow() {
         <div className="max-w-3xl mb-14">
           <span className="eyebrow">How it works</span>
           <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Four steps from ringing phone to cleared payout.
+            Four steps from raw inquiry to organized follow-up.
           </h2>
           <p className="mt-4 text-lg text-[var(--brand-slate)]">
-            Every handoff is auto-logged. Nothing lives in your head, a sticky note, or a spreadsheet.
+            Every handoff is visible. Nothing lives only in someone&apos;s head, a sticky note, or a spreadsheet.
           </p>
         </div>
 

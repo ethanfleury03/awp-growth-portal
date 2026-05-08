@@ -34,32 +34,32 @@ const IMAGE_META: Record<
   { alt: string; width: number; height: number }
 > = {
   hero: {
-    alt: 'A plumber in navy workwear smiles at a smartphone beside a branded service van at golden hour.',
+    alt: 'A cabin builder reviews customer details on a phone outside a finished Adirondack cabin.',
     width: 1600,
     height: 900,
   },
   receptionist: {
-    alt: 'Close-up of a tablet on a workshop bench showing a live AI receptionist call transcript.',
+    alt: 'Close-up of a tablet showing an AI-generated summary for a custom cabin buyer inquiry.',
     width: 1200,
     height: 900,
   },
   dispatch: {
-    alt: 'Dispatcher at a desk with three monitors full of map pins and a schedule grid.',
+    alt: 'Office desk with a CRM pipeline, site-readiness notes, and Adirondack project map on multiple screens.',
     width: 1200,
     height: 900,
   },
   payments: {
-    alt: 'Homeowner hands a phone back to a plumber after signing, both smiling in a warm kitchen.',
+    alt: 'Customer and cabin builder review a proposal and approval link on a phone.',
     width: 1000,
     height: 1000,
   },
   portal: {
-    alt: 'Laptop on a kitchen island showing the WNY Automation Portal customer portal with upcoming appointments.',
+    alt: 'Laptop on a cabin table showing the WNY Automation Portal customer portal with proposal details.',
     width: 1000,
     height: 1000,
   },
   team: {
-    alt: 'Three plumbers of varied backgrounds laughing in front of a branded van in morning light.',
+    alt: 'Cabin-building team reviewing plans outside a finished white pine cabin.',
     width: 1600,
     height: 900,
   },

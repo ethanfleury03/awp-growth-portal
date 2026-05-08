@@ -3,18 +3,18 @@ import { PhoneIncoming, CalendarCheck2, Wallet } from 'lucide-react';
 const VALUES = [
   {
     icon: PhoneIncoming,
-    title: 'Every call becomes a job',
-    body: 'The AI receptionist answers in seconds, books the right slot, and drops a structured lead into your pipeline — even at 11 PM on a Saturday.',
+    title: 'Every inquiry becomes a lead',
+    body: 'Website, phone, email, referral, and outreach responses land in a structured cabin-buyer pipeline with the right qualification fields.',
   },
   {
     icon: CalendarCheck2,
-    title: 'Every job stays on schedule',
-    body: 'Dispatch assigns the nearest tech, the mobile app tracks arrival, and customers get real-time ETA texts without anyone in the office.',
+    title: 'Every buyer has a next step',
+    body: 'Track planning calls, site readiness, utility questions, estimates, follow-ups, and nurture timing without hunting through notes.',
   },
   {
     icon: Wallet,
-    title: 'Every invoice gets paid',
-    body: 'Stripe Connect collects deposits, split payouts, refunds, and disputes. Ops sees the whole ledger. Techs just tap approve.',
+    title: 'Every proposal stays connected',
+    body: 'Estimates, invoices, customer history, campaign source, and AI context stay tied to the same account record.',
   },
 ];
 
@@ -25,11 +25,11 @@ export function ValueStrip() {
         <div className="text-center max-w-3xl mx-auto mb-14">
           <span className="eyebrow">Why operators switch</span>
           <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Built for the three moments that actually move revenue.
+            Built for the three moments that actually move cabin sales.
           </h2>
           <p className="mt-4 text-[var(--brand-slate)] text-lg">
-            Revenue leaks happen at handoff points: call to booking, booking to dispatch, and job closeout to
-            payment. WNY Automation Portal is built around keeping each handoff clean.
+            Deals get lost when inquiry details, site constraints, estimates, and follow-up notes split across tools.
+            WNY Automation Portal keeps those handoffs visible and accountable.
           </p>
         </div>
 

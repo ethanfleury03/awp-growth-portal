@@ -23,12 +23,12 @@ interface Tier {
 const TIERS: Tier[] = [
   {
     name: 'Starter',
-    tagline: 'For owner-operators and first-time hires.',
+    tagline: 'For owner-led teams getting the CRM organized.',
     priceMonthly: 149,
     features: [
-      '1 branch',
-      'Up to 2 techs',
-      'AI receptionist (shared voice)',
+      '1 workspace',
+      'Up to 2 users',
+      'AI assistant with CRM context',
       'Estimates + invoices + PDFs',
       'Stripe Connect payments',
       'Customer portal',
@@ -40,17 +40,17 @@ const TIERS: Tier[] = [
   },
   {
     name: 'Pro',
-    tagline: 'For growing shops hitting dispatch pain.',
+    tagline: 'For growing teams with active outreach and follow-up.',
     priceMonthly: 349,
     features: [
-      '3 branches',
-      'Up to 10 techs',
-      'AI receptionist (branded voice)',
-      'Dispatch board + route suggestions',
-      'Mobile tech app',
+      '3 workspaces or brands',
+      'Up to 10 users',
+      'Advanced AI context controls',
+      'Cabin buyer pipeline',
+      'Mobile workspace',
       'Bulk actions on invoices',
       'Reports dashboard',
-      'Service contracts',
+      'Marketing and outreach trackers',
       'SMS notifications + STOP handling',
       'Signature capture on estimates',
     ],
@@ -61,10 +61,10 @@ const TIERS: Tier[] = [
   },
   {
     name: 'Scale',
-    tagline: 'For multi-branch operators and franchises.',
+    tagline: 'For multi-brand teams and managed client workspaces.',
     priceMonthly: 'custom',
     features: [
-      'Unlimited branches + techs',
+      'Unlimited workspaces + users',
       'SSO (Clerk + SAML)',
       'Audit log export + SOC alignment',
       'Super-admin controls + feature flags',
@@ -78,13 +78,13 @@ const TIERS: Tier[] = [
 ];
 
 const COMPARE = [
-  { label: 'Branches', rows: ['1', '3', 'Unlimited'] },
-  { label: 'Techs', rows: ['2', '10', 'Unlimited'] },
-  { label: 'AI receptionist', rows: ['Shared voice', 'Branded voice', 'Multi-voice + routing'] },
-  { label: 'Dispatch board', rows: [false, true, true] },
-  { label: 'Mobile tech app', rows: [false, true, true] },
+  { label: 'Workspaces', rows: ['1', '3', 'Unlimited'] },
+  { label: 'Users', rows: ['2', '10', 'Unlimited'] },
+  { label: 'AI assistant context', rows: ['Core CRM', 'CRM + growth records', 'Custom guardrails + sources'] },
+  { label: 'Cabin buyer pipeline', rows: [true, true, true] },
+  { label: 'Mobile workspace', rows: [false, true, true] },
   { label: 'Reports dashboard', rows: [false, true, true] },
-  { label: 'Service contracts', rows: [false, true, true] },
+  { label: 'Marketing outreach trackers', rows: [false, true, true] },
   { label: 'Signature capture', rows: [false, true, true] },
   { label: 'SMS notifications', rows: [false, true, true] },
   { label: 'SSO (SAML)', rows: [false, false, true] },
@@ -101,7 +101,7 @@ export function Pricing() {
         <div className="text-center max-w-3xl mx-auto mb-10">
           <span className="eyebrow">Pricing</span>
           <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Simple, shop-friendly pricing.
+            Simple, workspace-friendly pricing.
           </h2>
           <p className="mt-4 text-lg text-[var(--brand-slate)]">
             Start free for 14 days. No credit card. Cancel anytime. Stripe fees passed through at cost — we

@@ -6,12 +6,12 @@ import { absoluteUrl, getSiteUrl } from '@/lib/marketing/site';
 export const metadata: Metadata = {
   title: 'Pricing — WNY Automation Portal',
   description:
-    'Starter, Pro, and Scale plans for plumbing companies. Feature comparison, monthly or annual billing, no payment markup.',
+    'Starter, Pro, and Scale plans for CRM workspaces. Feature comparison, monthly or annual billing, no payment markup.',
   alternates: { canonical: '/pricing' },
   openGraph: {
     title: 'Pricing — WNY Automation Portal',
     description:
-      'Starter, Pro, and Scale plans for plumbing companies with feature comparison.',
+      'Starter, Pro, and Scale plans for CRM workspaces with feature comparison.',
     url: '/pricing',
     type: 'website',
     images: [absoluteUrl('/opengraph-image')],
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Pricing — WNY Automation Portal',
     description:
-      'Starter, Pro, and Scale plans for plumbing companies.',
+      'Starter, Pro, and Scale plans for polished CRM workspaces.',
     images: [absoluteUrl('/twitter-image')],
   },
 };

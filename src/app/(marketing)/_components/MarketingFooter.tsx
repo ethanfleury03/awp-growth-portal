@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { Wrench, Twitter, Linkedin, Github } from 'lucide-react';
+import { Building2, Twitter, Linkedin, Github } from 'lucide-react';
 
 const PRODUCT_LINKS = [
-  { label: 'AI Receptionist', href: '/features#spotlight-receptionist' },
-  { label: 'Dispatch & Mobile', href: '/features#spotlight-dispatch' },
+  { label: 'AI Assistant', href: '/features#spotlight-receptionist' },
+  { label: 'Pipeline & Follow-Up', href: '/features#spotlight-dispatch' },
   { label: 'Estimates & Invoices', href: '/features#spotlight-payments' },
   { label: 'Customer Portal', href: '/features#spotlight-portal' },
   { label: 'Reports', href: '/features#features-grid' },
@@ -51,13 +51,13 @@ export function MarketingFooter() {
           <div className="col-span-2">
             <Link href="/" className="inline-flex items-center gap-2.5 text-white">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--brand-blue-500)] to-[var(--brand-blue-600)] text-white shadow-[0_14px_32px_-16px_rgba(37,76,137,0.72)]">
-                <Wrench className="h-5 w-5" />
+                <Building2 className="h-5 w-5" />
               </span>
               <span className="text-lg font-bold tracking-tight">WNY Automation Portal</span>
             </Link>
             <p className="mt-4 text-sm max-w-sm leading-relaxed">
-              The operating system for modern plumbing companies. Capture every call, dispatch the right tech, and
-              get paid faster.
+              A polished CRM workspace for cabin builders and growth teams. Organize leads, customers, estimates,
+              outreach, reporting, and AI context in one secure portal.
             </p>
             {hasSocial ? (
               <div className="mt-6 flex items-center gap-3">
@@ -162,7 +162,7 @@ export function MarketingFooter() {
           <p className="text-xs text-white/50">
             © {new Date().getFullYear()} WNY Automation Portal, Inc. All rights reserved.
           </p>
-          <p className="text-xs text-white/50">Made for plumbers, by builders who&apos;ve been on the truck.</p>
+          <p className="text-xs text-white/50">Made for operators who need clean handoffs and accountable follow-up.</p>
         </div>
       </div>
     </footer>

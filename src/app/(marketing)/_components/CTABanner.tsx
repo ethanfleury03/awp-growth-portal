@@ -17,16 +17,16 @@ export function CTABanner() {
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
         <span className="glow-pill glow-pill-dark">
           <PhoneCall className="h-3.5 w-3.5" />
-          Let&apos;s run the numbers on your shop
+          Let&apos;s organize the cabin pipeline
         </span>
         <h2 className="mt-6 text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-          Stop losing jobs to voicemail.
+          Stop losing cabin buyers to scattered notes.
           <br />
-          <span className="text-[var(--brand-orange-500)]">Start running the shop like it&apos;s 2026.</span>
+          <span className="text-[var(--brand-orange-500)]">Run the workspace like it&apos;s 2026.</span>
         </h2>
         <p className="mt-6 text-lg text-white/75 max-w-2xl mx-auto">
-          Spin up a free 14-day trial or book a 20-minute demo with a former dispatcher on our team. We&apos;ll
-          import your customers and get you live on your next ringing phone.
+          Spin up a free 14-day trial or book a focused walkthrough. We&apos;ll help map the lead stages, import
+          customers, and make sure the AI assistant has the right business context.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Show when="signed-out">
@@ -37,7 +37,7 @@ export function CTABanner() {
             <LeadModal
               kind="demo"
               title="Book a demo"
-              description="Tell us about your shop and we'll follow up with a tailored walkthrough."
+              description="Tell us about your team and we'll follow up with a tailored walkthrough."
               triggerLabel="Book a demo"
               triggerClassName="btn-ghost text-base"
               fields={['name', 'email', 'company', 'phone', 'message']}

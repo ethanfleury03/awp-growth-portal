@@ -19,23 +19,23 @@ import {
 const TILES = [
   {
     icon: Bot,
-    title: 'AI Receptionist',
-    body: 'Retell + Twilio voice, live transcription, emergency triage, and a mock mode for onboarding demos.',
+    title: 'AI Growth Assistant',
+    body: 'Answers with CRM-wide context: business profile, leads, customers, estimates, campaigns, assets, reports, and guardrails.',
   },
   {
     icon: KanbanSquare,
-    title: 'Lead Inbox + Kanban',
-    body: 'Drag-and-drop buckets: New → Qualified → Booked → Won. No more losing a job in a notebook.',
+    title: 'Cabin Buyer Pipeline',
+    body: 'Purpose-built stages from New Lead to Site Details Needed, Proposal Sent, Won, Lost, and Nurture.',
   },
   {
     icon: FileText,
     title: 'Estimates',
-    body: 'Line items, multi-tier options, public approval links, e-signature, and PDF export.',
+    body: 'Reusable catalog items, line-item proposals, public approval links, e-signature, deposits, and PDF export.',
   },
   {
     icon: Receipt,
     title: 'Invoices + PDFs',
-    body: 'Branded PDFs, bulk actions, customer-facing token view, status automation.',
+    body: 'Customer-facing token views, branded PDFs, bulk actions, payment status, and clean follow-up workflows.',
   },
   {
     icon: CreditCard,
@@ -44,13 +44,13 @@ const TILES = [
   },
   {
     icon: MapPin,
-    title: 'Dispatch Board',
-    body: 'Map + schedule with drag-and-drop assignment, route suggestions, and ETA math.',
+    title: 'Site Readiness',
+    body: 'Track land ownership, site access, utilities, slab/foundation needs, region, timeline, and buyer intent.',
   },
   {
     icon: Smartphone,
-    title: 'Mobile Tech App',
-    body: 'Job list, directions, status updates, signature capture, and photo uploads — built for gloves.',
+    title: 'Mobile Workspace',
+    body: 'Responsive CRM, customer history, proposal links, and activity context for sales and office staff.',
   },
   {
     icon: PenTool,
@@ -59,8 +59,8 @@ const TILES = [
   },
   {
     icon: RefreshCcw,
-    title: 'Service Contracts',
-    body: 'Recurring maintenance plans that auto-generate jobs and invoices on the cadence you set.',
+    title: 'Follow-Up Loops',
+    body: 'Nurture leads, schedule next actions, and keep referrals, campaigns, and buyers from going stale.',
   },
   {
     icon: Paperclip,
@@ -70,12 +70,12 @@ const TILES = [
   {
     icon: MessageSquare,
     title: 'SMS + Email',
-    body: 'Transactional notifications with consent, STOP handling, and per-branch sender identities.',
+    body: 'Transactional notifications with consent, STOP handling, and workspace-level sender configuration.',
   },
   {
     icon: Search,
     title: 'Global Search (⌘K)',
-    body: 'Cmd-K jumps across customers, jobs, invoices, estimates, and leads in under 50ms.',
+    body: 'Cmd-K jumps across customers, invoices, estimates, leads, and workspace records in under 50ms.',
   },
   {
     icon: ShieldCheck,
@@ -85,12 +85,12 @@ const TILES = [
   {
     icon: BarChart3,
     title: 'Reports Dashboard',
-    body: 'KPIs for invoices, payments, jobs, and leads. 7/30/90/365-day toggles, export-ready.',
+    body: 'Lead source, pipeline, campaign, estimate, invoice, and growth summaries built for owner review.',
   },
   {
     icon: Building2,
     title: 'Multi-branch + RLS',
-    body: 'Postgres row-level security plus app-layer tenant guards — no data leaks between shops.',
+    body: 'Postgres row-level security plus app-layer tenant guards — no data leaks between client workspaces.',
   },
 ];
 
@@ -105,8 +105,8 @@ export function FeatureGrid() {
             One platform instead of eight subscriptions.
           </h2>
           <p className="mt-4 text-lg text-[var(--brand-slate)]">
-            WNY Automation Portal replaces your answering service, CRM, scheduling app, invoicing tool, payment terminal,
-            customer portal, and the homemade spreadsheet that held it all together.
+            WNY Automation Portal replaces the spreadsheet stack: lead tracker, customer notes, follow-up list,
+            estimate catalog, outreach tracker, reporting doc, and AI prompt scratchpad.
           </p>
         </div>
 
@@ -123,7 +123,7 @@ export function FeatureGrid() {
         </div>
 
         <p className="mt-10 text-sm text-[var(--brand-slate-muted)]">
-          Plus: super-admin panel, feature flags, privacy export/delete, CSV import, Twilio inbound SMS, Inngest
+          Plus: super-admin panel, feature flags, privacy export/delete, CSV import, inbound SMS, Inngest
           background jobs, Sentry, structured logging, Postgres + SQLite dual-driver, Clerk auth.
         </p>
       </div>

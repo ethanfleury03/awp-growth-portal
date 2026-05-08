@@ -193,7 +193,7 @@ export function LeadForm({
 
       {enabledFields.includes('trade') ? (
         <label className="marketing-label">
-          <span className="marketing-label-text">Trade</span>
+          <span className="marketing-label-text">Workflow</span>
           <input
             type="text"
             className="marketing-field"

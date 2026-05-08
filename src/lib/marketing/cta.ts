@@ -1,6 +1,6 @@
 /** Sales contact for mailto links (marketing + pricing). */
 export function getSalesEmail(): string {
-  return process.env.NEXT_PUBLIC_SALES_EMAIL?.trim() || 'sales@plumber.os';
+  return process.env.NEXT_PUBLIC_SALES_EMAIL?.trim() || 'sales@wnyautomation.com';
 }
 
 export function getSalesMailto(): string {

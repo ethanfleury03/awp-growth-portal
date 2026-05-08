@@ -15,16 +15,15 @@ export function IndustriesHero() {
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 md:pt-20 md:pb-24 text-center">
         <span className="glow-pill glow-pill-dark">
           <Sparkles className="h-3.5 w-3.5" />
-          One platform · Every trade
+          One platform · Cabin growth workflows
         </span>
         <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight text-white">
-          Built for plumbers.{' '}
-          <span className="text-[var(--brand-orange-500)]">Ready for every trade.</span>
+          Built around the way cabin buyers actually decide.{' '}
+          <span className="text-[var(--brand-orange-500)]">Ready for every handoff.</span>
         </h1>
         <p className="mt-6 text-lg text-white/75 max-w-2xl mx-auto leading-relaxed">
-          Plumbing is where we started and where we&apos;re deepest — but the same
-          operating system that captures calls, dispatches techs, and collects
-          payment works for every home-services trade. Here&apos;s where we are today.
+          Track homeowners, landowners, realtors, campground operators, STR investors, and site-prep partners in
+          one CRM that keeps site details, outreach, estimates, and AI context connected.
         </p>
       </div>
 

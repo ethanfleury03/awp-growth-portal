@@ -27,7 +27,7 @@ export default function ContactPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <p className="eyebrow">Contact sales</p>
         <h1 className="mt-4 text-4xl sm:text-5xl font-extrabold tracking-tight text-[var(--brand-ink)]">
-          Tell us about your shop.
+          Tell us about your workflow.
         </h1>
         <p className="mt-5 text-lg text-[var(--brand-slate)]">
           We&apos;ll map your current workflow and share a practical rollout path for your team.

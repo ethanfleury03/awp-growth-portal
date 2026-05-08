@@ -8,12 +8,12 @@ import { absoluteUrl } from '@/lib/marketing/site';
 export const metadata: Metadata = {
   title: 'Features — WNY Automation Portal',
   description:
-    'AI receptionist, dispatch, estimates, invoices, customer portal, reports, and the full WNY Automation Portal feature inventory.',
+    'Cabin buyer CRM, AI assistant context, estimates, invoices, outreach, customer portal, reports, and the full WNY Automation Portal feature inventory.',
   alternates: { canonical: '/features' },
   openGraph: {
     title: 'Features — WNY Automation Portal',
     description:
-      'AI receptionist, dispatch, estimates, invoices, customer portal, reports, and the full WNY Automation Portal feature inventory.',
+      'Cabin buyer CRM, AI assistant context, estimates, invoices, customer portal, outreach, and reports.',
     url: '/features',
     type: 'website',
     images: [absoluteUrl('/opengraph-image')],
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Features — WNY Automation Portal',
     description:
-      'AI receptionist, dispatch, estimates, invoices, customer portal, and reports.',
+      'Cabin buyer CRM, AI assistant context, estimates, invoices, outreach, and reports.',
     images: [absoluteUrl('/twitter-image')],
   },
 };

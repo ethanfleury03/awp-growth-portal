@@ -1,6 +1,8 @@
 import { sql } from '@/lib/db';
 import {
   awpBusinessProfile,
+  awpEstimateCatalogDefaults,
+  awpEstimateDefaults,
   awpDefaultGrowthRecords,
   awpPipelineStages,
   awpReusableArchitectureDefaults,
@@ -346,6 +348,11 @@ async function removeLegacyPlumbingDemoData(companyId: string) {
     WHERE company_id = ${companyId}
       AND lower(name) IN (
         'standard diagnostic visit',
+        'clean drainage',
+        'drain cleaning - standard',
+        'on-site inspection',
+        'toilet rebuild',
+        'sewer camera inspection',
         'water heater diagnostic',
         'tankless flush service',
         'main drain cleaning',
@@ -417,6 +424,90 @@ async function normalizeLegacyLeadStatuses(companyId: string) {
     SET status = ${'won'}, updated_at = datetime('now')
     WHERE company_id = ${companyId} AND status = 'completed'
   `;
+}
+
+async function ensureAwpEstimateDefaults(companyId: string) {
+  await sql`
+    INSERT INTO estimate_settings (
+      company_id,
+      company_name,
+      estimate_prefix,
+      default_expiration_days,
+      default_terms_text,
+      estimate_footer_text
+    ) VALUES (
+      ${companyId},
+      ${awpBusinessProfile.businessName},
+      ${awpEstimateDefaults.prefix},
+      30,
+      ${awpEstimateDefaults.terms},
+      ${awpEstimateDefaults.footer}
+    )
+    ON CONFLICT(company_id) DO UPDATE SET
+      company_name = CASE
+        WHEN estimate_settings.company_name IN ('Company', 'Demo Plumbing Co.', '')
+          THEN excluded.company_name
+        ELSE estimate_settings.company_name
+      END,
+      estimate_prefix = CASE
+        WHEN estimate_settings.estimate_prefix IN ('EST', 'DEMO', '')
+          THEN excluded.estimate_prefix
+        ELSE estimate_settings.estimate_prefix
+      END,
+      default_terms_text = CASE
+        WHEN estimate_settings.default_terms_text IS NULL
+          OR lower(estimate_settings.default_terms_text) LIKE '%plumbing%'
+          OR lower(estimate_settings.default_terms_text) LIKE '%payment due as agreed%'
+          THEN excluded.default_terms_text
+        ELSE estimate_settings.default_terms_text
+      END,
+      estimate_footer_text = CASE
+        WHEN estimate_settings.estimate_footer_text IS NULL
+          OR lower(estimate_settings.estimate_footer_text) LIKE '%plumbing%'
+          OR trim(estimate_settings.estimate_footer_text) = ''
+          THEN excluded.estimate_footer_text
+        ELSE estimate_settings.estimate_footer_text
+      END,
+      updated_at = datetime('now')
+  `;
+
+  for (const [index, item] of awpEstimateCatalogDefaults.entries()) {
+    const existing = await sql`
+      SELECT id
+      FROM estimate_catalog_services
+      WHERE company_id = ${companyId}
+        AND lower(name) = ${item.name.toLowerCase()}
+      LIMIT 1
+    `;
+
+    if (existing.length > 0) {
+      await sql`
+        UPDATE estimate_catalog_services
+        SET
+          description = ${item.description},
+          unit_price_cents = ${item.unitPriceCents},
+          sort_order = ${index},
+          updated_at = datetime('now')
+        WHERE id = ${String(existing[0].id)} AND company_id = ${companyId}
+      `;
+    } else {
+      await sql`
+        INSERT INTO estimate_catalog_services (
+          company_id,
+          name,
+          description,
+          unit_price_cents,
+          sort_order
+        ) VALUES (
+          ${companyId},
+          ${item.name},
+          ${item.description},
+          ${item.unitPriceCents},
+          ${index}
+        )
+      `;
+    }
+  }
 }
 
 export async function ensureAwpPipeline(companyId: string) {
@@ -633,6 +724,7 @@ async function runAwpDemoSeed(companyId: string, branchId?: string | null) {
   await ensureAwpCompanyProfile(companyId);
   await removeLegacyPlumbingDemoData(companyId);
   await ensureAwpPipeline(companyId);
+  await ensureAwpEstimateDefaults(companyId);
   await ensureAwpLeads(companyId, branchId);
   await ensureGrowthDefaults(companyId);
   await ensureReusableArchitectureDefaults(companyId);

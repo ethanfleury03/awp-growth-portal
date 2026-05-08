@@ -78,8 +78,8 @@ export default function TermsPage() {
           <h2 className="text-lg font-semibold text-slate-900 mb-2">8. Contact</h2>
           <p>
             Questions about these Terms can be sent to{' '}
-            <a className="text-[var(--brand-orange-600)] hover:underline" href="mailto:legal@plumber.os">
-              legal@plumber.os
+            <a className="text-[var(--brand-orange-600)] hover:underline" href="mailto:legal@wnyautomation.com">
+              legal@wnyautomation.com
             </a>
             .
           </p>

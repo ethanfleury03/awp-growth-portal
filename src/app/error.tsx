@@ -26,7 +26,7 @@ export default function GlobalError({
           <Link href="/" className="btn-ghost-dark">
             Back to home
           </Link>
-          <a href="mailto:support@plumber.os" className="btn-ghost-dark">
+          <a href="mailto:support@wnyautomation.com" className="btn-ghost-dark">
             Contact support
           </a>
         </div>

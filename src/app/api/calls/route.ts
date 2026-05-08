@@ -16,7 +16,7 @@ async function getOrCreateCompanyId(explicitCompanyId?: string | null) {
 
   const newCompany = await sql`
     INSERT INTO companies (name, email)
-    VALUES ('Demo Company', 'demo@plumberos.com')
+    VALUES ('Demo Company', 'demo@wnyautomation.com')
     RETURNING id
   `;
 

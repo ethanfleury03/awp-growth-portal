@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronRight, Pencil, Plus, Search, Trash2, Wrench } from 'lucide-react';
+import { ChevronRight, FileText, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 
 type CatalogService = {
   id: string;
@@ -130,7 +130,7 @@ export default function ServiceCatalogPage() {
   }
 
   async function remove(id: string) {
-    if (!confirm('Delete this service from the catalog?')) return;
+    if (!confirm('Delete this catalog item?')) return;
     const res = await fetch(`/api/estimates/catalog-services/${id}`, { method: 'DELETE' });
     const j = await res.json();
     if (!res.ok) {
@@ -147,7 +147,7 @@ export default function ServiceCatalogPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 rounded-lg bg-blue-50 p-2">
-                <Wrench className="h-6 w-6 text-blue-600" aria-hidden />
+                <FileText className="h-6 w-6 text-blue-600" aria-hidden />
               </div>
               <div>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -155,11 +155,11 @@ export default function ServiceCatalogPage() {
                     CRM
                   </Link>
                   <span>/</span>
-                  <span className="text-gray-700">Service catalog</span>
+                  <span className="text-gray-700">Estimate catalog</span>
                 </div>
-                <h1 className="text-2xl font-semibold text-gray-900 mt-1">Service catalog</h1>
+                <h1 className="text-2xl font-semibold text-gray-900 mt-1">Estimate catalog</h1>
                 <p className="text-gray-500 text-sm mt-0.5">
-                  Reusable services with description and default price. Attach them when building estimates.
+                  Reusable proposal items with descriptions and default prices. Attach them when building estimates.
                 </p>
               </div>
             </div>
@@ -168,7 +168,7 @@ export default function ServiceCatalogPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search services…"
+                  placeholder="Search catalog…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-10 pr-4 py-2 w-full sm:w-64 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -187,7 +187,7 @@ export default function ServiceCatalogPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600"
               >
                 <Plus className="w-4 h-4" />
-                Add service
+                Add item
               </button>
             </div>
           </div>
@@ -204,7 +204,7 @@ export default function ServiceCatalogPage() {
             ) : filtered.length === 0 ? (
               <div className="p-12 text-center text-gray-500 text-sm">
                 {services.length === 0
-                  ? 'No services yet. Add your first service to use it on estimates.'
+                  ? 'No catalog items yet. Add your first item to use it on estimates.'
                   : 'No matches. Try a different search.'}
               </div>
             ) : (
@@ -255,7 +255,7 @@ export default function ServiceCatalogPage() {
               </div>
             )}
             <div className="px-6 py-3 border-t border-gray-100 text-xs text-gray-500 bg-gray-50/50">
-              {filtered.length} of {services.length} services
+              {filtered.length} of {services.length} catalog items
             </div>
           </div>
         </div>
@@ -265,7 +265,7 @@ export default function ServiceCatalogPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              {modal === 'add' ? 'Add service' : 'Edit service'}
+              {modal === 'add' ? 'Add catalog item' : 'Edit catalog item'}
             </h2>
             <form onSubmit={submitForm} className="space-y-4">
               <div>

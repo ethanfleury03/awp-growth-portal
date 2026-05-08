@@ -58,8 +58,8 @@ export default function PrivacyPage() {
           <p>
             Depending on jurisdiction, users may request access, correction, deletion, or export of personal
             information. Requests can be sent to{' '}
-            <a className="text-[var(--brand-orange-600)] hover:underline" href="mailto:privacy@plumber.os">
-              privacy@plumber.os
+            <a className="text-[var(--brand-orange-600)] hover:underline" href="mailto:privacy@wnyautomation.com">
+              privacy@wnyautomation.com
             </a>
             .
           </p>

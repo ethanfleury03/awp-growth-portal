@@ -1138,7 +1138,7 @@ export default function InvoicesPage() {
                   <p className="text-xs text-amber-700 mt-2">
                     No catalog items yet.{' '}
                     <Link href="/crm/service-catalog" className="underline" onClick={() => setInvoiceModal({ open: false })}>
-                      Add services
+                      Add catalog items
                     </Link>{' '}
                     or use Custom on each line.
                   </p>

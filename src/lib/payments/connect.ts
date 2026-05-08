@@ -1,11 +1,11 @@
 /**
  * Stripe Connect (controller-properties based). WNY Automation Portal is a marketplace
- * where plumbing companies each operate as their own connected account; the
+ * where client companies each operate as their own connected account; the
  * platform (WNY Automation Portal) may take an application fee per charge.
  *
  * We use **destination charges** on the platform account so the platform
  * receives the charge and then transfers to the connected account. This keeps
- * the customer experience single-vendor (branded as WNY Automation Portal / the plumber)
+ * the customer experience single-vendor (branded as WNY Automation Portal / the client)
  * while WNY Automation Portal retains data access and chargeback tooling.
  *
  * Controller model (replaces "Standard/Express/Custom" terminology):

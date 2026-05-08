@@ -8,58 +8,58 @@ interface Trade {
   slot: IndustrySlot;
   name: string;
   blurb: string;
-  status: 'available' | 'coming-soon';
+  status: 'available' | 'planned';
 }
 
 const TRADES: Trade[] = [
   {
     slot: 'plumbing',
-    name: 'Plumbing',
+    name: 'Custom Cabin Buyers',
     blurb:
-      'Purpose-built from day one. Call capture for water heaters, leaks, and drain emergencies; dispatch tuned around service-area radius and parts on the truck.',
+      'Capture land ownership, intended use, budget, timeline, site access, utilities, planning calls, proposal status, and follow-up timing.',
     status: 'available',
   },
   {
     slot: 'electrical',
-    name: 'Electrical',
+    name: 'Realtor and Land-Broker Partners',
     blurb:
-      'Panel upgrades, EV chargers, and emergency calls — with permit tracking, inspection reminders, and load-calc attachments on every estimate.',
-    status: 'coming-soon',
+      'Organize referral relationships, partner education, buyer-guide assets, outreach status, and converted leads from land-buyer introductions.',
+    status: 'available',
   },
   {
     slot: 'hvac',
-    name: 'HVAC',
+    name: 'Campgrounds and Hospitality',
     blurb:
-      'Seasonal maintenance plans, multi-visit jobs, and replacement quotes with equipment spec sheets and financing built into the customer portal.',
-    status: 'coming-soon',
+      'Track multi-unit opportunities, site layout questions, utility readiness, seasonal timing, decision makers, and proposal packages.',
+    status: 'available',
   },
   {
     slot: 'roofing',
-    name: 'Roofing',
+    name: 'STR and Second-Home Investors',
     blurb:
-      'Storm-surge scheduling, insurance-claim workflows, and photo-first job folders that survive the back-and-forth with adjusters.',
-    status: 'coming-soon',
+      'Keep investor conversations grounded in site constraints, layout goals, budget ranges, and compliant follow-up without making ROI promises.',
+    status: 'available',
   },
   {
     slot: 'garage-door',
-    name: 'Garage Door',
+    name: 'Site-Prep Contractors',
     blurb:
-      'Spring-break emergencies and opener installs, with SKU-level parts lookup and same-day invoicing built for one-and-done service calls.',
-    status: 'coming-soon',
+      'Manage excavation, slab, septic, well, and access-road partners who can help cabin buyers move from interest to site-ready.',
+    status: 'available',
   },
   {
     slot: 'pest-control',
-    name: 'Pest Control',
+    name: 'Marketing Assets',
     blurb:
-      'Recurring route optimization, chemical logs, and re-treatment guarantees tied to customer profiles and automated follow-up messaging.',
-    status: 'coming-soon',
+      'Store brochures, buyer guides, proposal templates, case studies, FAQs, email templates, and campaign-specific content in one workspace.',
+    status: 'available',
   },
   {
     slot: 'landscaping',
-    name: 'Landscaping',
+    name: 'Managed Client Workspaces',
     blurb:
-      'Weekly mow routes, seasonal programs, and project bids side-by-side — with weather-aware scheduling and crew-time tracking.',
-    status: 'coming-soon',
+      'Reuse the same CRM architecture for client-specific branding, module access, guardrails, data isolation, and reporting.',
+    status: 'planned',
   },
 ];
 
@@ -68,14 +68,13 @@ export function IndustriesGrid() {
     <section className="bg-[var(--brand-cream)] py-20 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
-          <p className="trust-mark text-[var(--brand-orange-600)]">Industries</p>
+          <p className="trust-mark text-[var(--brand-orange-600)]">Use cases</p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--brand-ink)]">
-            One core. Many trades.
+            One core CRM. Many cabin-growth workflows.
           </h2>
           <p className="mt-4 text-[var(--brand-slate-muted)] text-lg">
-            WNY Automation Portal ships today for plumbing shops. The trades below are on the
-            roadmap — join the waitlist and we&apos;ll onboard you the week we
-            turn your vertical on.
+            WNY Automation Portal is configured around Adirondack White Pine Cabins today, with reusable
+            architecture for buyer pipelines, partner outreach, estimates, reporting, and AI context.
           </p>
         </div>
 
@@ -86,16 +85,16 @@ export function IndustriesGrid() {
         </div>
 
         <p className="mt-10 text-sm text-[var(--brand-slate-muted)]">
-          Don&apos;t see your trade?{' '}
+          Don&apos;t see your workflow?{' '}
           <LeadModal
             kind="waitlist"
-            title="Request your trade"
-            description="Tell us what you run and we'll notify you when support opens."
-            triggerLabel="Tell us what you run"
+            title="Request a workflow"
+            description="Tell us what you need to track and we'll follow up with a fit assessment."
+            triggerLabel="Tell us what you need"
             triggerClassName="text-[var(--brand-orange-600)] font-semibold hover:underline"
             fields={['name', 'email', 'company', 'trade', 'message']}
           />
-          {' '}— we prioritize by demand.
+          {' '}— we prioritize by operational impact.
         </p>
       </div>
     </section>
@@ -129,7 +128,7 @@ function TradeCard({ trade }: { trade: Trade }) {
           ) : (
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider bg-white/90 text-[var(--brand-ink)] px-2.5 py-1 rounded-full shadow">
               <Clock3 className="h-3 w-3" />
-              Coming soon
+              Planned
             </span>
           )}
         </div>
@@ -153,7 +152,7 @@ function TradeCard({ trade }: { trade: Trade }) {
             <LeadModal
               kind="waitlist"
               title={`${trade.name} waitlist`}
-              description="Leave your info and we'll reach out when this vertical opens."
+              description="Leave your info and we'll reach out when this workflow is ready."
               triggerLabel="Join the waitlist"
               triggerClassName="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--brand-ink)] hover:text-[var(--brand-orange-600)]"
               defaultTrade={trade.name}
