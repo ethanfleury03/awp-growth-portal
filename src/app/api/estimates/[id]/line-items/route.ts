@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { lineItemBodySchema } from '@/lib/estimates/validation';
 import { addEstimateLineItem } from '@/lib/estimates/service';
+import { isEstimateAccessResponse, requireEstimateAccessOrRespond } from '@/lib/estimates/access';
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
+    const access = await requireEstimateAccessOrRespond(id);
+    if (isEstimateAccessResponse(access)) return access;
     const body = lineItemBodySchema.parse(await request.json());
     const line = await addEstimateLineItem(id, {
       category: body.category ?? null,

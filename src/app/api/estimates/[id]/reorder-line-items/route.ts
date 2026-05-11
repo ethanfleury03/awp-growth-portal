@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { reorderEstimateLineItems } from '@/lib/estimates/service';
+import { isEstimateAccessResponse, requireEstimateAccessOrRespond } from '@/lib/estimates/access';
 
 const bodySchema = z.object({ orderedIds: z.array(z.string().min(8)) });
 
@@ -9,6 +10,8 @@ type Ctx = { params: Promise<{ id: string }> };
 export async function POST(request: Request, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
+    const access = await requireEstimateAccessOrRespond(id);
+    if (isEstimateAccessResponse(access)) return access;
     const { orderedIds } = bodySchema.parse(await request.json());
     await reorderEstimateLineItems(id, orderedIds);
     return NextResponse.json({ ok: true });

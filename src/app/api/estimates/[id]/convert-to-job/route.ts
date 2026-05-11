@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { convertEstimateToJob } from '@/lib/estimates/service';
+import { isEstimateAccessResponse, requireEstimateAccessOrRespond } from '@/lib/estimates/access';
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function POST(_request: Request, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
+    const access = await requireEstimateAccessOrRespond(id);
+    if (isEstimateAccessResponse(access)) return access;
     const result = await convertEstimateToJob(id);
     return NextResponse.json(result);
   } catch (e) {

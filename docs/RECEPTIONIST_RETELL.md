@@ -37,7 +37,6 @@ Optional toggles:
 | POST | `/api/receptionist/providers/twilio/voice` | Twilio Voice webhook → Retell register → TwiML `<Dial><Sip>…` |
 | POST | `/api/receptionist/providers/twilio/status` | Twilio status callbacks → `receptionist_events` |
 | POST | `/api/receptionist/providers/retell/webhook` | Retell events → update `receptionist_calls`, transcript, finalize |
-| POST | `/api/receptionist/providers/retell/sync/:id` | Pull latest from Retell API (debug) |
 | POST | `/api/receptionist/providers/retell/functions/*` | Custom tools (auth required) |
 
 Legacy aliases (same handlers):

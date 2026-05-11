@@ -42,7 +42,11 @@ export async function createCatalogService(
       ${next}
     )
   `;
-  const r = await sql`SELECT * FROM estimate_catalog_services WHERE id = ${id} LIMIT 1`;
+  const r = await sql`
+    SELECT * FROM estimate_catalog_services
+    WHERE id = ${id} AND company_id = ${companyId}
+    LIMIT 1
+  `;
   return r[0] as unknown as CatalogServiceRow;
 }
 
@@ -69,7 +73,11 @@ export async function updateCatalogService(
       updated_at = datetime('now')
     WHERE id = ${id} AND company_id = ${companyId}
   `;
-  const r = await sql`SELECT * FROM estimate_catalog_services WHERE id = ${id} LIMIT 1`;
+  const r = await sql`
+    SELECT * FROM estimate_catalog_services
+    WHERE id = ${id} AND company_id = ${companyId}
+    LIMIT 1
+  `;
   return r[0] as unknown as CatalogServiceRow;
 }
 

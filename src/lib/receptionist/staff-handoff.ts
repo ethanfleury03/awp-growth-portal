@@ -126,11 +126,20 @@ export async function applyStaffHandoffAction(
   return { taskId };
 }
 
-export async function countOpenUrgentStaffTasks(): Promise<number> {
-  const row = await sql`
-    SELECT COUNT(*) AS c FROM receptionist_staff_tasks
-    WHERE status = 'open' AND priority IN ('high', 'urgent')
-  `;
+export async function countOpenUrgentStaffTasks(companyId?: string): Promise<number> {
+  const row = companyId
+    ? await sql`
+        SELECT COUNT(*) AS c
+        FROM receptionist_staff_tasks t
+        INNER JOIN receptionist_calls c ON c.id = t.call_id
+        WHERE c.company_id = ${companyId}
+          AND t.status = 'open'
+          AND t.priority IN ('high', 'urgent')
+      `
+    : await sql`
+        SELECT COUNT(*) AS c FROM receptionist_staff_tasks
+        WHERE status = 'open' AND priority IN ('high', 'urgent')
+      `;
   return Number((row[0] as { c?: number })?.c || 0);
 }
 

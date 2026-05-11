@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isReceptionistAccessResponse, requireReceptionistCallAccessOrRespond } from '@/lib/receptionist/access';
 import { receptionistService } from '@/lib/receptionist/service';
 
 const getErrorMessage = (error: unknown) =>
@@ -9,6 +10,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const access = await requireReceptionistCallAccessOrRespond(id);
+  if (isReceptionistAccessResponse(access)) return access;
+
   try {
     const result = await receptionistService.bookCallbackFromCall(id, { skipIssueClarificationGuard: true });
     return NextResponse.json(result);

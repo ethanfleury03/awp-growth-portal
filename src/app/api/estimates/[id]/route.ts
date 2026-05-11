@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { patchEstimateBodySchema } from '@/lib/estimates/validation';
+import { isEstimateAccessResponse, requireEstimateAccessOrRespond } from '@/lib/estimates/access';
 import {
   archiveEstimate,
   buildEstimatePresentation,
-  getEstimateById,
   updateEstimate,
 } from '@/lib/estimates/service';
 
@@ -12,6 +12,8 @@ type Ctx = { params: Promise<{ id: string }> };
 export async function GET(_request: Request, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
+    const access = await requireEstimateAccessOrRespond(id);
+    if (isEstimateAccessResponse(access)) return access;
     const presentation = await buildEstimatePresentation(id, { internal: true });
     if (!presentation) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(presentation);
@@ -23,9 +25,9 @@ export async function GET(_request: Request, ctx: Ctx) {
 export async function PATCH(request: Request, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
+    const access = await requireEstimateAccessOrRespond(id);
+    if (isEstimateAccessResponse(access)) return access;
     const body = patchEstimateBodySchema.parse(await request.json());
-    const est = await getEstimateById(id);
-    if (!est) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     const updated = await updateEstimate(id, {
       title: body.title,
       description: body.description,
@@ -48,8 +50,8 @@ export async function PATCH(request: Request, ctx: Ctx) {
 export async function DELETE(_request: Request, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
-    const est = await getEstimateById(id);
-    if (!est) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const access = await requireEstimateAccessOrRespond(id);
+    if (isEstimateAccessResponse(access)) return access;
     await archiveEstimate(id);
     return NextResponse.json({ ok: true });
   } catch (e) {

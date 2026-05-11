@@ -14,7 +14,6 @@ import type {
 import {
   createCustomerAndLeadFromExtracted,
   createJobForBooking,
-  getCompanyIdForReceptionist,
   suggestScheduleForBooking,
 } from '@/lib/receptionist/integrations';
 import {
@@ -61,6 +60,30 @@ function parseExtracted(call: Record<string, unknown>): ExtractedCallData | null
   } catch {
     return null;
   }
+}
+
+function requireCallCompanyId(call: Record<string, unknown>): string {
+  const companyId = String(call.company_id || '').trim();
+  if (!companyId) throw new Error('Call is not scoped to a company');
+  return companyId;
+}
+
+async function assertLeadBelongsToCompany(leadId: string, companyId: string): Promise<void> {
+  const rows = await sql`
+    SELECT id FROM leads
+    WHERE id = ${leadId} AND company_id = ${companyId}
+    LIMIT 1
+  `;
+  if (!rows.length) throw new Error('Linked lead is outside this company');
+}
+
+async function assertJobBelongsToCompany(jobId: string, companyId: string): Promise<void> {
+  const rows = await sql`
+    SELECT id FROM jobs
+    WHERE id = ${jobId} AND company_id = ${companyId}
+    LIMIT 1
+  `;
+  if (!rows.length) throw new Error('Linked job is outside this company');
 }
 
 /** When extracted_json is empty but the call row has PSTN / transcript context (common for live Retell mid-call). */
@@ -124,6 +147,7 @@ export const receptionistService = {
     const detail = await getReceptionistCallDetail(callId);
     if (!detail) throw new Error('Call not found');
     const call = detail.call as Record<string, unknown>;
+    const companyId = requireCallCompanyId(call);
     if (call.lead_id) {
       return { leadId: call.lead_id as string, alreadyLinked: true as const };
     }
@@ -131,6 +155,7 @@ export const receptionistService = {
     const prior = await getLastSuccessfulToolPayload(callId, 'create_lead');
     if (prior?.leadId) {
       const leadId = String(prior.leadId);
+      await assertLeadBelongsToCompany(leadId, companyId);
       await linkLeadToCall(callId, leadId);
       await sql`
         UPDATE receptionist_calls
@@ -164,7 +189,6 @@ export const receptionistService = {
       };
     }
 
-    const companyId = await getCompanyIdForReceptionist();
     const phoneNorm = normalizePhoneDigits(extracted.phone || (call.from_phone as string) || '');
     const isEm = callIsEmergency(extracted, call);
     const windowH = isEm ? EMERGENCY_CROSS_CALL_WINDOW_HOURS : DEFAULT_CROSS_CALL_WINDOW_HOURS;
@@ -275,13 +299,14 @@ export const receptionistService = {
     callId: string,
     opts?: { skipIssueClarificationGuard?: boolean },
   ) {
-    const settings = await ensureReceptionistSettings();
-    if (!settings.callback_booking_enabled) {
-      throw new Error('Callback booking is disabled in receptionist settings');
-    }
     const detail = await getReceptionistCallDetail(callId);
     if (!detail) throw new Error('Call not found');
     const call = detail.call as Record<string, unknown>;
+    const companyId = requireCallCompanyId(call);
+    const settings = await ensureReceptionistSettings(companyId);
+    if (!settings.callback_booking_enabled) {
+      throw new Error('Callback booking is disabled in receptionist settings');
+    }
     let extracted = parseExtracted(call);
     if (!extracted) {
       extracted = buildExtractedFallbackFromCallRow(call);
@@ -313,6 +338,7 @@ export const receptionistService = {
 
     const priorTool = await getLastSuccessfulToolPayload(callId, 'book_callback');
     if (priorTool?.jobId) {
+      await assertJobBelongsToCompany(String(priorTool.jobId), companyId);
       return {
         bookingId: String(priorTool.bookingId || priorTool.booking_id || ''),
         jobId: String(priorTool.jobId),
@@ -344,6 +370,7 @@ export const receptionistService = {
       Math.max(2, Math.ceil((rules.duplicateWindowMinutes ?? 120) / 60)),
     );
     const candidates = await listCrossCallBookingCandidates({
+      companyId,
       excludeCallId: callId,
       bookingType: 'callback',
       windowHours: isEm ? EMERGENCY_CROSS_CALL_WINDOW_HOURS : windowH,
@@ -430,7 +457,6 @@ export const receptionistService = {
       logReceptionistHardening('duplicate_booking_cross_call_hint', { callId, matches: 1 });
     }
 
-    const companyId = await getCompanyIdForReceptionist();
     const { scheduledDate, scheduledTime } = suggestScheduleForBooking(
       'callback',
       extracted,
@@ -510,13 +536,14 @@ export const receptionistService = {
     callId: string,
     opts?: { skipAddressGuard?: boolean },
   ) {
-    const settings = await ensureReceptionistSettings();
-    if (!settings.quote_visit_booking_enabled) {
-      throw new Error('Quote visit booking is disabled in receptionist settings');
-    }
     const detail = await getReceptionistCallDetail(callId);
     if (!detail) throw new Error('Call not found');
     const call = detail.call as Record<string, unknown>;
+    const companyId = requireCallCompanyId(call);
+    const settings = await ensureReceptionistSettings(companyId);
+    if (!settings.quote_visit_booking_enabled) {
+      throw new Error('Quote visit booking is disabled in receptionist settings');
+    }
     let extracted = parseExtracted(call);
     if (!extracted) {
       extracted = buildExtractedFallbackFromCallRow(call);
@@ -549,6 +576,7 @@ export const receptionistService = {
 
     const priorTool = await getLastSuccessfulToolPayload(callId, 'book_quote_visit');
     if (priorTool?.jobId) {
+      await assertJobBelongsToCompany(String(priorTool.jobId), companyId);
       return {
         bookingId: String(priorTool.bookingId || priorTool.booking_id || ''),
         jobId: String(priorTool.jobId),
@@ -569,6 +597,7 @@ export const receptionistService = {
       Math.max(2, Math.ceil((rules.duplicateWindowMinutes ?? 120) / 60)),
     );
     const qCandidates = await listCrossCallBookingCandidates({
+      companyId,
       excludeCallId: callId,
       bookingType: 'quote_visit',
       windowHours: isEm ? EMERGENCY_CROSS_CALL_WINDOW_HOURS : windowH,
@@ -653,7 +682,6 @@ export const receptionistService = {
       });
     }
 
-    const companyId = await getCompanyIdForReceptionist();
     const { scheduledDate, scheduledTime } = suggestScheduleForBooking(
       'quote_visit',
       extracted,

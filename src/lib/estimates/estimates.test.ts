@@ -29,6 +29,7 @@ import {
   createEstimate,
   duplicateEstimate,
   getEstimateByPublicToken,
+  getEstimateByIdForCompany,
   rejectEstimateByToken,
   sendEstimate,
 } from '@/lib/estimates/service';
@@ -260,6 +261,50 @@ describe('estimate service integration', () => {
     };
     expect(Number(row.discount_amount_cents)).toBe(1_000);
     expect(Number(row.total_amount_cents)).toBeGreaterThan(0);
+
+    resetSqliteSingletonForTests();
+  });
+
+  it('scopes estimate reads and linked records to the creating company', async () => {
+    resetSqliteSingletonForTests();
+    await sql`DELETE FROM estimate_delivery`;
+    await sql`DELETE FROM estimate_activity`;
+    await sql`DELETE FROM estimate_line_items`;
+    await sql`DELETE FROM estimates`;
+    await sql`DELETE FROM jobs`;
+    await sql`DELETE FROM leads`;
+    await sql`DELETE FROM customers`;
+    await sql`DELETE FROM plumbers`;
+    await sql`DELETE FROM estimate_settings`;
+    await sql`DELETE FROM estimate_number_sequences`;
+    await sql`DELETE FROM companies`;
+    await sql`INSERT INTO companies (id, name, email) VALUES ('tenant-a', 'Tenant A', 'a@example.com')`;
+    await sql`INSERT INTO companies (id, name, email) VALUES ('tenant-b', 'Tenant B', 'b@example.com')`;
+    await sql`
+      INSERT INTO customers (id, company_id, name, email, phone)
+      VALUES ('cust-a', 'tenant-a', 'Alice', 'alice@example.com', '111')
+    `;
+    await sql`
+      INSERT INTO customers (id, company_id, name, email, phone)
+      VALUES ('cust-b', 'tenant-b', 'Bob', 'bob@example.com', '222')
+    `;
+
+    await expect(
+      createEstimate({
+        company_id: 'tenant-a',
+        title: 'Cross-tenant customer attempt',
+        customer_id: 'cust-b',
+      }),
+    ).rejects.toThrow('Customer not found');
+
+    const estimate = await createEstimate({
+      company_id: 'tenant-a',
+      title: 'Tenant A estimate',
+      customer_id: 'cust-a',
+    });
+
+    expect(await getEstimateByIdForCompany(estimate.id as string, 'tenant-a')).toBeTruthy();
+    expect(await getEstimateByIdForCompany(estimate.id as string, 'tenant-b')).toBeNull();
 
     resetSqliteSingletonForTests();
   });

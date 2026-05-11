@@ -125,7 +125,7 @@ export function getAppBaseUrl() {
   ).replace(/\/$/, '');
 }
 
-export function verifyTwilioVoiceRequest(
+export function verifyTwilioRequest(
   signature: string | null,
   fullUrl: string,
   params: Record<string, string>,
@@ -157,6 +157,14 @@ export function verifyTwilioVoiceRequest(
     });
   }
   return ok;
+}
+
+export function verifyTwilioVoiceRequest(
+  signature: string | null,
+  fullUrl: string,
+  params: Record<string, string>,
+): boolean {
+  return verifyTwilioRequest(signature, fullUrl, params);
 }
 
 export async function verifyRetellSignature(rawBody: string, signature: string | null): Promise<boolean> {
@@ -517,31 +525,4 @@ async function ensureCallLogForLiveCall(
     recording: false,
   });
   await linkReceptionistCallToCallLog(plumberCallId, callLogId);
-}
-
-export async function syncRetellCallFromApi(plumberCallId: string) {
-  const rows = await sql`SELECT provider_call_id FROM receptionist_calls WHERE id = ${plumberCallId}`;
-  if (!rows.length) throw new Error('Call not found');
-  const retellId = rows[0].provider_call_id as string | null;
-  if (!retellId) throw new Error('No Retell call id on record');
-
-  const client = getRetellClient();
-  const call = (await client.call.retrieve(retellId)) as unknown as Record<string, unknown>;
-  const transcript = transcriptFromRetellCall(call);
-  await sql`
-    UPDATE receptionist_calls SET
-      transcript_text = ${transcript},
-      provider_status = ${(call.call_status as string) || null},
-      recording_url = ${(call.recording_url as string) || null},
-      raw_provider_payload_json = ${JSON.stringify(call)},
-      updated_at = datetime('now')
-    WHERE id = ${plumberCallId}
-  `;
-  if (call.call_status === 'ended' || call.call_status === 'error') {
-    await finalizeLiveRetellCall(plumberCallId, call);
-  }
-  if (call.call_analysis) {
-    await mergeRetellAnalysis(plumberCallId, call);
-  }
-  return (await sql`SELECT * FROM receptionist_calls WHERE id = ${plumberCallId}`)[0];
 }

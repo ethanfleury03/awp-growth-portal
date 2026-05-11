@@ -1,4 +1,48 @@
-.vercel
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
 
-# clerk configuration (can include secrets)
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.backup*
+
+# Vercel
+.vercel/
+
+# Runtime data
+data/*.db
+data/*.db-*
+data/uploads/
+
+# Clerk configuration can include secrets
 /.clerk/
+
+# Logs and coverage
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

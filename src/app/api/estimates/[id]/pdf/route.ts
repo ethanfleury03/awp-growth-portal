@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { buildEstimatePdfBytes } from '@/lib/estimates/pdf-document';
 import { buildEstimatePresentation } from '@/lib/estimates/service';
+import { isEstimateAccessResponse, requireEstimateAccessOrRespond } from '@/lib/estimates/access';
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
+    const access = await requireEstimateAccessOrRespond(id);
+    if (isEstimateAccessResponse(access)) return access;
     const presentation = await buildEstimatePresentation(id, { internal: true });
     if (!presentation) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });

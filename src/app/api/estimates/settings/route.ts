@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { ensureEstimateSettings, getDefaultCompanyId, patchEstimateSettings } from '@/lib/estimates/service';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { ensureEstimateSettings, patchEstimateSettings } from '@/lib/estimates/service';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 
 const patchSchema = z.object({
-  company_id: z.string().uuid().optional(),
   company_name: z.string().min(1).optional(),
   logo_url: z.string().nullable().optional(),
   accent_color: z.string().nullable().optional(),
@@ -19,11 +20,12 @@ const patchSchema = z.object({
   public_approval_requires_token: z.boolean().optional(),
 });
 
-export async function GET(request: Request) {
+export async function GET() {
+  const portal = await requireModuleOrRespond('estimates');
+  if (isPortalResponse(portal)) return portal;
+
   try {
-    const { searchParams } = new URL(request.url);
-    const companyId = (searchParams.get('company_id') || (await getDefaultCompanyId())) as string;
-    const settings = await ensureEstimateSettings(companyId);
+    const settings = await ensureEstimateSettings(portal.companyId);
     return NextResponse.json({ settings });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 });
@@ -31,11 +33,12 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const portal = await requireModuleOrRespond('estimates');
+  if (isPortalResponse(portal)) return portal;
+
   try {
     const body = patchSchema.parse(await request.json());
-    const { company_id: companyIdFromBody, ...patch } = body;
-    const companyId = (companyIdFromBody || (await getDefaultCompanyId())) as string;
-    const settings = await patchEstimateSettings(companyId, patch);
+    const settings = await patchEstimateSettings(portal.companyId, body);
     return NextResponse.json({ settings });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 400 });

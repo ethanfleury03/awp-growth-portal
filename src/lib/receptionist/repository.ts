@@ -8,7 +8,6 @@ import {
 } from '@/lib/receptionist/extract';
 import {
   createCallLogForReceptionistCall,
-  getCompanyIdForReceptionist,
   linkReceptionistCallToCallLog,
 } from '@/lib/receptionist/integrations';
 import { logReceptionistHardening, synthesizeReceptionistCallMeta } from '@/lib/receptionist/hardening';
@@ -114,6 +113,7 @@ export async function ensureReceptionistSettings(
 }
 
 export async function updateReceptionistSettings(
+  companyId: string,
   patch: Partial<{
     company_name: string | null;
     greeting: string | null;
@@ -133,7 +133,7 @@ export async function updateReceptionistSettings(
     retell_agent_id?: string | null;
   }>,
 ) {
-  const current = await ensureReceptionistSettings();
+  const current = await ensureReceptionistSettings(companyId);
   const next = {
     company_name: patch.company_name ?? current.company_name,
     greeting: patch.greeting ?? current.greeting,
@@ -194,10 +194,10 @@ export async function updateReceptionistSettings(
       quote_visit_booking_enabled = ${next.quote_visit_booking_enabled},
       retell_agent_id = ${next.retell_agent_id},
       updated_at = datetime('now')
-    WHERE id = ${current.id}
+    WHERE id = ${current.id} AND company_id = ${companyId}
   `;
 
-  return ensureReceptionistSettings();
+  return ensureReceptionistSettings(companyId);
 }
 
 export type ReceptionistEventSource = 'mock' | 'retell' | 'twilio' | 'system';
@@ -218,20 +218,25 @@ async function logEvent(callId: string, eventType: string, payload: unknown) {
   await logReceptionistEvent(callId, eventType, payload, 'mock');
 }
 
-export async function startMockCall(scenarioId: string) {
+export async function startMockCall(
+  scenarioId: string,
+  opts?: { companyId?: string; branchId?: string | null },
+) {
   await syncMockScenariosToDb();
   const scenario = getScenarioById(scenarioId);
   if (!scenario) {
     throw new Error('Unknown scenario');
   }
 
-  const settings = await ensureReceptionistSettings();
+  const settings = await ensureReceptionistSettings(opts?.companyId);
   const baseline = scenario.extractedBaseline;
   const fromPhone =
     (baseline?.phone as string) || '(555) 000-0001';
 
   const rows = await sql`
     INSERT INTO receptionist_calls (
+      company_id,
+      branch_id,
       provider,
       provider_call_id,
       direction,
@@ -244,6 +249,8 @@ export async function startMockCall(scenarioId: string) {
       urgency
     )
     VALUES (
+      ${opts?.companyId ?? null},
+      ${opts?.branchId ?? null},
       'mock',
       ${`mock-${Date.now()}`},
       'inbound',
@@ -264,8 +271,13 @@ export async function startMockCall(scenarioId: string) {
   return { call, scenario, settings };
 }
 
-export async function advanceMockCall(callId: string) {
-  const calls = await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`;
+export async function advanceMockCall(
+  callId: string,
+  opts?: { companyId?: string },
+) {
+  const calls = opts?.companyId
+    ? await sql`SELECT * FROM receptionist_calls WHERE id = ${callId} AND company_id = ${opts.companyId}`
+    : await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`;
   if (calls.length === 0) throw new Error('Call not found');
   const call = calls[0] as Record<string, unknown>;
   if (call.status === 'completed') {
@@ -324,7 +336,7 @@ export async function advanceMockCall(callId: string) {
   const updated = (await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`)[0];
 
   if (idx >= scenario.turns.length) {
-    await finalizeReceptionistCall(callId);
+    await finalizeReceptionistCall(callId, opts);
     const finalCall = (await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`)[0];
     return { done: true, segment: turn, call: finalCall, autoCompleted: true };
   }
@@ -332,14 +344,23 @@ export async function advanceMockCall(callId: string) {
   return { done: false, segment: turn, call: updated, autoCompleted: false };
 }
 
-export async function endMockCall(callId: string, fastForwardRemaining = true) {
-  const calls = await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`;
+export async function endMockCall(
+  callId: string,
+  fastForwardRemaining = true,
+  opts?: { companyId?: string },
+) {
+  const calls = opts?.companyId
+    ? await sql`SELECT * FROM receptionist_calls WHERE id = ${callId} AND company_id = ${opts.companyId}`
+    : await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`;
   if (calls.length === 0) throw new Error('Call not found');
   const call = calls[0] as Record<string, unknown>;
   const scenarioId = call.mock_scenario_id as string | null;
 
   if (call.status === 'completed') {
-    return (await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`)[0];
+    const completed = opts?.companyId
+      ? await sql`SELECT * FROM receptionist_calls WHERE id = ${callId} AND company_id = ${opts.companyId}`
+      : await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`;
+    return completed[0];
   }
 
   if (fastForwardRemaining && scenarioId) {
@@ -352,28 +373,38 @@ export async function endMockCall(callId: string, fastForwardRemaining = true) {
         if (row.status === 'completed') break;
         const idx = Number(row.current_transcript_index || 0);
         if (idx >= scenario.turns.length) {
-          await finalizeReceptionistCall(callId);
+          await finalizeReceptionistCall(callId, opts);
           break;
         }
-        await advanceMockCall(callId);
+        await advanceMockCall(callId, opts);
       }
     }
   } else {
-    await finalizeReceptionistCall(callId);
+    await finalizeReceptionistCall(callId, opts);
   }
 
-  return (await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`)[0];
+  const updated = opts?.companyId
+    ? await sql`SELECT * FROM receptionist_calls WHERE id = ${callId} AND company_id = ${opts.companyId}`
+    : await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`;
+  return updated[0];
 }
 
-export async function finalizeReceptionistCall(callId: string) {
-  const calls = await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`;
+export async function finalizeReceptionistCall(
+  callId: string,
+  opts?: { companyId?: string },
+) {
+  const calls = opts?.companyId
+    ? await sql`SELECT * FROM receptionist_calls WHERE id = ${callId} AND company_id = ${opts.companyId}`
+    : await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`;
   if (calls.length === 0) throw new Error('Call not found');
   const call = calls[0] as Record<string, unknown>;
   if (call.status === 'completed') {
     return call;
   }
 
-  const settings = await ensureReceptionistSettings();
+  const callCompanyId = String(call.company_id || opts?.companyId || '').trim();
+  if (!callCompanyId) throw new Error('Call is not scoped to a company');
+  const settings = await ensureReceptionistSettings(callCompanyId);
   const scenario = call.mock_scenario_id
     ? (getScenarioById(call.mock_scenario_id as string) ?? null)
     : null;
@@ -420,9 +451,8 @@ export async function finalizeReceptionistCall(callId: string) {
   const finalExtracted = syn.adjustedExtracted;
   const recommended = dispositionToRecommendedStep(disposition, finalExtracted);
 
-  const companyIdForMeta = await getCompanyIdForReceptionist();
   const enrichedMetaJson = await enrichReceptionistMetaAfterSynthesis({
-    companyId: companyIdForMeta,
+    companyId: callCompanyId,
     callId,
     callRow: { ...call, recommended_next_step: recommended },
     extracted: finalExtracted,
@@ -451,7 +481,6 @@ export async function finalizeReceptionistCall(callId: string) {
 
   await logEvent(callId, 'call_finalized', { disposition, recommended });
 
-  const companyId = await getCompanyIdForReceptionist();
   const finalRow = (await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`)[0] as Record<
     string,
     unknown
@@ -460,7 +489,7 @@ export async function finalizeReceptionistCall(callId: string) {
   if (!finalRow.call_log_id) {
     const transcriptFull = (finalRow.transcript_text as string) || '';
     const callLogId = await createCallLogForReceptionistCall({
-      companyId,
+      companyId: callCompanyId,
       customerName: finalExtracted.callerName,
       phoneNumber: (finalExtracted.phone as string) || (finalRow.from_phone as string) || 'unknown',
       durationSeconds,
@@ -499,8 +528,10 @@ export async function reprocessReceptionistCall(callId: string) {
   const calls = await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`;
   if (calls.length === 0) throw new Error('Call not found');
   const call = calls[0] as Record<string, unknown>;
+  const callCompanyId = String(call.company_id || '').trim();
+  if (!callCompanyId) throw new Error('Call is not scoped to a company');
 
-  const settings = await ensureReceptionistSettings();
+  const settings = await ensureReceptionistSettings(callCompanyId);
   const scenario = call.mock_scenario_id
     ? (getScenarioById(call.mock_scenario_id as string) ?? null)
     : null;
@@ -543,9 +574,8 @@ export async function reprocessReceptionistCall(callId: string) {
   const reExtracted = syn.adjustedExtracted;
   const recommended = dispositionToRecommendedStep(disposition, reExtracted);
 
-  const companyIdRe = await getCompanyIdForReceptionist();
   const enrichedReprocess = await enrichReceptionistMetaAfterSynthesis({
-    companyId: companyIdRe,
+    companyId: callCompanyId,
     callId,
     callRow: { ...call, recommended_next_step: recommended },
     extracted: reExtracted,
@@ -638,14 +668,34 @@ async function receptionistCallsHasCompanyId(): Promise<boolean> {
   return _receptionistCallsHasCompanyId;
 }
 
-export async function getReceptionistCallDetail(callId: string) {
+export async function getReceptionistCallForCompany(callId: string, companyId: string) {
   const calls = await sql`
-    SELECT rc.*, l.issue as lead_issue, j.type as job_type, j.scheduled_date, j.scheduled_time
-    FROM receptionist_calls rc
-    LEFT JOIN leads l ON rc.lead_id = l.id
-    LEFT JOIN jobs j ON rc.job_id = j.id
-    WHERE rc.id = ${callId}
+    SELECT * FROM receptionist_calls
+    WHERE id = ${callId} AND company_id = ${companyId}
+    LIMIT 1
   `;
+  return calls[0] ? (calls[0] as Record<string, unknown>) : null;
+}
+
+export async function getReceptionistCallDetail(
+  callId: string,
+  opts?: { companyId?: string },
+) {
+  const calls = opts?.companyId
+    ? await sql`
+        SELECT rc.*, l.issue as lead_issue, j.type as job_type, j.scheduled_date, j.scheduled_time
+        FROM receptionist_calls rc
+        LEFT JOIN leads l ON rc.lead_id = l.id AND l.company_id = rc.company_id
+        LEFT JOIN jobs j ON rc.job_id = j.id AND j.company_id = rc.company_id
+        WHERE rc.id = ${callId} AND rc.company_id = ${opts.companyId}
+      `
+    : await sql`
+        SELECT rc.*, l.issue as lead_issue, j.type as job_type, j.scheduled_date, j.scheduled_time
+        FROM receptionist_calls rc
+        LEFT JOIN leads l ON rc.lead_id = l.id AND l.company_id = rc.company_id
+        LEFT JOIN jobs j ON rc.job_id = j.id AND j.company_id = rc.company_id
+        WHERE rc.id = ${callId}
+      `;
   if (calls.length === 0) return null;
   const segments = await sql`
     SELECT * FROM receptionist_transcript_segments WHERE call_id = ${callId} ORDER BY seq ASC
@@ -663,50 +713,72 @@ export async function getReceptionistCallDetail(callId: string) {
   return { call: calls[0], segments, events, bookings, toolInvocations, staffTasks };
 }
 
-export async function getDashboardStats() {
-  const totalRow = await sql`SELECT COUNT(*) as c FROM receptionist_calls`;
+export async function getDashboardStats(companyId: string) {
+  const totalRow = await sql`
+    SELECT COUNT(*) as c FROM receptionist_calls WHERE company_id = ${companyId}
+  `;
   const activeRow = await sql`
     SELECT COUNT(*) as c FROM receptionist_calls
-    WHERE status IN ('mock', 'active', 'ringing')
-       OR provider_status IN ('registered', 'ongoing', 'not_connected')
+    WHERE company_id = ${companyId}
+      AND (
+        status IN ('mock', 'active', 'ringing')
+        OR provider_status IN ('registered', 'ongoing', 'not_connected')
+      )
   `;
   const cbRow = await sql`
-    SELECT COUNT(*) as c FROM receptionist_bookings WHERE booking_type = 'callback' AND status != 'cancelled'
+    SELECT COUNT(*) as c
+    FROM receptionist_bookings b
+    INNER JOIN receptionist_calls c ON c.id = b.call_id
+    WHERE c.company_id = ${companyId}
+      AND b.booking_type = 'callback'
+      AND b.status != 'cancelled'
   `;
   const qvRow = await sql`
-    SELECT COUNT(*) as c FROM receptionist_bookings WHERE booking_type = 'quote_visit' AND status != 'cancelled'
+    SELECT COUNT(*) as c
+    FROM receptionist_bookings b
+    INNER JOIN receptionist_calls c ON c.id = b.call_id
+    WHERE c.company_id = ${companyId}
+      AND b.booking_type = 'quote_visit'
+      AND b.status != 'cancelled'
   `;
   const emRow = await sql`
-    SELECT COUNT(*) as c FROM receptionist_calls WHERE disposition = 'emergency'
+    SELECT COUNT(*) as c FROM receptionist_calls
+    WHERE company_id = ${companyId} AND disposition = 'emergency'
   `;
   const fuRow = await sql`
-    SELECT COUNT(*) as c FROM receptionist_calls WHERE disposition = 'follow_up_needed'
+    SELECT COUNT(*) as c FROM receptionist_calls
+    WHERE company_id = ${companyId} AND disposition = 'follow_up_needed'
   `;
   const spamRow = await sql`
-    SELECT COUNT(*) as c FROM receptionist_calls WHERE disposition = 'spam'
+    SELECT COUNT(*) as c FROM receptionist_calls
+    WHERE company_id = ${companyId} AND disposition = 'spam'
   `;
   const incompleteRow = await sql`
     SELECT COUNT(*) as c FROM receptionist_calls
-    WHERE receptionist_meta_json IS NOT NULL
+    WHERE company_id = ${companyId}
+      AND receptionist_meta_json IS NOT NULL
       AND json_extract(receptionist_meta_json, '$.completeness.sufficient') = 0
   `;
 
   const urgentRow = await sql`
     SELECT COUNT(*) as c FROM receptionist_calls
-    WHERE receptionist_meta_json IS NOT NULL
+    WHERE company_id = ${companyId}
+      AND receptionist_meta_json IS NOT NULL
       AND json_extract(receptionist_meta_json, '$.operationalPriority') IN ('emergency_callback_required','emergency_dispatch_review','emergency_incomplete_but_urgent')
   `;
   const abusiveRow = await sql`
     SELECT COUNT(*) as c FROM receptionist_calls
-    WHERE receptionist_meta_json IS NOT NULL
+    WHERE company_id = ${companyId}
+      AND receptionist_meta_json IS NOT NULL
       AND json_extract(receptionist_meta_json, '$.callerBehavior') = 'abusive_but_legitimate'
   `;
   const dupMergedRow = await sql`
     SELECT COUNT(*) as c FROM receptionist_calls
-    WHERE receptionist_meta_json IS NOT NULL
+    WHERE company_id = ${companyId}
+      AND receptionist_meta_json IS NOT NULL
       AND json_extract(receptionist_meta_json, '$.duplicateResolution.outcome') = 'cross_call_merged'
   `;
-  const openUrgentTasks = await countOpenUrgentStaffTasks();
+  const openUrgentTasks = await countOpenUrgentStaffTasks(companyId);
 
   return {
     totalCalls: Number(totalRow[0]?.c || 0),
@@ -734,11 +806,13 @@ export async function mergeReceptionistMetaPartial(callId: string, patch: Partia
 }
 
 export async function persistReceptionistHardeningForCall(callId: string) {
-  const settings = await ensureReceptionistSettings();
   const call = (await sql`SELECT * FROM receptionist_calls WHERE id = ${callId}`)[0] as
     | Record<string, unknown>
     | undefined;
   if (!call) return;
+  const callCompanyId = String(call.company_id || '').trim();
+  if (!callCompanyId) return;
+  const settings = await ensureReceptionistSettings(callCompanyId);
   let extracted: ExtractedCallData;
   try {
     extracted = JSON.parse((call.extracted_json as string) || '{}') as ExtractedCallData;
@@ -779,9 +853,8 @@ export async function persistReceptionistHardeningForCall(callId: string) {
   const hardenedExtracted = syn.adjustedExtracted;
   const recommended = dispositionToRecommendedStep(syn.adjustedDisposition, hardenedExtracted);
 
-  const companyIdPh = await getCompanyIdForReceptionist();
   const enrichedPersist = await enrichReceptionistMetaAfterSynthesis({
-    companyId: companyIdPh,
+    companyId: callCompanyId,
     callId,
     callRow: { ...call, recommended_next_step: recommended },
     extracted: hardenedExtracted,

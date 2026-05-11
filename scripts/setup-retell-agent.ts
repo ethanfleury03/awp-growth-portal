@@ -293,8 +293,8 @@ function printSuccessSummary(rows: Record<string, string>) {
  * JSON. Awaiting the SDK promise runs the default parser, which calls `response.json()`
  * and throws "Unexpected end of JSON input". Using `.asResponse()` skips body parsing.
  */
-async function publishAgentWithoutJsonBody(client: Retell, agentId: string): Promise<Response> {
-  const response = await client.agent.publish(agentId).asResponse();
+async function publishAgentWithoutJsonBody(client: Retell, agentId: string, version: number): Promise<Response> {
+  const response = await client.agent.publish(agentId, { version }).asResponse();
   if (!response.ok) {
     const errText = await response.text().catch(() => '');
     throw new Error(`Publish failed: HTTP ${response.status} ${errText.slice(0, 500)}`);
@@ -408,9 +408,11 @@ async function main() {
   const agentPatch = buildAgentPayload(llmId, voiceId, webhookUrl, agentName, timezone);
 
   let agentId = agentIdPreset;
+  let agentVersion: number;
   if (agentId) {
     console.log(`[retell:setup] Updating agent ${agentId}…`);
-    await client.agent.update(agentId, agentPatch);
+    const updated = await client.agent.update(agentId, agentPatch);
+    agentVersion = updated.version;
   } else {
     console.log('[retell:setup] Creating new voice agent…');
     const createBody: AgentCreateParams = {
@@ -420,11 +422,12 @@ async function main() {
     };
     const created = await client.agent.create(createBody);
     agentId = created.agent_id;
+    agentVersion = created.version;
     console.log(`[retell:setup] Created agent ${agentId}`);
   }
 
   console.log('[retell:setup] Publishing agent (SDK typed publish + raw response — tolerates empty JSON body)…');
-  const publishRes = await publishAgentWithoutJsonBody(client, agentId);
+  const publishRes = await publishAgentWithoutJsonBody(client, agentId, agentVersion);
   const publishStatusLabel =
     publishRes.status === 204
       ? '204 No Content'

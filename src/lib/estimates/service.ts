@@ -232,6 +232,18 @@ export async function getEstimateById(id: string): Promise<Record<string, unknow
   return rows[0] ? (rows[0] as Record<string, unknown>) : null;
 }
 
+export async function getEstimateByIdForCompany(
+  id: string,
+  companyId: string,
+): Promise<Record<string, unknown> | null> {
+  const rows = await sql`
+    SELECT * FROM estimates
+    WHERE id = ${id} AND company_id = ${companyId}
+    LIMIT 1
+  `;
+  return rows[0] ? (rows[0] as Record<string, unknown>) : null;
+}
+
 export async function getEstimateByPublicToken(token: string): Promise<Record<string, unknown> | null> {
   const rows = await sql`SELECT * FROM estimates WHERE customer_public_token = ${token} LIMIT 1`;
   return rows[0] ? (rows[0] as Record<string, unknown>) : null;
@@ -299,15 +311,30 @@ export async function createEstimate(input: CreateEstimateInput): Promise<Record
     unknown
   >;
 
+  if (input.assigned_to_plumber_id) {
+    const plumber = await sql`
+      SELECT id FROM plumbers
+      WHERE id = ${input.assigned_to_plumber_id} AND company_id = ${companyId}
+      LIMIT 1
+    `;
+    if (!plumber.length) throw new Error('Assigned plumber not found');
+  }
+
   let customerName = 'Customer';
   let customerEmail: string | null = null;
   let customerPhone: string | null = null;
   let serviceAddress: string | null = null;
 
   if (input.customer_id) {
-    const c = (await sql`SELECT name, email, phone, address FROM customers WHERE id = ${input.customer_id} LIMIT 1`)[0] as
+    const c = (await sql`
+      SELECT name, email, phone, address
+      FROM customers
+      WHERE id = ${input.customer_id} AND company_id = ${companyId}
+      LIMIT 1
+    `)[0] as
       | Record<string, unknown>
       | undefined;
+    if (!c) throw new Error('Customer not found');
     if (c) {
       customerName = (c.name as string) || customerName;
       customerEmail = (c.email as string) || null;
@@ -316,15 +343,27 @@ export async function createEstimate(input: CreateEstimateInput): Promise<Record
     }
   }
   if (input.lead_id) {
-    const l = (await sql`SELECT issue, location, customer_id FROM leads WHERE id = ${input.lead_id} LIMIT 1`)[0] as
+    const l = (await sql`
+      SELECT issue, location, customer_id
+      FROM leads
+      WHERE id = ${input.lead_id} AND company_id = ${companyId}
+      LIMIT 1
+    `)[0] as
       | Record<string, unknown>
       | undefined;
+    if (!l) throw new Error('Lead not found');
     if (l) {
       if (!input.customer_id && l.customer_id) {
         input.customer_id = l.customer_id as string;
-        const c = (await sql`SELECT name, email, phone, address FROM customers WHERE id = ${input.customer_id} LIMIT 1`)[0] as
+        const c = (await sql`
+          SELECT name, email, phone, address
+          FROM customers
+          WHERE id = ${input.customer_id} AND company_id = ${companyId}
+          LIMIT 1
+        `)[0] as
           | Record<string, unknown>
           | undefined;
+        if (!c) throw new Error('Lead customer not found');
         if (c) {
           customerName = (c.name as string) || customerName;
           customerEmail = (c.email as string) || null;
@@ -341,10 +380,12 @@ export async function createEstimate(input: CreateEstimateInput): Promise<Record
       await sql`
       SELECT j.description, j.customer_id, c.name AS cn, c.email AS ce, c.phone AS cp, c.address AS ca
       FROM jobs j
-      LEFT JOIN customers c ON j.customer_id = c.id
-      WHERE j.id = ${input.job_id} LIMIT 1
+      LEFT JOIN customers c ON j.customer_id = c.id AND c.company_id = j.company_id
+      WHERE j.id = ${input.job_id} AND j.company_id = ${companyId}
+      LIMIT 1
     `
     )[0] as Record<string, unknown> | undefined;
+    if (!j) throw new Error('Job not found');
     if (j) {
       if (!input.customer_id && j.customer_id) {
         input.customer_id = j.customer_id as string;
@@ -358,8 +399,14 @@ export async function createEstimate(input: CreateEstimateInput): Promise<Record
 
   if (input.receptionist_call_id) {
     const call = (
-      await sql`SELECT caller_name, from_phone, extracted_json FROM receptionist_calls WHERE id = ${input.receptionist_call_id} LIMIT 1`
+      await sql`
+        SELECT caller_name, from_phone, extracted_json
+        FROM receptionist_calls
+        WHERE id = ${input.receptionist_call_id} AND company_id = ${companyId}
+        LIMIT 1
+      `
     )[0] as Record<string, unknown> | undefined;
+    if (!call) throw new Error('Receptionist call not found');
     if (call?.caller_name) customerName = (call.caller_name as string) || customerName;
     if (call?.from_phone && !customerPhone) customerPhone = call.from_phone as string;
     try {

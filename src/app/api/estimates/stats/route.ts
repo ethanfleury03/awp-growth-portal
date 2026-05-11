@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getDefaultCompanyId, getEstimateDashboardStats } from '@/lib/estimates/service';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { getEstimateDashboardStats } from '@/lib/estimates/service';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 
-export async function GET(request: Request) {
+export async function GET() {
+  const portal = await requireModuleOrRespond('estimates');
+  if (isPortalResponse(portal)) return portal;
+
   try {
-    const { searchParams } = new URL(request.url);
-    const companyId = (searchParams.get('company_id') || (await getDefaultCompanyId())) as string;
-    const stats = await getEstimateDashboardStats(companyId);
+    const stats = await getEstimateDashboardStats(portal.companyId);
     return NextResponse.json({ stats });
   } catch (e) {
     console.error(e);

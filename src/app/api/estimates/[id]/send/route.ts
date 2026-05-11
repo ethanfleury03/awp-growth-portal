@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@clerk/nextjs/server';
 import { sendEstimate } from '@/lib/estimates/service';
-import { getPortalUser } from '@/lib/auth/portal-user';
+import { isEstimateAccessResponse, requireEstimateAccessOrRespond } from '@/lib/estimates/access';
 
 const bodySchema = z.object({
   recipientEmail: z.string().email().optional().nullable(),
@@ -16,12 +16,9 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, ctx: Ctx) {
   try {
-    const portalUser = await getPortalUser();
-    if (!portalUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { id } = await ctx.params;
+    const access = await requireEstimateAccessOrRespond(id);
+    if (isEstimateAccessResponse(access)) return access;
     const json = await request.json().catch(() => ({}));
     const body = bodySchema.parse(json);
 

@@ -93,6 +93,7 @@ export function rankBookingDuplicate(
 }
 
 export async function listCrossCallBookingCandidates(params: {
+  companyId: string;
   excludeCallId: string;
   bookingType: 'callback' | 'quote_visit';
   windowHours: number;
@@ -106,6 +107,7 @@ export async function listCrossCallBookingCandidates(params: {
     INNER JOIN receptionist_calls c ON c.id = b.call_id
     LEFT JOIN jobs j ON j.id = b.job_id
     WHERE b.booking_type = ${params.bookingType}
+      AND c.company_id = ${params.companyId}
       AND b.status IN ('scheduled', 'requested')
       AND b.call_id != ${params.excludeCallId}
       AND datetime(b.created_at) > datetime('now', ${mod})

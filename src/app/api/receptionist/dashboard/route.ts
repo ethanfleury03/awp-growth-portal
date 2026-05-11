@@ -11,9 +11,11 @@ export async function GET() {
   const portal = await requireModuleOrRespond('receptionist');
   if (isPortalResponse(portal)) return portal;
   try {
-    const stats = await receptionistService.dashboardStats();
-    const { calls, total } = await receptionistService.listCalls(1, 12);
-    const settings = await receptionistService.getSettings();
+    const stats = await receptionistService.dashboardStats(portal.companyId);
+    const { calls, total } = await receptionistService.listCalls(1, 12, {
+      companyId: portal.companyId,
+    });
+    const settings = await receptionistService.getSettings(portal.companyId);
     const integration = {
       providerType: settings.provider_type,
       retellReady: Boolean(

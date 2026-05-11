@@ -38,10 +38,6 @@ const EXEMPT_FILES = new Set<string>([
   // Webhooks verify the source and scope by payload metadata.
   'src/app/api/stripe/webhook/route.ts',
   'src/app/api/webhooks/clerk/route.ts',
-  // Twilio inbound SMS (STOP/START keywords) — the caller identifies themselves
-  // only via their phone number, which can't be mapped to a single tenant, so
-  // the opt-out propagates across every tenant that stored that number.
-  'src/app/api/webhooks/twilio/inbound-sms/route.ts',
   // Retell/Twilio provider callbacks — scoped via provider ids, not portal user.
   'src/app/api/receptionist/webhooks/twilio/voice/route.ts',
   'src/app/api/receptionist/webhooks/twilio/status/route.ts',
@@ -54,7 +50,6 @@ const EXEMPT_FILES = new Set<string>([
   'src/app/api/receptionist/providers/retell/functions/get_availability/route.ts',
   'src/app/api/receptionist/providers/retell/functions/get_receptionist_context/route.ts',
   'src/app/api/receptionist/providers/retell/functions/mark_spam/route.ts',
-  'src/app/api/receptionist/providers/retell/sync/[id]/route.ts',
   'src/app/api/receptionist/providers/twilio/voice/route.ts',
   'src/app/api/receptionist/providers/twilio/status/route.ts',
   // Setup is dev-only and gated by env token.
@@ -89,7 +84,12 @@ function fileReferencesTenantTable(contents: string): string[] {
 }
 
 function hasCompanyGuard(contents: string): boolean {
-  return /company_id/.test(contents) || /requirePortalUser|requireTenantContext|requirePortalOrRespond/.test(contents);
+  return (
+    /company_id/.test(contents) ||
+    /requirePortalUser|requireTenantContext|requirePortalOrRespond|requireModuleOrRespond|requireEstimateAccessOrRespond|requireReceptionistCallAccessOrRespond/.test(
+      contents,
+    )
+  );
 }
 
 describe('unscoped query guard', () => {

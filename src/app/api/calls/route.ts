@@ -1,27 +1,10 @@
 import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Unknown error';
-
-async function getOrCreateCompanyId(explicitCompanyId?: string | null) {
-  if (explicitCompanyId) {
-    return explicitCompanyId;
-  }
-
-  const companies = await sql`SELECT id FROM companies ORDER BY created_at ASC LIMIT 1`;
-  if (companies.length > 0) {
-    return companies[0].id as string;
-  }
-
-  const newCompany = await sql`
-    INSERT INTO companies (name, email)
-    VALUES ('Demo Company', 'demo@wnyautomation.com')
-    RETURNING id
-  `;
-
-  return newCompany[0].id as string;
-}
 
 function parseDurationToSeconds(duration: unknown) {
   if (typeof duration === 'number' && Number.isFinite(duration)) {
@@ -48,17 +31,43 @@ function parseDurationToSeconds(duration: unknown) {
   return 0;
 }
 
+async function assertLinkedRecordsBelongToCompany(
+  companyId: string,
+  links: { customer_id?: unknown; lead_id?: unknown; job_id?: unknown },
+) {
+  const customerId = typeof links.customer_id === 'string' ? links.customer_id.trim() : '';
+  if (customerId) {
+    const rows = await sql`SELECT id FROM customers WHERE id = ${customerId} AND company_id = ${companyId} LIMIT 1`;
+    if (!rows.length) throw new Error('Customer not found');
+  }
+
+  const leadId = typeof links.lead_id === 'string' ? links.lead_id.trim() : '';
+  if (leadId) {
+    const rows = await sql`SELECT id FROM leads WHERE id = ${leadId} AND company_id = ${companyId} LIMIT 1`;
+    if (!rows.length) throw new Error('Lead not found');
+  }
+
+  const jobId = typeof links.job_id === 'string' ? links.job_id.trim() : '';
+  if (jobId) {
+    const rows = await sql`SELECT id FROM jobs WHERE id = ${jobId} AND company_id = ${companyId} LIMIT 1`;
+    if (!rows.length) throw new Error('Job not found');
+  }
+}
+
 export async function GET(request: Request) {
+  const auth = await requireModuleOrRespond('receptionist');
+  if (isPortalResponse(auth)) return auth;
+
   const { searchParams } = new URL(request.url);
   const search = searchParams.get('search');
   const status = searchParams.get('status');
-  const limit = parseInt(searchParams.get('limit') || '100');
+  const limit = Math.min(200, Math.max(1, parseInt(searchParams.get('limit') || '100', 10) || 100));
 
   try {
     let query = sql`
       SELECT *
       FROM call_logs
-      WHERE 1=1
+      WHERE company_id = ${auth.companyId}
     `;
 
     if (search) {
@@ -88,10 +97,13 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireModuleOrRespond('receptionist');
+  if (isPortalResponse(auth)) return auth;
+
   const body = await request.json();
 
   try {
-    const companyId = await getOrCreateCompanyId(body.company_id);
+    await assertLinkedRecordsBelongToCompany(auth.companyId, body);
     const result = await sql`
       INSERT INTO call_logs (
         company_id,
@@ -110,7 +122,7 @@ export async function POST(request: Request) {
         updated_at
       )
       VALUES (
-        ${companyId},
+        ${auth.companyId},
         ${body.customer_id || null},
         ${body.lead_id || null},
         ${body.job_id || null},
@@ -136,6 +148,9 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const auth = await requireModuleOrRespond('receptionist');
+  if (isPortalResponse(auth)) return auth;
+
   const body = await request.json();
   const { id, ...updates } = body;
 
@@ -144,6 +159,7 @@ export async function PUT(request: Request) {
   }
 
   try {
+    await assertLinkedRecordsBelongToCompany(auth.companyId, updates);
     const result = await sql`
       UPDATE call_logs
       SET
@@ -159,9 +175,13 @@ export async function PUT(request: Request) {
         job_id = COALESCE(${updates.job_id ?? null}, job_id),
         customer_id = COALESCE(${updates.customer_id ?? null}, customer_id),
         updated_at = NOW()
-      WHERE id = ${id}
+      WHERE id = ${id} AND company_id = ${auth.companyId}
       RETURNING *
     `;
+
+    if (!result.length) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
 
     return NextResponse.json({ call: result[0] });
   } catch (error: unknown) {
@@ -171,6 +191,9 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const auth = await requireModuleOrRespond('receptionist');
+  if (isPortalResponse(auth)) return auth;
+
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -179,7 +202,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    await sql`DELETE FROM call_logs WHERE id = ${id}`;
+    await sql`DELETE FROM call_logs WHERE id = ${id} AND company_id = ${auth.companyId}`;
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     console.error('Error deleting call log:', error);

@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server';
+import { isPortalResponse } from '@/lib/auth/tenant';
 import { catalogServiceBodySchema } from '@/lib/estimates/validation';
 import { createCatalogService, listCatalogServices } from '@/lib/estimates/catalog-services';
-import { getDefaultCompanyId } from '@/lib/estimates/service';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 
-export async function GET(request: Request) {
+export async function GET() {
+  const portal = await requireModuleOrRespond('estimates');
+  if (isPortalResponse(portal)) return portal;
+
   try {
-    const { searchParams } = new URL(request.url);
-    const companyId = (searchParams.get('company_id') || (await getDefaultCompanyId())) as string;
-    const services = await listCatalogServices(companyId);
+    const services = await listCatalogServices(portal.companyId);
     return NextResponse.json({ services });
   } catch (e) {
     console.error(e);
@@ -16,10 +18,12 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const portal = await requireModuleOrRespond('estimates');
+  if (isPortalResponse(portal)) return portal;
+
   try {
     const body = catalogServiceBodySchema.parse(await request.json());
-    const companyId = await getDefaultCompanyId();
-    const svc = await createCatalogService(companyId, body);
+    const svc = await createCatalogService(portal.companyId, body);
     return NextResponse.json({ service: svc });
   } catch (e) {
     console.error(e);

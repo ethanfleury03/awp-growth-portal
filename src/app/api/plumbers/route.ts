@@ -1,33 +1,18 @@
 import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { isPortalResponse, requirePortalOrRespond } from '@/lib/auth/tenant';
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Unknown error';
 
-async function getOrCreateCompanyId(explicitCompanyId?: string | null) {
-  if (explicitCompanyId) {
-    return explicitCompanyId;
-  }
-
-  const companies = await sql`SELECT id FROM companies ORDER BY created_at ASC LIMIT 1`;
-  if (companies.length > 0) {
-    return companies[0].id as string;
-  }
-
-  const newCompany = await sql`
-    INSERT INTO companies (name, email)
-    VALUES ('Demo Company', 'demo@wnyautomation.com')
-    RETURNING id
-  `;
-
-  return newCompany[0].id as string;
-}
-
 export async function GET(request: Request) {
+  const auth = await requirePortalOrRespond('admin');
+  if (isPortalResponse(auth)) return auth;
+
   const { searchParams } = new URL(request.url);
   const search = searchParams.get('search');
   const active = searchParams.get('active');
-  const limit = parseInt(searchParams.get('limit') || '100');
+  const limit = Math.min(200, Math.max(1, parseInt(searchParams.get('limit') || '100', 10) || 100));
 
   try {
     let query = sql`
@@ -40,8 +25,8 @@ export async function GET(request: Request) {
             AND datetime(j.completed_at) >= datetime('now', '-7 days')
         ) AS completed_this_week
       FROM plumbers p
-      LEFT JOIN jobs j ON j.plumber_id = p.id
-      WHERE 1=1
+      LEFT JOIN jobs j ON j.plumber_id = p.id AND j.company_id = ${auth.companyId}
+      WHERE p.company_id = ${auth.companyId}
     `;
 
     if (search) {
@@ -74,14 +59,16 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const auth = await requirePortalOrRespond('admin');
+  if (isPortalResponse(auth)) return auth;
+
   const body = await request.json();
 
   try {
-    const companyId = await getOrCreateCompanyId(body.company_id);
     const result = await sql`
       INSERT INTO plumbers (company_id, name, email, phone, role, active, updated_at)
       VALUES (
-        ${companyId},
+        ${auth.companyId},
         ${body.name},
         ${body.email},
         ${body.phone || null},
@@ -100,6 +87,9 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const auth = await requirePortalOrRespond('admin');
+  if (isPortalResponse(auth)) return auth;
+
   const body = await request.json();
   const { id, ...updates } = body;
 
@@ -117,9 +107,13 @@ export async function PUT(request: Request) {
         role = COALESCE(${updates.role ?? null}, role),
         active = COALESCE(${updates.active ?? null}, active),
         updated_at = NOW()
-      WHERE id = ${id}
+      WHERE id = ${id} AND company_id = ${auth.companyId}
       RETURNING *
     `;
+
+    if (!result.length) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
 
     return NextResponse.json({ plumber: result[0] });
   } catch (error: unknown) {
@@ -129,6 +123,9 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const auth = await requirePortalOrRespond('admin');
+  if (isPortalResponse(auth)) return auth;
+
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -137,7 +134,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    await sql`DELETE FROM plumbers WHERE id = ${id}`;
+    await sql`DELETE FROM plumbers WHERE id = ${id} AND company_id = ${auth.companyId}`;
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     console.error('Error deleting plumber:', error);

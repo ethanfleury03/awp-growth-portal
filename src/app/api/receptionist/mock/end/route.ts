@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 import { receptionistService } from '@/lib/receptionist/service';
 
 const getErrorMessage = (error: unknown) =>
@@ -13,6 +15,9 @@ const bodySchema = z
   .strict();
 
 export async function POST(request: Request) {
+  const portal = await requireModuleOrRespond('receptionist');
+  if (isPortalResponse(portal)) return portal;
+
   try {
     const body = await request.json();
     const parsed = bodySchema.safeParse(body);
@@ -22,6 +27,7 @@ export async function POST(request: Request) {
     const call = await receptionistService.endMockCall(
       parsed.data.callId,
       parsed.data.fastForwardRemaining !== false,
+      { companyId: portal.companyId },
     );
     return NextResponse.json({ call });
   } catch (error: unknown) {

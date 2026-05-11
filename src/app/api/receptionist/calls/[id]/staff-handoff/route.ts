@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { isReceptionistAccessResponse, requireReceptionistCallAccessOrRespond } from '@/lib/receptionist/access';
 import { receptionistService } from '@/lib/receptionist/service';
+import { sql } from '@/lib/db';
 
 const bodySchema = z.object({
   action: z.enum([
@@ -24,6 +26,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const access = await requireReceptionistCallAccessOrRespond(id);
+  if (isReceptionistAccessResponse(access)) return access;
+
   let json: unknown;
   try {
     json = await request.json();
@@ -33,6 +38,16 @@ export async function POST(
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  if (parsed.data.plumberId) {
+    const plumber = await sql`
+      SELECT id FROM plumbers
+      WHERE id = ${parsed.data.plumberId} AND company_id = ${access.auth.companyId}
+      LIMIT 1
+    `;
+    if (!plumber.length) {
+      return NextResponse.json({ error: 'Plumber not found' }, { status: 404 });
+    }
   }
   try {
     const out = await receptionistService.applyStaffHandoff(id, parsed.data.action, {

@@ -215,7 +215,6 @@ export default function ReceptionistCallDetailPage() {
     | undefined;
   const disposition = call.disposition as string | null;
   const isEmergency = disposition === 'emergency';
-  const isRetell = call.provider === 'retell';
 
   const transcriptItems = segments.length
     ? segments.map((segment) => ({
@@ -610,17 +609,6 @@ export default function ReceptionistCallDetailPage() {
                     <RefreshCw className="h-4 w-4" />
                     Reprocess
                   </OpsButton>
-                  {isRetell && call.provider_call_id ? (
-                    <OpsButton
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void runAction(`/api/receptionist/providers/retell/sync/${id}`)}
-                      variant="ghost"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                      Sync from Retell
-                    </OpsButton>
-                  ) : null}
                 </div>
               </ConsolePanel>
 

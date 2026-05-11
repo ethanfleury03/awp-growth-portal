@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getEstimateDeliveries } from '@/lib/estimates/service';
+import { isEstimateAccessResponse, requireEstimateAccessOrRespond } from '@/lib/estimates/access';
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
+    const access = await requireEstimateAccessOrRespond(id);
+    if (isEstimateAccessResponse(access)) return access;
     const deliveries = await getEstimateDeliveries(id);
     return NextResponse.json({ deliveries });
   } catch (e) {

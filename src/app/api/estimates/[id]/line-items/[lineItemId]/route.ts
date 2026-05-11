@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { deleteEstimateLineItem, updateEstimateLineItem } from '@/lib/estimates/service';
+import { isEstimateAccessResponse, requireEstimateAccessOrRespond } from '@/lib/estimates/access';
 
 const patchSchema = z.object({
   category: z.string().nullable().optional(),
@@ -20,6 +21,8 @@ type Ctx = { params: Promise<{ id: string; lineItemId: string }> };
 export async function PATCH(request: Request, ctx: Ctx) {
   try {
     const { id, lineItemId } = await ctx.params;
+    const access = await requireEstimateAccessOrRespond(id);
+    if (isEstimateAccessResponse(access)) return access;
     const body = patchSchema.parse(await request.json());
     await updateEstimateLineItem(id, lineItemId, body);
     return NextResponse.json({ ok: true });
@@ -31,6 +34,8 @@ export async function PATCH(request: Request, ctx: Ctx) {
 export async function DELETE(_request: Request, ctx: Ctx) {
   try {
     const { id, lineItemId } = await ctx.params;
+    const access = await requireEstimateAccessOrRespond(id);
+    if (isEstimateAccessResponse(access)) return access;
     await deleteEstimateLineItem(id, lineItemId);
     return NextResponse.json({ ok: true });
   } catch (e) {

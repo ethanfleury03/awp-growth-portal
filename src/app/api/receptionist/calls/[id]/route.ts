@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isReceptionistAccessResponse, requireReceptionistCallAccessOrRespond } from '@/lib/receptionist/access';
 import { receptionistService } from '@/lib/receptionist/service';
 
 const getErrorMessage = (error: unknown) =>
@@ -9,8 +10,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const access = await requireReceptionistCallAccessOrRespond(id);
+  if (isReceptionistAccessResponse(access)) return access;
+
   try {
-    const detail = await receptionistService.getCallDetail(id);
+    const detail = await receptionistService.getCallDetail(id, { companyId: access.auth.companyId });
     if (!detail) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
