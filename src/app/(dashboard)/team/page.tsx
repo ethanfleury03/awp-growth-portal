@@ -166,7 +166,7 @@ export default function TeamPage() {
             </div>
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-xl font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30"
+              className="flex items-center gap-2 bg-[var(--ops-brand)] text-white px-4 py-2 rounded-xl font-medium hover:bg-[var(--ops-brand-strong)] transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Team Member
@@ -176,29 +176,29 @@ export default function TeamPage() {
 
         <div className="bg-white border-b border-gray-200 px-8 py-6">
           <div className="grid grid-cols-4 gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border border-blue-200">
-              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 mb-3">
+            <div className="bg-white rounded-xl p-5 border border-gray-200">
+              <div className="w-12 h-12 bg-[var(--ops-brand)] rounded-xl flex items-center justify-center mb-3">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <p className="text-3xl font-bold text-blue-700">{loading ? '...' : stats.totalPlumbers}</p>
               <p className="text-sm text-blue-600">Total Team</p>
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-5 border border-green-200">
-              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30 mb-3">
+            <div className="bg-white rounded-xl p-5 border border-gray-200">
+              <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center mb-3">
                 <CheckCircle className="w-6 h-6 text-white" />
               </div>
               <p className="text-3xl font-bold text-green-700">{loading ? '...' : stats.activeNow}</p>
               <p className="text-sm text-green-600">Active Now</p>
             </div>
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-5 border border-orange-200">
-              <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30 mb-3">
+            <div className="bg-white rounded-xl p-5 border border-gray-200">
+              <div className="w-12 h-12 bg-amber-600 rounded-xl flex items-center justify-center mb-3">
                 <Wrench className="w-6 h-6 text-white" />
               </div>
               <p className="text-3xl font-bold text-orange-700">{loading ? '...' : stats.jobsToday}</p>
               <p className="text-sm text-orange-600">Jobs Today</p>
             </div>
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 border border-purple-200">
-              <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30 mb-3">
+            <div className="bg-white rounded-xl p-5 border border-gray-200">
+              <div className="w-12 h-12 bg-slate-600 rounded-xl flex items-center justify-center mb-3">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
               <p className="text-3xl font-bold text-purple-700">{loading ? '...' : stats.completedThisWeek}</p>
@@ -218,18 +218,18 @@ export default function TeamPage() {
             {filteredPlumbers.map((plumber) => (
               <div
                 key={plumber.id}
-                className={`bg-white rounded-2xl border-2 p-6 transition-all hover:shadow-xl hover:-translate-y-1 ${
+                className={`bg-white rounded-xl border p-6 transition-colors ${
                   plumber.active
-                    ? 'border-green-200 shadow-lg shadow-green-100'
-                    : 'border-gray-100 shadow-sm opacity-75'
+                    ? 'border-green-200'
+                    : 'border-gray-100 opacity-75'
                 }`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold shadow-md ${
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-lg font-bold ${
                       plumber.active
-                        ? 'bg-gradient-to-br from-green-400 to-green-600 text-white'
-                        : 'bg-gradient-to-br from-gray-300 to-gray-500 text-white'
+                        ? 'bg-[var(--ops-brand)] text-white'
+                        : 'bg-gray-300 text-white'
                     }`}>
                       {getInitials(plumber.name)}
                     </div>
@@ -283,9 +283,9 @@ export default function TeamPage() {
 
             <button
               onClick={() => setShowAddModal(true)}
-              className="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-6 flex flex-col items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-all min-h-[240px]"
+              className="bg-white rounded-xl border border-dashed border-gray-300 p-6 flex flex-col items-center justify-center text-gray-400 hover:border-[var(--ops-brand)] hover:text-[var(--ops-brand)] hover:bg-[var(--ops-surface-subtle)] transition-colors min-h-[240px]"
             >
-              <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+              <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center mb-4">
                 <Plus className="w-8 h-8" />
               </div>
               <p className="font-medium">Add New Team Member</p>
@@ -300,7 +300,7 @@ export default function TeamPage() {
 
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Add New Team Member</h2>
               <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-gray-100 rounded-xl">

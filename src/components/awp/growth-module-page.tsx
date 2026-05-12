@@ -251,7 +251,7 @@ export function GrowthModulePage({ config, embedded = false }: { config: GrowthM
   const content = (
     <>
       {embedded ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] p-4 shadow-[var(--ops-shadow-soft)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] p-4 shadow-[var(--ops-shadow-soft)]">
           <div>
             <p className="text-sm font-semibold text-[var(--ops-text)]">{config.title}</p>
             <p className="mt-1 max-w-3xl text-sm text-[var(--ops-muted)]">{config.description}</p>
@@ -426,13 +426,13 @@ export function GrowthModulePage({ config, embedded = false }: { config: GrowthM
           ))}
 
           {contacts.length > 0 ? (
-            <div className="rounded-[24px] border border-[var(--ops-border)] bg-[var(--ops-surface-subtle)] p-4">
+            <div className="rounded-xl border border-[var(--ops-border)] bg-[var(--ops-surface-subtle)] p-4">
               <h3 className="text-sm font-semibold text-[var(--ops-text)]">List contacts</h3>
               <div className="mt-3 space-y-2">
                 {contacts.map((contact, index) => {
                   const row = contact as Record<string, unknown>;
                   return (
-                    <div key={index} className="rounded-2xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 text-sm">
+                    <div key={index} className="rounded-xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 text-sm">
                       <p className="font-semibold text-[var(--ops-text)]">{String(row.name || row.businessName || 'Contact')}</p>
                       <p className="mt-1 text-[var(--ops-muted)]">
                         {[row.businessName, row.email, row.location, row.outreachStatus].filter(Boolean).join(' / ')}

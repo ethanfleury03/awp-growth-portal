@@ -16,8 +16,9 @@ function cols(db: Database.Database, table: string): Set<string> {
  */
 export function applyAuthMigrations(db: Database.Database) {
   const t = tables(db);
+  let hasPortalUsers = t.has('portal_users');
 
-  if (!t.has('portal_users')) {
+  if (!hasPortalUsers) {
     db.exec(`
       CREATE TABLE portal_users (
         id          TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
@@ -27,11 +28,13 @@ export function applyAuthMigrations(db: Database.Database) {
         hashed_pw   TEXT NOT NULL,
         role        TEXT NOT NULL DEFAULT 'staff',
         is_active   INTEGER NOT NULL DEFAULT 1,
+        clerk_user_id TEXT,
         created_at  TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
       );
       CREATE INDEX IF NOT EXISTS idx_portal_users_email ON portal_users(email);
     `);
+    hasPortalUsers = true;
   }
 
   if (!t.has('user_sessions')) {
@@ -48,7 +51,7 @@ export function applyAuthMigrations(db: Database.Database) {
   }
 
   // Safe column additions for older DBs
-  if (t.has('portal_users')) {
+  if (hasPortalUsers) {
     const c = cols(db, 'portal_users');
     if (!c.has('is_active')) db.exec(`ALTER TABLE portal_users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1`);
     if (!c.has('clerk_user_id')) db.exec(`ALTER TABLE portal_users ADD COLUMN clerk_user_id TEXT`);

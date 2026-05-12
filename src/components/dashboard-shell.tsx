@@ -81,7 +81,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <button
           type="button"
           onClick={() => setMobileNavOpen(true)}
-          className="fixed left-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ops-border-strong)] bg-white/90 text-[var(--ops-text)] shadow-[var(--ops-shadow-soft)] backdrop-blur lg:hidden"
+          className="fixed left-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--ops-border-strong)] bg-white/90 text-[var(--ops-text)] shadow-[var(--ops-shadow-soft)] backdrop-blur lg:hidden"
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Open navigation</span>

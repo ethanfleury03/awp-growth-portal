@@ -47,7 +47,7 @@ export function ConsentManager() {
       ) : null}
 
       {consent === 'unknown' ? (
-        <div className="fixed z-[120] bottom-4 inset-x-4 md:left-auto md:right-6 md:bottom-6 md:max-w-md rounded-xl border border-slate-200 bg-white shadow-2xl p-4 text-sm">
+        <div className="fixed z-[120] bottom-4 inset-x-4 md:left-auto md:right-6 md:bottom-6 md:max-w-md rounded-xl border border-slate-200 bg-white shadow-lg p-4 text-sm">
           <p className="font-semibold text-[var(--brand-ink)]">Cookie preferences</p>
           <p className="text-slate-600 mt-1">
             We use optional analytics cookies to improve site performance. You can change this choice any time by

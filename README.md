@@ -35,6 +35,17 @@ npm run build
 This repository deploys to the existing Vercel project `wnyautomation-portal`
 from the repository root.
 
+When this portal is moved behind the central WNY Automation gateway, configure:
+
+```text
+PORTAL_GATEWAY_URL=https://app.wnyautomation.com
+PORTAL_GATEWAY_SERVICE_TOKEN=<shared internal token>
+PORTAL_GATEWAY_DESTINATION_KEY=awp-growth-portal
+```
+
+With those variables present, direct visits to this portal require both a local
+portal assignment and a matching gateway assignment.
+
 ## Docs
 
 Operational notes live in `docs/`, including receptionist, estimates, Stripe,

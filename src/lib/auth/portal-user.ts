@@ -1,5 +1,6 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { sql } from '@/lib/db';
+import { verifyGatewayPortalAccess } from '@/lib/auth/gateway-access';
 import type { SessionUser } from '@/lib/auth/types';
 
 /**
@@ -84,6 +85,19 @@ export async function getPortalUser(): Promise<SessionUser | null> {
       clerkUserId: userId,
       name,
     }).catch((error) => console.warn('[auth] failed to record unassigned user', error));
+  }
+
+  if (companyId && role !== 'super_admin') {
+    const gatewayAccess = await verifyGatewayPortalAccess({ clerkUserId: userId, email });
+    if (gatewayAccess.configured && !gatewayAccess.allowed) {
+      await recordUnassignedPortalUser({
+        email,
+        clerkUserId: userId,
+        name,
+      }).catch((error) => console.warn('[auth] failed to record gateway-denied user', error));
+      companyId = '';
+      branchId = '';
+    }
   }
 
   return {

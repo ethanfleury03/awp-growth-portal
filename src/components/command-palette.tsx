@@ -99,7 +99,7 @@ export function CommandPalette() {
       aria-modal="true"
     >
       <div
-        className="w-full max-w-2xl overflow-hidden rounded-[32px] border border-[var(--ops-border-strong)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,249,255,0.96))] shadow-[0_28px_64px_-24px_rgba(8,18,35,0.58)]"
+        className="w-full max-w-2xl overflow-hidden rounded-xl border border-[var(--ops-border-strong)] bg-[var(--ops-surface-strong)] shadow-[0_18px_44px_-30px_rgba(8,18,35,0.52)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 border-b border-[var(--ops-border)] px-5 py-4">
@@ -119,7 +119,7 @@ export function CommandPalette() {
             placeholder="Search cabin leads, contacts, estimates, and growth work..."
             className="flex-1 bg-transparent text-sm text-[var(--ops-text)] outline-none placeholder:text-[var(--ops-muted)]"
           />
-          <kbd className="rounded-lg border border-[var(--ops-border)] bg-white px-2 py-1 text-xs text-[var(--ops-muted)]">Esc</kbd>
+          <kbd className="rounded-md border border-[var(--ops-border)] bg-white px-2 py-1 text-xs text-[var(--ops-muted)]">Esc</kbd>
         </div>
         <div className="max-h-96 overflow-y-auto">
           {results.length === 0 && query.trim().length >= 2 && !loading && (

@@ -106,8 +106,8 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
 
   const navLinkClass = (active: boolean) =>
     clsx(
-      'sidebar-item flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm',
-      active ? 'active text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]' : 'text-slate-300 hover:text-white',
+      'sidebar-item flex w-full items-center gap-3 rounded-lg px-3.5 py-2.5 text-left text-sm',
+      active ? 'active text-white' : 'text-slate-300 hover:text-white',
     );
 
   const handleNavigate = () => {
@@ -124,11 +124,11 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
       <div className="relative z-10 border-b border-white/10 px-5 py-5">
         <div className="mb-4 flex items-center justify-between">
           <Link href="/app" className="flex items-center gap-3" onClick={handleNavigate}>
-            <div className="sidebar-logo flex h-11 w-11 items-center justify-center rounded-2xl shadow-lg">
+            <div className="sidebar-logo flex h-10 w-10 items-center justify-center rounded-lg">
               <span className="text-sm font-bold">WNY</span>
             </div>
             <div>
-              <span className="block text-xl font-semibold tracking-[-0.03em] text-white">
+              <span className="block text-lg font-semibold text-white">
                 {branding?.portalTitle ?? 'WNY Automation Portal'}
               </span>
               <span className="block text-[11px] uppercase tracking-[0.22em] text-slate-400">
@@ -140,14 +140,14 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 text-slate-300 transition-colors hover:bg-white/6 hover:text-white"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-slate-300 transition-colors hover:bg-white/6 hover:text-white"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
           ) : null}
         </div>
 
-        <div className="rounded-[24px] border border-white/10 bg-white/6 px-4 py-3">
+        <div className="rounded-xl border border-white/10 bg-white/6 px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Workspace</p>
@@ -202,8 +202,8 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
         ) : null}
 
         <div className="border-t border-white/10 p-4">
-          <div className="group flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/6 p-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#4a7eff,#255cf3)] text-sm font-bold shadow-lg">
+          <div className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/6 p-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--ops-brand)] text-sm font-bold">
               {user?.avatarInitials ?? '??'}
             </div>
             <div className="min-w-0 flex-1">

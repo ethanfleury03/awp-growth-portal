@@ -1,6 +1,6 @@
 export const clerkMarketingAppearance = {
   variables: {
-    colorPrimary: '#f26a1f',
+    colorPrimary: '#2f6b4f',
     colorBackground: '#ffffff',
     colorText: '#101828',
     colorTextSecondary: '#667085',
@@ -11,7 +11,7 @@ export const clerkMarketingAppearance = {
   },
   elements: {
     rootBox: 'w-full flex justify-center',
-    card: 'bg-white border border-slate-200 shadow-2xl shadow-slate-200/80',
+    card: 'bg-white border border-slate-200 shadow-lg shadow-slate-200/60',
     header: 'hidden',
     headerTitle: 'text-slate-950',
     headerSubtitle: 'text-slate-600',
@@ -21,12 +21,12 @@ export const clerkMarketingAppearance = {
     dividerText: 'text-slate-500',
     formFieldLabel: 'text-slate-700',
     formFieldInput:
-      'bg-white text-slate-950 border-slate-300 placeholder:text-slate-400 focus:border-[#f26a1f] focus:ring-[#f26a1f]',
+      'bg-white text-slate-950 border-slate-300 placeholder:text-slate-400 focus:border-[#2f6b4f] focus:ring-[#2f6b4f]',
     formButtonPrimary:
-      'bg-gradient-to-r from-[#f26a1f] to-[#d95614] text-white shadow-lg shadow-orange-200/70 hover:from-[#e45f19] hover:to-[#c94e12]',
+      'bg-[#2f6b4f] text-white shadow-none hover:bg-[#24553f]',
     footer: 'bg-slate-50 border-t border-slate-200',
     footerActionText: 'text-slate-600',
-    footerActionLink: 'text-[#d95614] font-semibold hover:text-[#a93d0d]',
+    footerActionLink: 'text-[#2f6b4f] font-semibold hover:text-[#24553f]',
     identityPreviewText: 'text-slate-900',
     formFieldInputShowPasswordButton: 'text-slate-500',
   },

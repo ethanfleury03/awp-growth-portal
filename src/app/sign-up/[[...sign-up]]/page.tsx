@@ -1,5 +1,11 @@
 import { Suspense } from 'react';
+import { auth } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
 import { SignUpClient } from '../sign-up-client';
+import {
+  getSafeRedirectPath,
+  type RedirectSearchParams,
+} from '@/lib/auth/redirect-after-sign-in';
 
 function SignUpFallback() {
   return (
@@ -7,7 +13,14 @@ function SignUpFallback() {
   );
 }
 
-export default function SignUpPage() {
+export default async function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<RedirectSearchParams>;
+}) {
+  const [{ userId }, sp] = await Promise.all([auth(), searchParams]);
+  if (userId) redirect(getSafeRedirectPath(sp));
+
   return (
     <Suspense fallback={<SignUpFallback />}>
       <SignUpClient />

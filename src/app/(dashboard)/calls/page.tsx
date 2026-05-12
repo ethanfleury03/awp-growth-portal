@@ -267,7 +267,7 @@ export default function CallsPage() {
 
         <div className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="grid grid-cols-4 gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+            <div className="bg-white rounded-xl p-4 border border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                   <Phone className="w-5 h-5 text-white" />
@@ -278,7 +278,7 @@ export default function CallsPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+            <div className="bg-white rounded-xl p-4 border border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
                   <CheckCircle className="w-5 h-5 text-white" />
@@ -289,7 +289,7 @@ export default function CallsPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 border border-emerald-200">
+            <div className="bg-white rounded-xl p-4 border border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-white" />
@@ -300,7 +300,7 @@ export default function CallsPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+            <div className="bg-white rounded-xl p-4 border border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
                   <Mic className="w-5 h-5 text-white" />
@@ -378,7 +378,7 @@ export default function CallsPage() {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-medium">
+                        <div className="w-10 h-10 bg-[var(--ops-brand)] rounded-full flex items-center justify-center text-white font-medium">
                           {(call.customer_name || 'C').charAt(0)}
                         </div>
                         <span className="font-medium text-gray-900">{call.customer_name || 'Unknown Caller'}</span>
@@ -449,7 +449,7 @@ export default function CallsPage() {
               </button>
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+              <div className="w-14 h-14 bg-[var(--ops-brand)] rounded-full flex items-center justify-center text-white text-xl font-bold">
                 {(selectedCall.customer_name || 'C').charAt(0)}
               </div>
               <div>

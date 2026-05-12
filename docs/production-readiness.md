@@ -5,11 +5,13 @@
 1. Deploy the latest `awp-growth-portal` branch to Vercel.
 2. Confirm Vercel env vars are set for both projects:
    - portal: Clerk, Neon `DATABASE_URL`, app URLs, Stripe, Twilio, Retell, Sentry, and optional R2.
-   - marketing: `DATABASE_URL`, `BLOG_API_TOKEN`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_CLIENT_PORTAL_URL`, lead webhook, and analytics.
+   - portal gateway: shared Clerk keys, Neon `DATABASE_URL`, `GATEWAY_INTERNAL_ACCESS_TOKEN`, `GATEWAY_SUPER_ADMIN_EMAILS`, and destination seed values.
+   - marketing: `DATABASE_URL`, `BLOG_API_TOKEN`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_CLIENT_LOGIN_PATH`, `NEXT_PUBLIC_CLIENT_GATEWAY_SIGN_IN_URL`, lead webhook, and analytics.
 3. Confirm domains:
    - `https://wnyautomation.com`
    - `https://www.wnyautomation.com`
-   - `https://app.wnyautomation.com`
+   - `https://app.wnyautomation.com` for the gateway.
+   - `https://awp.wnyautomation.com` for the AWP portal.
 4. Run migrations against production:
    ```bash
    npm run db:migrate --workspace @wnyautomation/portal
@@ -20,19 +22,20 @@
    ```
 6. Configure Clerk production:
    - production publishable/secret keys in Vercel
-   - allowed origins include `https://app.wnyautomation.com`
+   - allowed origins include `https://app.wnyautomation.com` and client portal origins such as `https://awp.wnyautomation.com`
    - sign-in/sign-up redirects point to the app domain
    - Google sign-in enabled if clients will use Google
-   - webhook points to `https://app.wnyautomation.com/api/webhooks/clerk`
+   - Clerk webhooks point to the gateway and any client portal apps that need local user sync.
 7. Configure provider webhooks:
-   - Stripe: `https://app.wnyautomation.com/api/stripe/webhook`
-   - Twilio voice/status: app-domain receptionist webhook URLs
-   - Retell webhook/functions: app-domain receptionist provider URLs
+   - Stripe: `https://awp.wnyautomation.com/api/stripe/webhook`
+   - Twilio voice/status: AWP portal receptionist webhook URLs
+   - Retell webhook/functions: AWP portal receptionist provider URLs
 8. Verify:
    - `/super-admin` loads for the WNY super admin.
    - Tenant detail pages load.
    - Preview workspace shows the tenant branding/modules.
-   - `/app` loads for assigned client users.
+   - `https://app.wnyautomation.com/launch` sends assigned client users to the correct portal.
+   - `/app` loads for assigned AWP client users after gateway access is configured.
    - Disabled module URLs show the module-disabled screen.
    - `/api/health` returns `ok: true` and `db: "up"`.
 
@@ -40,12 +43,13 @@
 
 - Super admin login works with the production Clerk app.
 - Client admin login works and lands in the correct tenant.
+- Client Login from `wnyautomation.com/client-login` opens the gateway sign-in and then launches the assigned portal.
 - A brand-new unassigned login lands on `/account-unassigned`.
 - The unassigned login appears in `/super-admin` and can be assigned.
 - Core CRM pages load: dashboard, leads, customers, estimates, invoices.
 - Disabled modules are hidden and direct URLs are blocked.
 - Sentry/logging env vars are configured.
-- Stripe, Clerk, Twilio, and Retell webhook URLs all use `app.wnyautomation.com`.
+- Gateway login/webhook URLs use `app.wnyautomation.com`; AWP Stripe, Twilio, and Retell webhook URLs use `awp.wnyautomation.com`.
 - `/api/admin/system-health` shows no unexpected missing required service categories.
 
 ## Seed Environment Overrides

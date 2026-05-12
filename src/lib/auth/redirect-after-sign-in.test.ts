@@ -39,4 +39,14 @@ describe('getSafeRedirectPath', () => {
     expect(getSafeRedirectPath(params({ redirect_url: '/' }))).toBe('/');
     expect(getSafeRedirectPath(params({ redirect_url: '/estimates/new?foo=1' }))).toBe('/estimates/new?foo=1');
   });
+
+  it('rejects auth pages to avoid signed-in redirect loops', () => {
+    expect(getSafeRedirectPath(params({ redirect_url: '/login' }))).toBe(DEFAULT_POST_AUTH_PATH);
+    expect(getSafeRedirectPath(params({ redirect_url: '/sign-in?redirect_url=/app' }))).toBe(DEFAULT_POST_AUTH_PATH);
+    expect(getSafeRedirectPath(params({ redirect_url: '/sign-up' }))).toBe(DEFAULT_POST_AUTH_PATH);
+  });
+
+  it('accepts server search params records', () => {
+    expect(getSafeRedirectPath({ redirect_url: ['/customers', '/jobs'] })).toBe('/customers');
+  });
 });

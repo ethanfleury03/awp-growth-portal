@@ -179,7 +179,7 @@ export default function CalendarPage() {
             <StatCard label="Assigned techs" value={loading ? '…' : new Set(filteredJobs.map((job) => job.plumber_name).filter(Boolean)).size} meta="Distinct visible assignees" tone="success" icon={User} />
           </KpiStrip>
 
-          <div className="rounded-[32px] border border-[var(--ops-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,250,255,0.96))] px-5 py-5 shadow-[var(--ops-shadow-soft)]">
+          <div className="rounded-xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-5 py-5 shadow-[var(--ops-shadow-soft)]">
             <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex items-center gap-3">
                 <button type="button" onClick={() => navigateWindow(-1)} className={opsButtonClass('secondary', 'sm')}>
@@ -218,9 +218,9 @@ export default function CalendarPage() {
                 components={{ event: CalendarEventCard }}
                 eventPropGetter={(event) => ({
                   style: {
-                    background: `linear-gradient(180deg, ${eventTone(event.resource.status)}, ${eventTone(event.resource.status)})`,
+                    background: eventTone(event.resource.status),
                     color: '#ffffff',
-                    borderRadius: '16px',
+                    borderRadius: '8px',
                   },
                 })}
               />
@@ -251,7 +251,7 @@ export default function CalendarPage() {
               {selectedJob.plumber_name ? <StatusBadge tone="neutral">{selectedJob.plumber_name}</StatusBadge> : null}
             </div>
 
-            <div className="rounded-[24px] border border-[var(--ops-border)] bg-[var(--ops-surface-subtle)] px-5 py-4">
+            <div className="rounded-xl border border-[var(--ops-border)] bg-[var(--ops-surface-subtle)] px-5 py-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ops-muted)]">Scheduled</p>
               <p className="mt-2 text-sm text-[var(--ops-text)]">
                 {selectedJob.scheduled_at
@@ -262,7 +262,7 @@ export default function CalendarPage() {
               </p>
             </div>
 
-            <div className="rounded-[24px] border border-[var(--ops-border)] bg-white px-5 py-4">
+            <div className="rounded-xl border border-[var(--ops-border)] bg-white px-5 py-4">
               <div className="flex items-start gap-3">
                 <MapPin className="mt-0.5 h-4 w-4 text-[var(--ops-muted)]" />
                 <div>
@@ -272,7 +272,7 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-[var(--ops-border)] bg-white px-5 py-4">
+            <div className="rounded-xl border border-[var(--ops-border)] bg-white px-5 py-4">
               <div className="flex items-start gap-3">
                 <User className="mt-0.5 h-4 w-4 text-[var(--ops-muted)]" />
                 <div>
@@ -283,7 +283,7 @@ export default function CalendarPage() {
             </div>
 
             {selectedJob.description ? (
-              <div className="rounded-[24px] border border-[var(--ops-border)] bg-white px-5 py-4">
+              <div className="rounded-xl border border-[var(--ops-border)] bg-white px-5 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ops-muted)]">Description</p>
                 <p className="mt-2 text-sm leading-6 text-[var(--ops-text)]">{selectedJob.description}</p>
               </div>

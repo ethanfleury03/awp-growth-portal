@@ -3,16 +3,16 @@
 @import "react-big-calendar/lib/css/react-big-calendar.css";
 
 :root {
-  --background: #edf1ec;
+  --background: #f3f5f1;
   --foreground: #17241f;
-  --ops-bg: #edf1ec;
-  --ops-surface: #f8faf6;
-  --ops-surface-elevated: rgba(251, 252, 248, 0.94);
+  --ops-bg: #f3f5f1;
+  --ops-surface: #fbfcf8;
+  --ops-surface-elevated: rgba(255, 255, 252, 0.96);
   --ops-surface-strong: #fffefa;
-  --ops-surface-subtle: #e8eee7;
-  --ops-border: rgba(105, 126, 111, 0.32);
-  --ops-border-strong: rgba(77, 99, 84, 0.44);
-  --ops-focus-ring: rgba(47, 107, 79, 0.15);
+  --ops-surface-subtle: #eef2ec;
+  --ops-border: rgba(88, 111, 95, 0.22);
+  --ops-border-strong: rgba(70, 91, 78, 0.32);
+  --ops-focus-ring: rgba(47, 107, 79, 0.12);
   --ops-text: #17241f;
   --ops-muted: #607068;
   --ops-muted-strong: #41534a;
@@ -44,10 +44,10 @@
   --ops-sky-soft-border: rgba(44, 153, 255, 0.18);
   --ops-sky-ink: #125995;
   --ops-shadow-soft:
-    0 22px 44px -30px rgba(16, 28, 50, 0.18),
-    0 8px 18px -16px rgba(40, 61, 98, 0.08);
+    0 10px 24px -20px rgba(16, 28, 50, 0.22),
+    0 1px 2px rgba(16, 28, 50, 0.04);
   --ops-shadow-inset: 0 1px 0 rgba(255, 255, 255, 0.78);
-  --ops-shell-gradient: linear-gradient(180deg, #10251d 0%, #173327 52%, #0d1b17 100%);
+  --ops-shell-gradient: #10251d;
 }
 
 @theme inline {
@@ -113,19 +113,13 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(circle at top left, rgba(47, 107, 79, 0.09), transparent 24%),
-    radial-gradient(circle at top right, rgba(143, 117, 76, 0.1), transparent 22%),
-    linear-gradient(180deg, #f0f3ee 0%, #e7ece6 100%),
-    var(--ops-bg);
+  background: var(--ops-bg);
   color: var(--foreground);
   font-family: var(--font-app-sans), "Segoe UI", sans-serif;
 }
 
 .ops-shell {
-  background:
-    radial-gradient(circle at top right, rgba(47, 107, 79, 0.11), transparent 18%),
-    linear-gradient(180deg, #f0f3ee 0%, #e6ece5 100%);
+  background: var(--ops-bg);
 }
 
 .ops-shell .bg-white {
@@ -157,6 +151,36 @@ body {
   min-height: 0;
 }
 
+/* Restraint pass for older portal screens that still use one-off Tailwind
+   utility styling instead of the shared ops components. */
+.ops-shell [class~="rounded-[32px]"],
+.ops-shell [class~="rounded-[28px]"],
+.ops-shell [class~="rounded-[24px]"],
+.ops-shell [class~="rounded-[22px]"],
+.ops-shell [class~="rounded-[20px]"],
+.ops-shell [class~="rounded-3xl"],
+.ops-shell [class~="rounded-2xl"] {
+  border-radius: 0.875rem !important;
+}
+
+.ops-shell [class*="bg-[linear-gradient"] {
+  background-image: none !important;
+  background-color: var(--ops-surface-strong) !important;
+}
+
+.ops-shell [class*="shadow-["],
+.ops-shell [class~="shadow-xl"],
+.ops-shell [class~="shadow-2xl"],
+.ops-shell [class~="shadow-lg"],
+.ops-shell [class~="shadow-md"] {
+  box-shadow: var(--ops-shadow-soft) !important;
+}
+
+.ops-shell [class~="hover:-translate-y-1"]:hover,
+.ops-shell [class~="hover:-translate-y-0.5"]:hover {
+  transform: none !important;
+}
+
 code,
 pre,
 .font-mono {
@@ -180,13 +204,7 @@ pre,
 }
 
 .sidebar::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at top left, rgba(86, 141, 103, 0.22), transparent 34%),
-    radial-gradient(circle at 90% 80%, rgba(178, 137, 78, 0.12), transparent 28%);
-  pointer-events: none;
+  content: none;
 }
 
 .sidebar::after {
@@ -199,10 +217,8 @@ pre,
 }
 
 .sidebar-logo {
-  background: linear-gradient(180deg, #5f8f61, #2f6b4f);
-  box-shadow:
-    0 16px 28px -18px rgba(47, 107, 79, 0.84),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  background: #2f6b4f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .sidebar-item {
@@ -218,18 +234,18 @@ pre,
   left: 0;
   width: 3px;
   border-radius: 0 999px 999px 0;
-  background: linear-gradient(180deg, #b88d4f 0%, #4f8c5f 100%);
+  background: #8aa17c;
   opacity: 0;
   transform: scaleY(0.4);
   transition: opacity 140ms ease, transform 140ms ease;
 }
 
 .sidebar-item:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-item.active {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-item:hover::before,
@@ -240,8 +256,8 @@ pre,
 
 .header {
   background: rgba(255, 255, 255, 0.84);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--ops-border);
 }
 
@@ -250,7 +266,7 @@ pre,
   background: white;
   border: 1px solid var(--ops-border);
   color: var(--ops-text);
-  border-radius: 18px;
+  border-radius: 12px;
   transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
 }
 
@@ -268,9 +284,9 @@ pre,
 
 .btn-primary,
 .btn-secondary {
-  border-radius: 18px;
+  border-radius: 12px;
   font-weight: 700;
-  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+  transition: background-color 140ms ease, border-color 140ms ease;
 }
 
 .btn-primary {
@@ -298,7 +314,7 @@ pre,
 .bucket,
 .details-section,
 .modal-content {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 255, 0.96));
+  background: var(--ops-surface-strong);
   border: 1px solid var(--ops-border);
   box-shadow: var(--ops-shadow-soft);
 }
@@ -307,16 +323,16 @@ pre,
 .glass-card,
 .bucket,
 .details-section {
-  border-radius: 28px;
+  border-radius: 14px;
 }
 
 .modal-content {
-  border-radius: 32px;
+  border-radius: 16px;
 }
 
 .modal-overlay {
-  background: rgba(8, 18, 35, 0.52);
-  backdrop-filter: blur(8px);
+  background: rgba(8, 18, 35, 0.42);
+  backdrop-filter: blur(3px);
 }
 
 .badge {
@@ -391,17 +407,13 @@ pre,
 }
 
 .text-gradient {
-  background: linear-gradient(180deg, #2f6b4f, #b27c3f);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  background: none;
+  color: var(--ops-brand);
 }
 
 .border-gradient {
-  border: 1px solid transparent;
-  background:
-    linear-gradient(white, white) padding-box,
-    linear-gradient(135deg, rgba(33, 105, 255, 0.72), rgba(83, 120, 255, 0.28)) border-box;
+  border: 1px solid var(--ops-border-strong);
+  background: var(--ops-surface-strong);
 }
 
 .shadow-premium {
@@ -450,9 +462,9 @@ pre,
 .rbc-time-view,
 .rbc-agenda-view table.rbc-agenda-table {
   border: 1px solid var(--ops-border) !important;
-  border-radius: 28px;
+  border-radius: 14px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--ops-surface-strong);
   box-shadow: var(--ops-shadow-soft);
 }
 
@@ -512,9 +524,9 @@ pre,
 
 .rbc-event {
   border: none !important;
-  border-radius: 16px !important;
-  background: linear-gradient(180deg, rgba(33, 105, 255, 0.96), rgba(28, 88, 217, 0.96)) !important;
-  box-shadow: 0 10px 18px -16px rgba(33, 105, 255, 0.92);
+  border-radius: 8px !important;
+  background: var(--ops-brand) !important;
+  box-shadow: none;
 }
 
 .rbc-event:focus {
@@ -525,7 +537,7 @@ pre,
 }
 
 .rbc-selected {
-  background: linear-gradient(180deg, rgba(16, 82, 224, 1), rgba(12, 70, 191, 1)) !important;
+  background: var(--ops-brand-strong) !important;
 }
 
 .rbc-agenda-view table.rbc-agenda-table thead > tr > th,
@@ -538,7 +550,7 @@ pre,
   .rbc-month-view,
   .rbc-time-view,
   .rbc-agenda-view table.rbc-agenda-table {
-    border-radius: 22px;
+    border-radius: 12px;
   }
 }
 

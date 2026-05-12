@@ -18,14 +18,14 @@ type ButtonSize = 'sm' | 'md' | 'lg';
 
 const buttonVariantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-[var(--ops-brand)] text-white shadow-[0_12px_28px_-16px_rgba(33,105,255,0.72)] hover:bg-[var(--ops-brand-strong)]',
+    'bg-[var(--ops-brand)] text-white hover:bg-[var(--ops-brand-strong)]',
   secondary:
     'bg-[var(--ops-surface-strong)] text-[var(--ops-text)] border border-[var(--ops-border-strong)] hover:bg-[var(--ops-surface-subtle)]',
   ghost: 'bg-transparent text-[var(--ops-muted)] hover:bg-[var(--ops-surface-subtle)] hover:text-[var(--ops-text)]',
   danger: 'bg-[var(--ops-danger)] text-white hover:bg-[#be3952]',
   warning: 'bg-[var(--ops-warning)] text-[#271504] hover:bg-[#b67a19]',
   subtle:
-    'bg-[linear-gradient(180deg,var(--ops-surface-strong),var(--ops-surface))] text-[var(--ops-text)] border border-[var(--ops-border)] hover:border-[var(--ops-border-strong)]',
+    'bg-[var(--ops-surface-strong)] text-[var(--ops-text)] border border-[var(--ops-border)] hover:border-[var(--ops-border-strong)]',
 };
 
 const buttonSizeClasses: Record<ButtonSize, string> = {
@@ -49,7 +49,7 @@ type Tone = keyof typeof toneClasses;
 
 export function opsButtonClass(variant: ButtonVariant = 'secondary', size: ButtonSize = 'md') {
   return cn(
-    'inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ops-focus-ring)] disabled:pointer-events-none disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ops-focus-ring)] disabled:pointer-events-none disabled:opacity-50',
     buttonVariantClasses[variant],
     buttonSizeClasses[size],
   );
@@ -73,6 +73,7 @@ export function OpsInput({
     <label
       className={cn(
         'flex h-11 items-center gap-3 rounded-2xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-3.5 text-sm text-[var(--ops-text)] shadow-[var(--ops-shadow-inset)] transition-colors focus-within:border-[var(--ops-border-strong)] focus-within:ring-4 focus-within:ring-[var(--ops-focus-ring)]',
+        'rounded-xl shadow-none',
         className,
       )}
     >
@@ -94,6 +95,7 @@ export function OpsSelect({
     <select
       className={cn(
         'h-11 w-full rounded-2xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-3.5 text-sm text-[var(--ops-text)] shadow-[var(--ops-shadow-inset)] outline-none transition-colors focus:border-[var(--ops-border-strong)] focus:ring-4 focus:ring-[var(--ops-focus-ring)]',
+        'rounded-xl shadow-none',
         className,
       )}
       {...props}
@@ -111,6 +113,7 @@ export function OpsTextarea({
     <textarea
       className={cn(
         'min-h-[112px] w-full rounded-3xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 text-sm text-[var(--ops-text)] shadow-[var(--ops-shadow-inset)] outline-none transition-colors placeholder:text-[var(--ops-muted)] focus:border-[var(--ops-border-strong)] focus:ring-4 focus:ring-[var(--ops-focus-ring)]',
+        'rounded-xl shadow-none',
         className,
       )}
       {...props}
@@ -163,11 +166,10 @@ export function AppPageHeader({
   return (
     <header
       className={cn(
-        'relative overflow-hidden rounded-[32px] border border-[var(--ops-border-strong)] bg-[linear-gradient(180deg,var(--ops-surface-strong),var(--ops-surface))] px-6 py-6 shadow-[var(--ops-shadow-soft)]',
+        'relative rounded-xl border border-[var(--ops-border-strong)] bg-[var(--ops-surface-strong)] px-5 py-5 shadow-[var(--ops-shadow-soft)]',
         className,
       )}
     >
-      <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(33,105,255,0.38),transparent)]" />
       <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0">
           {eyebrow ? (
@@ -177,12 +179,12 @@ export function AppPageHeader({
           ) : null}
           <div className="flex items-start gap-4">
             {Icon ? (
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[24px] border border-[rgba(33,105,255,0.18)] bg-[linear-gradient(180deg,rgba(33,105,255,0.1),rgba(33,105,255,0.04))] text-[var(--ops-brand)]">
-                <Icon className="h-7 w-7" aria-hidden />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[var(--ops-brand-soft-border)] bg-[var(--ops-brand-soft)] text-[var(--ops-brand)]">
+                <Icon className="h-5 w-5" aria-hidden />
               </div>
             ) : null}
             <div className="min-w-0">
-              <h1 className="text-[clamp(1.75rem,3vw,2.45rem)] font-semibold tracking-[-0.03em] text-[var(--ops-text)]">
+              <h1 className="text-2xl font-semibold text-[var(--ops-text)]">
                 {title}
               </h1>
               {description ? (
@@ -218,7 +220,7 @@ export function ConsolePanel({
   return (
     <section
       className={cn(
-        'rounded-[28px] border border-[var(--ops-border)] bg-[linear-gradient(180deg,var(--ops-surface-strong),var(--ops-surface))] shadow-[var(--ops-shadow-soft)]',
+        'rounded-xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] shadow-[var(--ops-shadow-soft)]',
         className,
       )}
     >
@@ -226,7 +228,7 @@ export function ConsolePanel({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             {Icon ? <Icon className="h-5 w-5 text-[var(--ops-brand)]" aria-hidden /> : null}
-            <h2 className="text-base font-semibold tracking-[-0.02em] text-[var(--ops-text)]">{title}</h2>
+            <h2 className="text-base font-semibold text-[var(--ops-text)]">{title}</h2>
           </div>
           {description ? <p className="mt-1 text-sm text-[var(--ops-muted)]">{description}</p> : null}
         </div>
@@ -267,7 +269,7 @@ export function StatCard({
   return (
     <div
       className={cn(
-        'rounded-[28px] border border-[var(--ops-border)] bg-[linear-gradient(180deg,var(--ops-surface-strong),var(--ops-surface))] p-5 shadow-[var(--ops-shadow-soft)]',
+        'rounded-xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] p-4 shadow-[var(--ops-shadow-soft)]',
         className,
       )}
     >
@@ -275,11 +277,11 @@ export function StatCard({
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ops-muted)]">{label}</p>
           <div className="mt-3 flex items-end gap-3">
-            <div className="text-3xl font-semibold tracking-[-0.04em] text-[var(--ops-text)]">{value}</div>
+            <div className="text-2xl font-semibold text-[var(--ops-text)]">{value}</div>
             {Icon ? (
               <div
                 className={cn(
-                  'mb-1 flex h-10 w-10 items-center justify-center rounded-2xl border',
+                  'mb-1 flex h-9 w-9 items-center justify-center rounded-lg border',
                   toneClasses[tone],
                 )}
               >
@@ -309,7 +311,7 @@ export function SegmentedFilterBar({
   return (
     <div
       className={cn(
-        'inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-[var(--ops-border)] bg-[var(--ops-surface-elevated)] p-1 shadow-[var(--ops-shadow-inset)]',
+        'inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-[var(--ops-border)] bg-[var(--ops-surface-elevated)] p-1',
         className,
       )}
     >
@@ -321,9 +323,9 @@ export function SegmentedFilterBar({
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-semibold transition-colors',
+              'inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors',
               active
-                ? 'bg-[var(--ops-brand)] text-white shadow-[0_10px_24px_-14px_rgba(33,105,255,0.78)]'
+                ? 'bg-[var(--ops-brand)] text-white'
                 : 'text-[var(--ops-muted)] hover:bg-[var(--ops-surface-subtle)] hover:text-[var(--ops-text)]',
             )}
           >
@@ -366,7 +368,7 @@ export function DataTable({
   className?: string;
 }) {
   return (
-    <div className={cn('overflow-hidden rounded-[28px] border border-[var(--ops-border)] bg-[linear-gradient(180deg,var(--ops-surface-strong),var(--ops-surface))] shadow-[var(--ops-shadow-soft)]', className)}>
+    <div className={cn('overflow-hidden rounded-xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] shadow-[var(--ops-shadow-soft)]', className)}>
       <div className="overflow-x-auto">
         <table className={cn('w-full text-sm', minWidthClassName)}>
           <thead className="bg-[var(--ops-surface-subtle)]">
@@ -409,7 +411,7 @@ export function ActionCard({
   return (
     <div
       className={cn(
-        'rounded-[24px] border border-[var(--ops-border)] bg-[linear-gradient(180deg,var(--ops-surface-strong),var(--ops-surface))] p-5 shadow-[var(--ops-shadow-soft)]',
+        'rounded-xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] p-5 shadow-[var(--ops-shadow-soft)]',
         className,
       )}
     >
@@ -458,19 +460,19 @@ export function DetailDrawer({
             exit={{ opacity: 0, x: 36 }}
             transition={{ type: 'spring', stiffness: 320, damping: 28 }}
             className={cn(
-              'fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-[var(--ops-border-strong)] bg-[linear-gradient(180deg,var(--ops-surface-strong),var(--ops-surface))] shadow-[0_28px_64px_-24px_rgba(8,18,35,0.58)]',
+              'fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-[var(--ops-border-strong)] bg-[var(--ops-surface-strong)] shadow-[0_18px_44px_-28px_rgba(8,18,35,0.5)]',
               size === 'lg' ? 'max-w-2xl' : 'max-w-xl',
             )}
           >
             <div className="flex items-start justify-between gap-4 border-b border-[var(--ops-border)] px-6 py-5">
               <div className="min-w-0">
-                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--ops-text)]">{title}</h2>
+                <h2 className="text-xl font-semibold text-[var(--ops-text)]">{title}</h2>
                 {description ? <p className="mt-1 text-sm text-[var(--ops-muted)]">{description}</p> : null}
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ops-border)] text-[var(--ops-muted)] transition-colors hover:bg-[var(--ops-surface-subtle)] hover:text-[var(--ops-text)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--ops-border)] text-[var(--ops-muted)] transition-colors hover:bg-[var(--ops-surface-subtle)] hover:text-[var(--ops-text)]"
               >
                 <X className="h-4 w-4" aria-hidden />
                 <span className="sr-only">Close</span>
@@ -500,7 +502,7 @@ export function TimelineList({
 }) {
   if (!items.length) {
     return (
-      <div className="rounded-[24px] border border-dashed border-[var(--ops-border-strong)] bg-[var(--ops-surface-subtle)] px-5 py-7 text-sm text-[var(--ops-muted)]">
+      <div className="rounded-xl border border-dashed border-[var(--ops-border-strong)] bg-[var(--ops-surface-subtle)] px-5 py-7 text-sm text-[var(--ops-muted)]">
         {empty || 'Nothing here yet.'}
       </div>
     );
@@ -522,7 +524,7 @@ export function TimelineList({
           >
             <span className="h-2 w-2 rounded-full bg-current opacity-70" />
           </span>
-          <div className="rounded-[22px] border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 shadow-[var(--ops-shadow-inset)]">
+          <div className="rounded-xl border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <h3 className="text-sm font-semibold text-[var(--ops-text)]">{item.title}</h3>
               {item.meta ? <div className="text-xs font-mono text-[var(--ops-muted)]">{item.meta}</div> : null}
@@ -547,13 +549,13 @@ export function EmptyState({
   icon?: LucideIcon;
 }) {
   return (
-    <div className="rounded-[28px] border border-dashed border-[var(--ops-border-strong)] bg-[var(--ops-surface-subtle)] px-6 py-10 text-center shadow-[var(--ops-shadow-inset)]">
+    <div className="rounded-xl border border-dashed border-[var(--ops-border-strong)] bg-[var(--ops-surface-subtle)] px-6 py-10 text-center">
       {Icon ? (
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[22px] bg-[var(--ops-surface-strong)] text-[var(--ops-brand)] shadow-[var(--ops-shadow-soft)]">
-          <Icon className="h-7 w-7" aria-hidden />
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--ops-surface-strong)] text-[var(--ops-brand)] shadow-[var(--ops-shadow-soft)]">
+          <Icon className="h-6 w-6" aria-hidden />
         </div>
       ) : null}
-      <h3 className="text-lg font-semibold tracking-[-0.02em] text-[var(--ops-text)]">{title}</h3>
+      <h3 className="text-lg font-semibold text-[var(--ops-text)]">{title}</h3>
       <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--ops-muted)]">{description}</p>
       {action ? <div className="mt-5">{action}</div> : null}
     </div>
@@ -561,7 +563,7 @@ export function EmptyState({
 }
 
 export function SkeletonBlock({ className }: ComponentPropsWithoutRef<'div'>) {
-  return <div className={cn('animate-pulse rounded-3xl bg-[linear-gradient(90deg,#eef3fb_0%,#f7faff_40%,#eef3fb_100%)]', className)} />;
+  return <div className={cn('animate-pulse rounded-xl bg-[var(--ops-surface-subtle)]', className)} />;
 }
 
 export function SearchField(
