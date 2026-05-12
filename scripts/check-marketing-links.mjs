@@ -1,6 +1,7 @@
 const BASE = process.env.MARKETING_BASE_URL || 'http://localhost:3003';
 const START_ROUTES = ['/', '/features', '/pricing', '/industries', '/about', '/contact'];
 const ALLOWED_PREFIXES = ['/', '/features', '/pricing', '/industries', '/about', '/contact', '/legal'];
+const AUTH_REDIRECT_PREFIXES = ['/login', '/sign-in', '/sign-up'];
 
 function normalizeHref(href) {
   if (!href) return null;
@@ -33,7 +34,11 @@ async function checkStatus(url) {
       redirect: 'follow',
       signal: AbortSignal.timeout(10000),
     });
-    return { ok: res.status < 400, status: res.status };
+    const finalUrl = new URL(res.url);
+    const redirectedToAuth =
+      res.redirected &&
+      AUTH_REDIRECT_PREFIXES.some((prefix) => finalUrl.pathname === prefix || finalUrl.pathname.startsWith(`${prefix}/`));
+    return { ok: res.status < 400 && !redirectedToAuth, status: res.status, finalUrl: res.url };
   } catch (error) {
     return { ok: false, status: 0, error };
   }
@@ -60,7 +65,7 @@ async function main() {
     const status = await checkStatus(url);
     checked.add(url);
     if (!status.ok) {
-      failures.push({ url, status: status.status });
+      failures.push({ url, status: status.status, finalUrl: status.finalUrl });
       continue;
     }
     const html = await fetch(url, { signal: AbortSignal.timeout(10000) }).then((r) => r.text());
@@ -72,14 +77,15 @@ async function main() {
   for (const url of discovered) {
     if (checked.has(url)) continue;
     const status = await checkStatus(url);
-    if (!status.ok) failures.push({ url, status: status.status });
+    if (!status.ok) failures.push({ url, status: status.status, finalUrl: status.finalUrl });
     checked.add(url);
   }
 
   if (failures.length) {
     console.error('Broken marketing links detected:');
     for (const failure of failures) {
-      console.error(`- ${failure.url} -> ${failure.status || 'request failed'}`);
+      const finalUrl = failure.finalUrl && failure.finalUrl !== failure.url ? ` (${failure.finalUrl})` : '';
+      console.error(`- ${failure.url} -> ${failure.status || 'request failed'}${finalUrl}`);
     }
     process.exit(1);
   }

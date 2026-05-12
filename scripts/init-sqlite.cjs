@@ -18,7 +18,7 @@ if (fs.existsSync(dbPath)) {
 const db = new Database(dbPath);
 db.pragma('journal_mode = DELETE');
 db.pragma('foreign_keys = ON');
-db.function('uuid', randomUUID);
+db.function('uuid', () => randomUUID());
 
 db.exec(fs.readFileSync(schemaPath, 'utf8'));
 db.exec(fs.readFileSync(seedPath, 'utf8'));

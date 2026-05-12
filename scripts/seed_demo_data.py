@@ -9,6 +9,12 @@ NOW = "2026-04-21 09:00:00"
 
 
 def ensure_column(conn: sqlite3.Connection, table: str, column: str, ddl: str) -> None:
+    exists = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1",
+        (table,),
+    ).fetchone()
+    if not exists:
+        return
     cols = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
     if column not in cols:
         conn.execute(f"ALTER TABLE {table} ADD COLUMN {ddl}")
@@ -74,6 +80,9 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     ensure_column(conn, "customers", "email_opt_in", "email_opt_in INTEGER NOT NULL DEFAULT 1")
     ensure_column(conn, "customers", "sms_opt_in", "sms_opt_in INTEGER NOT NULL DEFAULT 1")
     ensure_column(conn, "customers", "sms_opt_out_at", "sms_opt_out_at TEXT")
+
+    for table in ("plumbers", "customers", "leads", "jobs", "invoices", "payments", "estimates"):
+        ensure_column(conn, table, "branch_id", "branch_id TEXT")
 
     ensure_column(conn, "jobs", "scheduled_at", "scheduled_at TEXT")
     conn.execute(

@@ -7,6 +7,7 @@ const devExtraOrigins = (process.env.NEXT_PUBLIC_DEV_EXTRA_ORIGINS ?? "")
   .filter(Boolean);
 
 const isProd = process.env.NODE_ENV === "production";
+const clerkSources = "https://*.clerk.accounts.dev https://*.clerk.dev https://clerk.wnyautomation.com https://wnyautomation.com";
 
 /**
  * Security headers. We deliberately use a permissive CSP in dev (Next's HMR
@@ -15,12 +16,12 @@ const isProd = process.env.NODE_ENV === "production";
 const csp = [
   "default-src 'self'",
   // Clerk ships its own chunks + images.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.dev https://wnyautomation.com https://js.stripe.com https://challenges.cloudflare.com",
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${clerkSources} https://js.stripe.com https://challenges.cloudflare.com`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https:",
-  "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.dev https://wnyautomation.com https://clerk.com https://api.stripe.com https://maps.googleapis.com https://*.retellai.com https://*.sentry.io wss:",
-  "frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.dev https://wnyautomation.com https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com",
+  `connect-src 'self' ${clerkSources} https://clerk.com https://api.stripe.com https://maps.googleapis.com https://*.retellai.com https://*.sentry.io wss:`,
+  `frame-src 'self' ${clerkSources} https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com`,
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
