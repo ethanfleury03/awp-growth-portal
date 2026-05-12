@@ -5,9 +5,6 @@ import "./globals.css";
 import { absoluteUrl, getSiteUrl } from "@/lib/marketing/site";
 import { ConsentManager } from "@/components/consent/ConsentManager";
 
-const clerkProxyUrl =
-  process.env.NEXT_PUBLIC_CLERK_PROXY_URL || "https://wnyautomation.com/clerk-proxy";
-
 const clerkLocalization = {
   signIn: {
     start: {
@@ -30,6 +27,9 @@ const clerkLocalization = {
     },
   },
 } as const;
+
+const clerkProxyUrl =
+  process.env.NEXT_PUBLIC_CLERK_PROXY_URL || "https://wnyautomation.com/clerk-proxy";
 
 const appSans = Manrope({
   variable: "--font-app-sans",
@@ -92,8 +92,8 @@ export default async function RootLayout({
         <ClerkProvider
           signInUrl="/sign-in"
           signUpUrl="/sign-up"
-          proxyUrl={clerkProxyUrl}
           localization={clerkLocalization}
+          proxyUrl={clerkProxyUrl}
         >
           <div className="flex-1 min-h-0">{children}</div>
           <ConsentManager />
