@@ -1,6 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
+const clerkProxyUrl =
+  process.env.NEXT_PUBLIC_CLERK_PROXY_URL || 'https://wnyautomation.com/clerk-proxy';
+
 const isPublicRoute = createRouteMatcher([
   '/',
   '/login(.*)',
@@ -29,23 +32,28 @@ const isPublicRoute = createRouteMatcher([
   '/favicon.ico',
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isPublicRoute(req)) {
-    return NextResponse.next();
-  }
-  const { userId } = await auth();
-  if (!userId) {
-    const url = req.nextUrl.clone();
-    if (url.pathname.startsWith('/api/')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export default clerkMiddleware(
+  async (auth, req) => {
+    if (isPublicRoute(req)) {
+      return NextResponse.next();
     }
-    url.pathname = '/sign-in';
-    const returnPath = req.nextUrl.pathname + (req.nextUrl.search || '');
-    url.searchParams.set('redirect_url', returnPath);
-    return NextResponse.redirect(url);
-  }
-  return NextResponse.next();
-});
+    const { userId } = await auth();
+    if (!userId) {
+      const url = req.nextUrl.clone();
+      if (url.pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      url.pathname = '/sign-in';
+      const returnPath = req.nextUrl.pathname + (req.nextUrl.search || '');
+      url.searchParams.set('redirect_url', returnPath);
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  },
+  {
+    proxyUrl: clerkProxyUrl,
+  },
+);
 
 export const config = {
   matcher: [

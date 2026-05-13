@@ -5,6 +5,9 @@ import "./globals.css";
 import { absoluteUrl, getSiteUrl } from "@/lib/marketing/site";
 import { ConsentManager } from "@/components/consent/ConsentManager";
 
+const clerkProxyUrl =
+  process.env.NEXT_PUBLIC_CLERK_PROXY_URL || "https://wnyautomation.com/clerk-proxy";
+
 const clerkLocalization = {
   signIn: {
     start: {
@@ -86,7 +89,12 @@ export default async function RootLayout({
       <body
         className={`${appSans.variable} ${appMono.variable} antialiased min-h-screen flex flex-col bg-white`}
       >
-        <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" localization={clerkLocalization}>
+        <ClerkProvider
+          signInUrl="/sign-in"
+          signUpUrl="/sign-up"
+          proxyUrl={clerkProxyUrl}
+          localization={clerkLocalization}
+        >
           <div className="flex-1 min-h-0">{children}</div>
           <ConsentManager />
         </ClerkProvider>
