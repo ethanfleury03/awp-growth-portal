@@ -26,6 +26,7 @@ import { applyMarketingMigrations } from '@/lib/marketing/sqlite-marketing-migra
 import { applyGrowthMigrations } from '@/lib/growth/sqlite-growth-migrate';
 import { applyAiMigrations } from '@/lib/ai/sqlite-ai-migrate';
 import { applyClientConfigMigrations } from '@/lib/platform/sqlite-client-config-migrate';
+import { applyMarketingAgentMigrations } from '@/lib/marketing-agent/sqlite-marketing-agent-migrate';
 
 type PgPoolType = import('@neondatabase/serverless').Pool;
 
@@ -178,6 +179,7 @@ export function getDb(): Database.Database {
   applyMarketingMigrations(dbInstance);
   applyGrowthMigrations(dbInstance);
   applyAiMigrations(dbInstance);
+  applyMarketingAgentMigrations(dbInstance);
   applyClientConfigMigrations(dbInstance);
   if (process.env.NODE_ENV !== 'test') {
     seedAdminUser(dbInstance);

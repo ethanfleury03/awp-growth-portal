@@ -21,6 +21,7 @@ export async function GET() {
     SELECT id, title, selected_model, status, created_at, updated_at
     FROM ai_conversations
     WHERE company_id = ${auth.companyId}
+      AND COALESCE(conversation_type, 'assistant') = 'assistant'
     ORDER BY updated_at DESC
     LIMIT 50
   `;
@@ -34,11 +35,12 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
 
   const result = await sql`
-    INSERT INTO ai_conversations (company_id, title, selected_model, created_by_user_id)
+    INSERT INTO ai_conversations (company_id, title, selected_model, conversation_type, created_by_user_id)
     VALUES (
       ${auth.companyId},
       ${body.title || 'New conversation'},
       ${body.selectedModel || null},
+      'assistant',
       ${auth.id}
     )
     RETURNING id, title, selected_model, status, created_at, updated_at

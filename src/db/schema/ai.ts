@@ -35,6 +35,7 @@ export const aiConversations = pgTable(
       .references(() => companies.id, { onDelete: 'cascade' }),
     title: text('title').notNull().default('New conversation'),
     selectedModel: text('selected_model'),
+    conversationType: text('conversation_type').notNull().default('assistant'),
     status: text('status').notNull().default('Active'),
     createdByUserId: text('created_by_user_id'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

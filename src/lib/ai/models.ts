@@ -21,8 +21,8 @@ export const ASSISTANT_MODEL_OPTIONS: AssistantModelOption[] = [
     outputUsdPerToken: 0.00000087,
   },
   {
-    id: '~anthropic/claude-opus-latest',
-    name: 'Claude Opus Latest',
+    id: 'anthropic/claude-opus-4.7',
+    name: 'Claude Opus 4.7',
     description: 'Premium reasoning model',
     costTier: 'expensive',
     costLabel: 'Expensive',
@@ -52,7 +52,8 @@ export function getAssistantModelOption(modelId: string): AssistantModelOption |
 
 export function normalizeAssistantModelId(modelId: unknown) {
   const id = String(modelId || '');
-  return ASSISTANT_MODEL_OPTIONS.find((model) => model.id === id)?.id || DEFAULT_ASSISTANT_MODEL_ID;
+  const normalized = id === '~anthropic/claude-opus-latest' ? 'anthropic/claude-opus-4.7' : id;
+  return ASSISTANT_MODEL_OPTIONS.find((model) => model.id === normalized)?.id || DEFAULT_ASSISTANT_MODEL_ID;
 }
 
 export function estimateAssistantCostUsd(modelId: string, inputTokens: unknown, outputTokens: unknown): number {

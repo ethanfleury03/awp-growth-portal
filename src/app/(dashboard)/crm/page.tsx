@@ -1,6 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { LeadPipelineBoard } from '@/components/awp/lead-pipeline-board';
+import { CrmWorkspaceTabs } from '@/components/awp/crm-tabs';
+import { opsButtonClass } from '@/components/ops/ui';
 import { BriefcaseBusiness } from 'lucide-react';
 
 export default function CrmPage() {
@@ -9,16 +12,24 @@ export default function CrmPage() {
       <main className="min-h-0 flex-1 overflow-auto px-4 py-4 sm:px-5 xl:px-6">
         <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-3">
           <header className="rounded-lg border border-[var(--ops-border-strong)] bg-[var(--ops-surface-strong)] px-4 py-3 shadow-[var(--ops-shadow-soft)]">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[rgba(47,111,83,0.22)] bg-[rgba(47,111,83,0.08)] text-[var(--ops-brand)]">
-                <BriefcaseBusiness className="h-4 w-4" aria-hidden />
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[rgba(47,111,83,0.22)] bg-[rgba(47,111,83,0.08)] text-[var(--ops-brand)]">
+                  <BriefcaseBusiness className="h-4 w-4" aria-hidden />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--ops-muted)]">Cabin Buyer CRM</p>
+                  <h1 className="text-[1.55rem] font-semibold text-[var(--ops-text)]">Cabin Buyer CRM</h1>
+                  <p className="text-sm text-[var(--ops-muted)]">
+                    Manage cabin opportunities in one configurable pipeline.
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--ops-muted)]">Cabin Buyer CRM</p>
-                <h1 className="text-[1.55rem] font-semibold text-[var(--ops-text)]">Cabin Buyer CRM</h1>
-                <p className="text-sm text-[var(--ops-muted)]">
-                  Manage cabin opportunities in one configurable pipeline.
-                </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <CrmWorkspaceTabs active="pipeline" />
+                <Link href="/crm/marketing-agent" className={opsButtonClass('secondary', 'sm')}>
+                  Open Agent
+                </Link>
               </div>
             </div>
           </header>
