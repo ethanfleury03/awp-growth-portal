@@ -1,4 +1,4 @@
-type GatewayAccessAllowed = {
+export type GatewayAccessAllowed = {
   configured: true;
   allowed: true;
   companyId: string;
