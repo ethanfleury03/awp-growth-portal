@@ -80,7 +80,7 @@ export async function getPortalUser(): Promise<SessionUser | null> {
       WHERE user_id = ${portalRowId}
         AND company_id = ${companyId}
         AND status = 'active'
-      ORDER BY CASE WHEN branch_id IS NULL THEN 1 ELSE 0 END, datetime(created_at) ASC
+      ORDER BY CASE WHEN branch_id IS NULL THEN 1 ELSE 0 END, created_at ASC
       LIMIT 1
     `;
     const membership = memberships[0] as { branch_id?: string; role?: string } | undefined;
@@ -94,7 +94,7 @@ export async function getPortalUser(): Promise<SessionUser | null> {
       SELECT id
       FROM branches
       WHERE company_id = ${companyId}
-      ORDER BY is_primary DESC, datetime(created_at) ASC
+      ORDER BY is_primary DESC, created_at ASC
       LIMIT 1
     `;
     branchId = String((branches[0] as { id?: string } | undefined)?.id || '');
