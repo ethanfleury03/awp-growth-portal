@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -8,13 +8,14 @@ const dir = dirname(fileURLToPath(import.meta.url));
 const bundlePath = join(dir, 'marketing-agent.bundle');
 const targetBranch = 'codex/marketing-agent-workspace-full';
 const expectedHead = '7f88b19a95edc54595bea3de18bdc347a105af06';
+const partPrefix = 'marketing-agent.bundle.b64.v2.part-';
 
 const parts = readdirSync(dir)
-  .filter((name) => name.startsWith('marketing-agent.bundle.b64.part-'))
+  .filter((name) => name.startsWith(partPrefix))
   .sort();
 
 if (!parts.length) {
-  console.error('No bundle part files found in .codex-transfer.');
+  console.error(`No ${partPrefix} files found in .codex-transfer.`);
   process.exit(1);
 }
 
