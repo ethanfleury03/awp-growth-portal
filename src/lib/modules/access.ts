@@ -47,6 +47,12 @@ export async function requireModulePage(moduleKey: ModuleKey): Promise<void> {
   const user = await getPortalUser().catch(() => null);
   const access = await getModuleAccess(user, moduleKey);
   if (!access.ok) {
-    redirect(`/module-disabled?module=${encodeURIComponent(moduleKey)}`);
+    const reason =
+      access.error === 'Forbidden'
+        ? 'role'
+        : access.error === 'Unauthorized'
+          ? 'unassigned'
+          : 'disabled';
+    redirect(`/module-disabled?module=${encodeURIComponent(moduleKey)}&reason=${reason}`);
   }
 }

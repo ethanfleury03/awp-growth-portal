@@ -1,5 +1,28 @@
 import Link from 'next/link';
 import { currentUser } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
+
+const DEFAULT_GATEWAY_ADMIN_EMAILS = ['ethan@wnyautomation.com'];
+
+function configuredGatewayAdminEmails() {
+  return new Set(
+    [
+      ...DEFAULT_GATEWAY_ADMIN_EMAILS,
+      ...(process.env.PORTAL_GATEWAY_ADMIN_EMAILS || process.env.GATEWAY_SUPER_ADMIN_EMAILS || '')
+        .split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean),
+    ],
+  );
+}
+
+function gatewayAdminUrl() {
+  const base =
+    process.env.PORTAL_GATEWAY_URL ||
+    process.env.NEXT_PUBLIC_GATEWAY_URL ||
+    'https://app.wnyautomation.com';
+  return `${base.replace(/\/$/, '')}/admin`;
+}
 
 export default async function AccountUnassignedPage() {
   const user = await currentUser().catch(() => null);
@@ -7,6 +30,10 @@ export default async function AccountUnassignedPage() {
     user?.primaryEmailAddress?.emailAddress ||
     user?.emailAddresses?.[0]?.emailAddress ||
     null;
+  if (email && configuredGatewayAdminEmails().has(email.trim().toLowerCase())) {
+    redirect(gatewayAdminUrl());
+  }
+
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-16 text-slate-950">
       <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">

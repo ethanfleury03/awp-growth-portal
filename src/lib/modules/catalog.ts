@@ -160,7 +160,7 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     route: '/settings',
     description: 'Company and account settings.',
     defaultEnabled: true,
-    requiredRole: 'admin',
+    requiredRole: 'staff',
   },
 ];
 

@@ -29,6 +29,7 @@ import type { CompanyWorkspace } from '@/lib/workspace/types';
 import { MODULE_CATALOG, type ModuleKey } from '@/lib/modules/catalog';
 import clsx from 'clsx';
 import { cn } from '@/lib/ops';
+import { roleAtLeast } from '@/lib/auth/types';
 
 const MODULE_ICONS: Record<ModuleKey, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -97,7 +98,10 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
   }, []);
 
   const enabledModules = new Set(workspace?.enabledModules ?? MODULE_CATALOG.filter((m) => m.defaultEnabled).map((m) => m.key));
-  const navItems = MODULE_CATALOG.filter((module) => enabledModules.has(module.key)).map((module) => ({
+  const navItems = MODULE_CATALOG.filter((module) => {
+    if (!enabledModules.has(module.key)) return false;
+    return user ? roleAtLeast(user.role, module.requiredRole) : true;
+  }).map((module) => ({
     href: module.route,
     label: module.label,
     icon: MODULE_ICONS[module.key],
