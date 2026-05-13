@@ -672,6 +672,7 @@ async function ensureGrowthDefaults(companyId: string) {
           ${true},
           ${index}
         )
+        ON CONFLICT DO NOTHING
       `;
     }
   }
