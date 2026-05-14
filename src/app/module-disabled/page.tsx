@@ -8,7 +8,7 @@ export default async function ModuleDisabledPage({
 }) {
   const { module, reason } = await searchParams;
   const mod = MODULE_BY_KEY.get(module as ModuleKey);
-  const label = mod?.label ?? 'This module';
+  const label = module === 'staging' ? 'Staging' : mod?.label ?? 'This module';
   const roleBlocked = reason === 'role';
   const unassigned = reason === 'unassigned';
   return (

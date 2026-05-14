@@ -103,22 +103,38 @@ async function upsertUser(user: { email: string; name: string }, companyId: stri
 async function seedModules(companyId: string, industry: string) {
   const preset = getIndustryPreset(industry);
   for (const mod of MODULE_CATALOG) {
+    const enabled = preset.modules.includes(mod.key);
     await sql`
-      INSERT INTO feature_flags (company_id, flag_key, enabled, payload_json)
-      VALUES (${companyId}, ${mod.flagKey}, ${preset.modules.includes(mod.key)}, null)
+      INSERT INTO feature_flags (company_id, key, value, flag_key, enabled, payload_json)
+      VALUES (${companyId}, ${mod.flagKey}, ${enabled ? 'true' : 'false'}, ${mod.flagKey}, ${enabled}, null)
       ON CONFLICT (company_id, flag_key) DO UPDATE SET
         enabled = excluded.enabled,
+        value = excluded.value,
         updated_at = datetime('now')
     `;
   }
 }
 
+async function ensurePrimaryBranch(companyId: string, name: string) {
+  await sql`
+    INSERT INTO branches (company_id, name, is_primary)
+    SELECT ${companyId}, ${name}, true
+    WHERE NOT EXISTS (
+      SELECT 1 FROM branches WHERE company_id = ${companyId}
+    )
+  `;
+}
+
 async function main() {
   if (!process.env.DATABASE_URL) {
-    console.warn('[seed-production-workspace] DATABASE_URL is not set; using local SQLite fallback.');
+    throw new Error(
+      '[seed-production-workspace] DATABASE_URL is required. Refusing to seed the local SQLite fallback from a production seed command.',
+    );
   }
   const wnyCompanyId = await upsertCompany({ ...wny, industry: 'agency' });
   const clientCompanyId = await upsertCompany(sampleClient);
+  await ensurePrimaryBranch(wnyCompanyId, 'WNY Automation');
+  await ensurePrimaryBranch(clientCompanyId, 'Main');
   await seedModules(wnyCompanyId, 'agency');
   await seedModules(clientCompanyId, sampleClient.industry);
   await upsertUser(superAdmin, wnyCompanyId, 'super_admin');

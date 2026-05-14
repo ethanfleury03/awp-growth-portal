@@ -57,6 +57,20 @@
       "when": 1778601600000,
       "tag": "0008_marketing_agent",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778712070000,
+      "tag": "0009_billing_usage_periods",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778798400000,
+      "tag": "0010_admin_ticket_board",
+      "breakpoints": true
     }
   ]
 }

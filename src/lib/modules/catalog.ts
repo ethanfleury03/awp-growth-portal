@@ -14,6 +14,7 @@ export type ModuleKey =
   | 'marketing'
   | 'outreach'
   | 'ai-assistant'
+  | 'billing'
   | 'reports'
   | 'assets'
   | 'settings';
@@ -134,6 +135,15 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     description: 'AI assistant for account and growth operations.',
     defaultEnabled: true,
     requiredRole: 'staff',
+  },
+  {
+    key: 'billing',
+    flagKey: 'module.billing',
+    label: 'Billing',
+    route: '/billing',
+    description: 'Subscription, payment method, invoices, and AI usage billing.',
+    defaultEnabled: true,
+    requiredRole: 'admin',
   },
   {
     key: 'reports',

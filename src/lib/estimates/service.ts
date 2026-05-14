@@ -1,6 +1,5 @@
 import { randomBytes, randomUUID } from 'crypto';
 import { sql } from '@/lib/db';
-import { getDb } from '@/lib/db';
 import { allocateEstimateNumber } from '@/lib/estimates/number';
 import {
   buildEstimateEmailCopy,
@@ -423,8 +422,7 @@ export async function createEstimate(input: CreateEstimateInput): Promise<Record
   }
 
   const token = randomBytes(24).toString('hex');
-  const db = getDb();
-  const estimateNumber = allocateEstimateNumber(db, companyId, prefix);
+  const estimateNumber = await allocateEstimateNumber(companyId, prefix);
 
   let expiration = input.expiration_date ?? null;
   if (!expiration) {
@@ -1018,8 +1016,7 @@ export async function duplicateEstimate(estimateId: string): Promise<Record<stri
   const settings = await ensureEstimateSettings(companyId);
   const prefix = (settings.estimate_prefix as string) || 'EST';
   const token = randomBytes(24).toString('hex');
-  const db = getDb();
-  const estimateNumber = allocateEstimateNumber(db, companyId, prefix);
+  const estimateNumber = await allocateEstimateNumber(companyId, prefix);
   const ver = Number(est.version_number) + 1;
   const newEstimateId = randomUUID();
 

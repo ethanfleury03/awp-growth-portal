@@ -39,6 +39,27 @@
    - Disabled module URLs show the module-disabled screen.
    - `/api/health` returns `ok: true` and `db: "up"`.
 
+## Database & Backup Requirements
+
+- Production source of truth: Neon Postgres, not SQLite.
+- Vercel production and preview environments must set `DATABASE_URL`; the app
+  refuses to use SQLite in hosted runtimes.
+- Use a Neon pooled connection string for runtime `DATABASE_URL`.
+- Set `DATABASE_DIRECT_URL` for Drizzle migrations and other admin tasks when
+  available.
+- Keep production and preview on separate Neon branches. Preview must never
+  write to the production branch.
+- Before any migration, seed, import, or bulk edit in production, create a named
+  Neon snapshot/restore point and record the timestamp in the deployment notes.
+- Enable scheduled snapshots/backups with a retention window appropriate for
+  the client contract. Daily snapshots plus point-in-time restore is the minimum
+  launch posture.
+- Do a restore drill before go-live: restore the latest production-like snapshot
+  to a non-production branch, point a preview deploy at it, and confirm login,
+  CRM list/detail pages, estimates, invoices, and `/api/health`.
+- Attachments live outside Postgres when R2 is enabled. Confirm R2 bucket
+  lifecycle, access keys, and recovery process separately from database backup.
+
 ## Go / No-Go Checklist
 
 - Super admin login works with the production Clerk app.
@@ -98,6 +119,9 @@ SEED_CLIENT_INDUSTRY="generic"
 ## Recovery Notes
 
 - Neon backups are the source of truth for database recovery. Before destructive data work, create or confirm a recent restore point.
+- Restore into a non-production branch first whenever the incident allows it;
+  inspect the recovered data before swapping production traffic or connection
+  strings.
 - For a broken deploy, roll back in Vercel first, then inspect `/api/health`, `/api/admin/system-health`, Vercel logs, and Sentry.
 - For stuck webhooks, inspect `/super-admin/webhook-failures` and provider dashboards before replaying events.
 - If auth assignment breaks, do not manually assign unknown users to arbitrary tenants; use the unassigned-user admin flow.

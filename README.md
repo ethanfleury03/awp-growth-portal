@@ -19,7 +19,9 @@ environment variables are managed in Vercel.
 
 When `DATABASE_URL` is not set, local development falls back to SQLite at
 `data/plumberos.db`. That runtime database is intentionally ignored and is not
-tracked in Git.
+tracked in Git. Hosted production/preview environments must set `DATABASE_URL`;
+the app refuses to use SQLite there so client data cannot land on ephemeral
+runtime storage.
 
 ## Useful Commands
 

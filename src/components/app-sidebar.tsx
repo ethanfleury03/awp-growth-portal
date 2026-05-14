@@ -45,6 +45,7 @@ const MODULE_ICONS: Record<ModuleKey, LucideIcon> = {
   marketing: FolderOpen,
   outreach: Megaphone,
   'ai-assistant': Bot,
+  billing: CreditCard,
   reports: BarChart3,
   assets: FolderOpen,
   settings: Settings,

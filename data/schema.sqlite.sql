@@ -185,6 +185,34 @@ CREATE TABLE IF NOT EXISTS growth_records (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS admin_ticket_buckets (
+  id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
+  name TEXT NOT NULL,
+  color TEXT NOT NULL DEFAULT '#2f6b4f',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS admin_tickets (
+  id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
+  bucket_id TEXT NOT NULL REFERENCES admin_ticket_buckets(id) ON DELETE RESTRICT,
+  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  project_id TEXT REFERENCES growth_records(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  priority TEXT NOT NULL DEFAULT 'normal',
+  requester_email TEXT,
+  source TEXT NOT NULL DEFAULT 'admin',
+  due_date TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_by_user_id TEXT,
+  updated_by_user_id TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS jobs (
   id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
   company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -271,6 +299,14 @@ CREATE INDEX IF NOT EXISTS idx_growth_records_company_type ON growth_records(com
 CREATE UNIQUE INDEX IF NOT EXISTS idx_growth_records_source_key
   ON growth_records(company_id, record_type, source_key)
   WHERE source_key IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_admin_ticket_buckets_active
+  ON admin_ticket_buckets(is_active, sort_order);
+CREATE INDEX IF NOT EXISTS idx_admin_tickets_bucket_order
+  ON admin_tickets(bucket_id, sort_order, updated_at);
+CREATE INDEX IF NOT EXISTS idx_admin_tickets_company
+  ON admin_tickets(company_id, updated_at);
+CREATE INDEX IF NOT EXISTS idx_admin_tickets_project
+  ON admin_tickets(project_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_company_id ON jobs(company_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_customer_id ON jobs(customer_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_lead_id ON jobs(lead_id);
@@ -610,3 +646,54 @@ CREATE TABLE IF NOT EXISTS payment_events (
   processed_at TEXT NOT NULL DEFAULT (datetime('now')),
   payload_json TEXT
 );
+
+CREATE TABLE IF NOT EXISTS billing_subscriptions (
+  id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
+  company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
+  clerk_user_id TEXT,
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT NOT NULL UNIQUE,
+  stripe_checkout_session_id TEXT,
+  price_id TEXT,
+  plan TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'incomplete',
+  billing_cycle TEXT NOT NULL DEFAULT 'monthly',
+  trial_ends_at TEXT,
+  current_period_start TEXT,
+  current_period_end TEXT,
+  metadata_json TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_billing_subscriptions_company
+  ON billing_subscriptions(company_id);
+CREATE INDEX IF NOT EXISTS idx_billing_subscriptions_status
+  ON billing_subscriptions(status);
+
+CREATE TABLE IF NOT EXISTS billing_usage_periods (
+  id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
+  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT NOT NULL,
+  stripe_invoice_id TEXT,
+  stripe_invoice_item_id TEXT,
+  period_start TEXT NOT NULL,
+  period_end TEXT NOT NULL,
+  provider_cost_usd TEXT NOT NULL DEFAULT '0',
+  multiplier TEXT NOT NULL DEFAULT '2',
+  charge_amount_cents INTEGER NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'usd',
+  status TEXT NOT NULL DEFAULT 'pending',
+  metadata_json TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(stripe_subscription_id, period_start, period_end)
+);
+
+CREATE INDEX IF NOT EXISTS idx_billing_usage_periods_company
+  ON billing_usage_periods(company_id);
+CREATE INDEX IF NOT EXISTS idx_billing_usage_periods_invoice
+  ON billing_usage_periods(stripe_invoice_id);
+CREATE INDEX IF NOT EXISTS idx_billing_usage_periods_status
+  ON billing_usage_periods(status);

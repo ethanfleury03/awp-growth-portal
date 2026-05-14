@@ -11,3 +11,4 @@ export * from './marketing';
 export * from './growth';
 export * from './ai';
 export * from './marketing-agent';
+export * from './admin';

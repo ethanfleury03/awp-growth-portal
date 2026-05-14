@@ -3,6 +3,7 @@ import { sql } from '@/lib/db';
 import { getPortalUser } from '@/lib/auth/portal-user';
 import Link from 'next/link';
 import { MobileJobActions } from './actions';
+import { canAccessStaging } from '@/lib/staging/access';
 
 export default async function MobileJobPage({
   params,
@@ -10,13 +11,13 @@ export default async function MobileJobPage({
   params: Promise<{ id: string }>;
 }) {
   const user = await getPortalUser();
-  if (!user) {
+  if (!user || !canAccessStaging(user.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
         <div>
-          <p className="text-lg font-medium">Sign in required</p>
+          <p className="text-lg font-medium">{user ? 'Permission needed' : 'Sign in required'}</p>
           <Link href="/login" className="mt-3 inline-block text-blue-600 underline">
-            Sign in to view job
+            {user ? 'Return to sign in' : 'Sign in to view job'}
           </Link>
         </div>
       </div>

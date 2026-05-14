@@ -79,6 +79,7 @@ export const billingSubscriptions = pgTable(
     status: text('status').notNull().default('incomplete'),
     billingCycle: text('billing_cycle').notNull().default('monthly'),
     trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
+    currentPeriodStart: timestamp('current_period_start', { withTimezone: true }),
     currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
     metadataJson: text('metadata_json'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -88,5 +89,39 @@ export const billingSubscriptions = pgTable(
     stripeSubUnique: uniqueIndex('idx_billing_subscriptions_stripe_sub').on(t.stripeSubscriptionId),
     companyIdx: index('idx_billing_subscriptions_company').on(t.companyId),
     statusIdx: index('idx_billing_subscriptions_status').on(t.status),
+  }),
+);
+
+export const billingUsagePeriods = pgTable(
+  'billing_usage_periods',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    stripeCustomerId: text('stripe_customer_id'),
+    stripeSubscriptionId: text('stripe_subscription_id').notNull(),
+    stripeInvoiceId: text('stripe_invoice_id'),
+    stripeInvoiceItemId: text('stripe_invoice_item_id'),
+    periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+    periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
+    providerCostUsd: text('provider_cost_usd').notNull().default('0'),
+    multiplier: text('multiplier').notNull().default('2'),
+    chargeAmountCents: integer('charge_amount_cents').notNull().default(0),
+    currency: text('currency').notNull().default('usd'),
+    status: text('status').notNull().default('pending'),
+    metadataJson: text('metadata_json'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    companyIdx: index('idx_billing_usage_periods_company').on(t.companyId),
+    invoiceIdx: index('idx_billing_usage_periods_invoice').on(t.stripeInvoiceId),
+    statusIdx: index('idx_billing_usage_periods_status').on(t.status),
+    periodUnique: uniqueIndex('idx_billing_usage_periods_sub_period').on(
+      t.stripeSubscriptionId,
+      t.periodStart,
+      t.periodEnd,
+    ),
   }),
 );

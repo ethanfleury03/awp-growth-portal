@@ -42,4 +42,20 @@ describe('module access', () => {
     const access = await getModuleAccess({ ...user, role: 'super_admin' }, 'receptionist');
     expect(access.ok).toBe(true);
   });
+
+  it('blocks tenant users in the staging environment', async () => {
+    const previous = process.env.APP_ENV;
+    process.env.APP_ENV = 'staging';
+    try {
+      const access = await getModuleAccess(user, 'crm');
+      expect(access.ok).toBe(false);
+      if (!access.ok) {
+        expect(access.status).toBe(403);
+        expect(access.error).toBe('staging_super_admin_only');
+      }
+    } finally {
+      if (previous === undefined) delete process.env.APP_ENV;
+      else process.env.APP_ENV = previous;
+    }
+  });
 });

@@ -30,6 +30,12 @@ export type AuditAction =
   | 'tenant.modules.update'
   | 'tenant.branding.update'
   | 'tenant.crm_config.update'
+  | 'admin_ticket.create'
+  | 'admin_ticket.update'
+  | 'admin_ticket.delete'
+  | 'admin_ticket_bucket.create'
+  | 'admin_ticket_bucket.update'
+  | 'admin_ticket_bucket.delete'
   | 'super_admin.impersonate'
   | 'webhook.replay';
 

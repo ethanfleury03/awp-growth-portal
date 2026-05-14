@@ -13,6 +13,11 @@ import {
 } from '@/lib/payments/payment-service';
 import { computeConnectStatus } from '@/lib/payments/connect';
 import {
+  createAiOverageInvoiceItemForInvoice,
+  markBillingInvoicePaid,
+  markBillingInvoicePaymentFailed,
+} from '@/lib/billing/service';
+import {
   markBillingSubscriptionPastDue,
   upsertBillingSubscriptionFromCheckout,
   upsertBillingSubscriptionFromSubscription,
@@ -84,8 +89,18 @@ export async function POST(request: Request) {
         await upsertBillingSubscriptionFromSubscription(event.data.object as Stripe.Subscription);
         break;
       }
+      case 'invoice.created': {
+        await createAiOverageInvoiceItemForInvoice(event.data.object as Stripe.Invoice);
+        break;
+      }
+      case 'invoice.paid': {
+        await markBillingInvoicePaid(event.data.object as Stripe.Invoice);
+        break;
+      }
       case 'invoice.payment_failed': {
-        await markBillingSubscriptionPastDue(event.data.object as Stripe.Invoice);
+        const invoice = event.data.object as Stripe.Invoice;
+        await markBillingSubscriptionPastDue(invoice);
+        await markBillingInvoicePaymentFailed(invoice);
         break;
       }
       case 'account.updated': {

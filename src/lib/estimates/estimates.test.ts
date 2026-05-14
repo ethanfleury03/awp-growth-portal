@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { assertStatusTransition } from '@/lib/estimates/validation';
 import { calculateEstimateTotals, lineExtendedCents } from '@/lib/estimates/totals';
-import Database from 'better-sqlite3';
 import { allocateEstimateNumber } from '@/lib/estimates/number';
 
 vi.hoisted(() => {
@@ -65,22 +64,15 @@ describe('status transitions', () => {
 });
 
 describe('estimate number allocation', () => {
-  it('increments per company and year', () => {
-    const db = new Database(':memory:');
-    db.pragma('foreign_keys = ON');
-    db.exec(`CREATE TABLE companies (id TEXT PRIMARY KEY, name TEXT, email TEXT);
-      INSERT INTO companies VALUES ('c1', 'Co', 'co@test.com');
-      CREATE TABLE estimate_number_sequences (
-        company_id TEXT NOT NULL REFERENCES companies(id),
-        year INTEGER NOT NULL,
-        last_seq INTEGER NOT NULL DEFAULT 0,
-        PRIMARY KEY (company_id, year)
-      );`);
-    const a = allocateEstimateNumber(db, 'c1', 'EST');
-    const b = allocateEstimateNumber(db, 'c1', 'EST');
+  it('increments per company and year', async () => {
+    resetSqliteSingletonForTests();
+    await sql`DELETE FROM estimate_number_sequences`;
+    await sql`DELETE FROM companies`;
+    await sql`INSERT INTO companies (id, name, email) VALUES ('c1', 'Co', 'co@test.com')`;
+    const a = await allocateEstimateNumber('c1', 'EST');
+    const b = await allocateEstimateNumber('c1', 'EST');
     expect(a).toMatch(/^EST-\d{4}-0001$/);
     expect(b).toMatch(/^EST-\d{4}-0002$/);
-    db.close();
   });
 });
 

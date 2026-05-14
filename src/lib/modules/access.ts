@@ -5,6 +5,7 @@ import type { SessionUser } from '@/lib/auth/types';
 import { roleAtLeast } from '@/lib/auth/types';
 import { getEnabledModules } from '@/lib/workspace/workspace';
 import { MODULE_BY_KEY, type ModuleKey } from '@/lib/modules/catalog';
+import { canAccessStaging, STAGING_SUPER_ADMIN_ONLY_REASON } from '@/lib/staging/access';
 
 export type ModuleAccess =
   | { ok: true; user: SessionUser; module: ModuleKey }
@@ -16,6 +17,9 @@ export async function getModuleAccess(
 ): Promise<ModuleAccess> {
   if (!user?.companyId) {
     return { ok: false, status: 401, error: 'Unauthorized', module: moduleKey };
+  }
+  if (!canAccessStaging(user.role)) {
+    return { ok: false, status: 403, error: STAGING_SUPER_ADMIN_ONLY_REASON, module: moduleKey };
   }
   if (user.role === 'super_admin') {
     return { ok: true, user, module: moduleKey };
@@ -48,7 +52,7 @@ export async function requireModulePage(moduleKey: ModuleKey): Promise<void> {
   const access = await getModuleAccess(user, moduleKey);
   if (!access.ok) {
     const reason =
-      access.error === 'Forbidden'
+      access.error === 'Forbidden' || access.error === STAGING_SUPER_ADMIN_ONLY_REASON
         ? 'role'
         : access.error === 'Unauthorized'
           ? 'unassigned'

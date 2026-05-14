@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getPortalUser } from '@/lib/auth/portal-user';
 import type { SessionUser, UserRole } from '@/lib/auth/types';
 import { roleAtLeast } from '@/lib/auth/types';
+import { canAccessStaging, STAGING_SUPER_ADMIN_ONLY_REASON } from '@/lib/staging/access';
 
 export type TenantContext = Pick<SessionUser, 'id' | 'companyId' | 'branchId' | 'role'>;
 
@@ -9,6 +10,9 @@ export async function requirePortalUser(): Promise<SessionUser> {
   const user = await getPortalUser();
   if (!user?.companyId) {
     throw new Error('Unauthorized');
+  }
+  if (!canAccessStaging(user.role)) {
+    throw new Error('Forbidden');
   }
   return user;
 }
@@ -41,6 +45,12 @@ export async function requirePortalOrRespond(
   const user = await getPortalUser().catch(() => null);
   if (!user?.companyId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (!canAccessStaging(user.role)) {
+    return NextResponse.json(
+      { error: 'Forbidden', reason: STAGING_SUPER_ADMIN_ONLY_REASON },
+      { status: 403 },
+    );
   }
   if (minRole && !roleAtLeast(user.role, minRole)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

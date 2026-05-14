@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { getDb, sql } from '@/lib/db';
+import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import {
   deleteInvoiceLineItems,
@@ -127,7 +127,7 @@ export async function GET(request: Request) {
     const rows = await dataQuery;
     const invIds = rows.map((r) => String((r as Record<string, unknown>).id));
     const invoices = rows.map(mapInvoiceRow);
-    const lineRows = listLineItemsForInvoiceIds(invIds);
+    const lineRows = await listLineItemsForInvoiceIds(invIds);
     const byInvoice = groupLineItemsByInvoiceId(lineRows);
 
     return NextResponse.json({
@@ -281,7 +281,7 @@ export async function POST(request: Request) {
     const dueDate = body.due_date || null;
     const paidDate = body.status === 'paid' ? body.paid_date || todayIsoDate() : null;
 
-    const invoiceNumber = allocateInvoiceNumber(getDb(), companyId);
+    const invoiceNumber = await allocateInvoiceNumber(companyId);
 
     const inserted = await sql`
       INSERT INTO invoices (
@@ -330,7 +330,7 @@ export async function POST(request: Request) {
     `;
 
     const inv = mapInvoiceRow(fullRows[0]);
-    const lines = listLineItemsForInvoiceIds([invoiceId]).filter((r) => r.invoice_id === invoiceId);
+    const lines = (await listLineItemsForInvoiceIds([invoiceId])).filter((r) => r.invoice_id === invoiceId);
 
     return NextResponse.json({ invoice: { ...inv, line_items: lines } });
   } catch (error: unknown) {
@@ -532,7 +532,7 @@ export async function PUT(request: Request) {
     `;
 
     const inv = mapInvoiceRow(fullRows[0]);
-    const lineRows = listLineItemsForInvoiceIds([id]).filter((r) => r.invoice_id === id);
+    const lineRows = (await listLineItemsForInvoiceIds([id])).filter((r) => r.invoice_id === id);
     return NextResponse.json({ invoice: { ...inv, line_items: lineRows } });
   } catch (error: unknown) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });

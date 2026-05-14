@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { getDb } from '@/lib/db';
 import { sql } from '@/lib/db';
 
 export type InvoiceLineItemRow = {
@@ -14,15 +13,18 @@ export type InvoiceLineItemRow = {
   catalog_service_id: string | null;
 };
 
-export function listLineItemsForInvoiceIds(invoiceIds: string[]): InvoiceLineItemRow[] {
+export async function listLineItemsForInvoiceIds(invoiceIds: string[]): Promise<InvoiceLineItemRow[]> {
   if (invoiceIds.length === 0) return [];
-  const db = getDb();
-  const ph = invoiceIds.map(() => '?').join(',');
-  const rows = db
-    .prepare(
-      `SELECT * FROM invoice_line_items WHERE invoice_id IN (${ph}) ORDER BY invoice_id, sort_order ASC, id ASC`,
-    )
-    .all(...invoiceIds) as InvoiceLineItemRow[];
+  const rows: InvoiceLineItemRow[] = [];
+  for (const invoiceId of invoiceIds) {
+    const invoiceRows = await sql`
+      SELECT *
+      FROM invoice_line_items
+      WHERE invoice_id = ${invoiceId}
+      ORDER BY invoice_id, sort_order ASC, id ASC
+    `;
+    rows.push(...(invoiceRows as InvoiceLineItemRow[]));
+  }
   return rows;
 }
 

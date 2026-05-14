@@ -6,9 +6,24 @@ route handlers work unchanged against either backend:
 - `DATABASE_URL` unset → **SQLite** via `better-sqlite3` (default for dev/test).
 - `DATABASE_URL` set → **Neon Postgres** via `@neondatabase/serverless` + `pg`.
 
+Hosted runtimes are different: production and Vercel preview deployments must
+set `DATABASE_URL`. The app refuses to use the SQLite fallback in hosted
+environments because SQLite files are local runtime data, not durable client
+system-of-record storage.
+
 The canonical schema lives in `src/db/schema/**` (Drizzle ORM). The SQLite
 schema at `data/schema.sqlite.sql` is retained for local dev only and will be
 removed once all environments are on Neon.
+
+## Connection strings
+
+- `DATABASE_URL`: runtime app connection string. Use Neon's pooled connection
+  string for Vercel/serverless traffic.
+- `DATABASE_DIRECT_URL`: optional migration/admin connection string. Drizzle
+  uses this first when present, then falls back to `DATABASE_URL`.
+
+Keep production, preview, and local development on separate Neon branches or
+projects. Never point a preview deploy at the production write database.
 
 ## Neon branch layout (recommended)
 
@@ -25,7 +40,10 @@ Use Neon's **branching** feature (copy-on-write) to create `preview` off of
 ## One-time migration
 
 ```bash
-# 1. Apply Drizzle-generated schema + RLS policies to the target Neon branch
+# 0. Create a Neon snapshot or restore branch before touching production data.
+
+# 1. Apply Drizzle-generated schema + RLS policies to the target Neon branch.
+#    Prefer DATABASE_DIRECT_URL for migration/admin work.
 psql "$DATABASE_URL" -f drizzle/0000_fuzzy_thunderbolt_ross.sql
 psql "$DATABASE_URL" -f drizzle/0001_rls.sql
 
@@ -58,3 +76,8 @@ npm run db:migrate      # drizzle-kit migrate (staging first!)
 
 RLS changes live in hand-written `drizzle/XXXX_rls_*.sql` files since
 `drizzle-kit` does not yet generate RLS policies.
+
+Before any production migration or bulk data operation, create a named restore
+point/snapshot such as `prod_pre_migration_YYYY-MM-DD`. Verify `/api/health`
+after migration and keep the restore point until the client has accepted the
+release.

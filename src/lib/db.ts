@@ -23,25 +23,52 @@ import { applyPlatformMigrations } from '@/lib/platform/sqlite-platform-migrate'
 import { applyTenancyMigrations } from '@/lib/platform/sqlite-tenancy-migrate';
 import { applyWorkflowMigrations } from '@/lib/platform/sqlite-workflow-migrate';
 import { applyMarketingMigrations } from '@/lib/marketing/sqlite-marketing-migrate';
+import { applyBillingMigrations } from '@/lib/billing/sqlite-billing-migrate';
 import { applyGrowthMigrations } from '@/lib/growth/sqlite-growth-migrate';
 import { applyAiMigrations } from '@/lib/ai/sqlite-ai-migrate';
 import { applyClientConfigMigrations } from '@/lib/platform/sqlite-client-config-migrate';
 import { applyMarketingAgentMigrations } from '@/lib/marketing-agent/sqlite-marketing-agent-migrate';
+import { applyAdminTicketMigrations } from '@/lib/admin/sqlite-admin-ticket-migrate';
 
 type PgPoolType = import('@neondatabase/serverless').Pool;
 
+export function getDatabaseMode(env: NodeJS.ProcessEnv = process.env): 'postgres' | 'sqlite' {
+  return env.DATABASE_URL ? 'postgres' : 'sqlite';
+}
+
+export function requiresManagedPostgres(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.NODE_ENV === 'production' || env.VERCEL === '1' || Boolean(env.VERCEL_ENV);
+}
+
+export function assertSqliteSafeForRuntime(env: NodeJS.ProcessEnv = process.env): void {
+  if (env.DATABASE_URL) {
+    throw new Error(
+      'getDb() is SQLite-only and cannot be used when DATABASE_URL is set. Use the sql tagged template for portable database access.',
+    );
+  }
+  if (requiresManagedPostgres(env)) {
+    throw new Error(
+      'DATABASE_URL is required in production/hosted environments. Refusing to use the SQLite fallback for client data.',
+    );
+  }
+}
+
 function isPostgres(): boolean {
-  return Boolean(process.env.DATABASE_URL);
+  return getDatabaseMode() === 'postgres';
 }
 
 let pgPool: PgPoolType | null = null;
 function getPgPool(): PgPoolType {
   if (pgPool) return pgPool;
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is required for Postgres database access.');
+  }
   // Loaded lazily so that SQLite-only dev/test environments don't pay the
   // import cost and don't require the Neon driver to be installed.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Pool } = require('@neondatabase/serverless') as typeof import('@neondatabase/serverless');
-  pgPool = new Pool({ connectionString: process.env.DATABASE_URL });
+  pgPool = new Pool({ connectionString });
   return pgPool!;
 }
 
@@ -156,6 +183,7 @@ function ensureCommittedSchema(db: Database.Database) {
 }
 
 export function getDb(): Database.Database {
+  assertSqliteSafeForRuntime();
   if (dbInstance) {
     return dbInstance;
   }
@@ -177,10 +205,12 @@ export function getDb(): Database.Database {
   applyTenancyMigrations(dbInstance);
   applyWorkflowMigrations(dbInstance);
   applyMarketingMigrations(dbInstance);
+  applyBillingMigrations(dbInstance);
   applyGrowthMigrations(dbInstance);
   applyAiMigrations(dbInstance);
   applyMarketingAgentMigrations(dbInstance);
   applyClientConfigMigrations(dbInstance);
+  applyAdminTicketMigrations(dbInstance);
   if (process.env.NODE_ENV !== 'test') {
     seedAdminUser(dbInstance);
   }

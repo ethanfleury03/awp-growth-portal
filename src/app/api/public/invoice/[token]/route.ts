@@ -35,7 +35,7 @@ export async function GET(_request: Request, ctx: Ctx) {
     const row = rows[0] as Record<string, unknown>;
     const cents = invoiceAmountsCents(row);
     const invId = row.id as string;
-    const lineItems = listLineItemsForInvoiceIds([invId]).filter((r) => r.invoice_id === invId);
+    const lineItems = (await listLineItemsForInvoiceIds([invId])).filter((r) => r.invoice_id === invId);
     return NextResponse.json({
       invoice: {
         invoice_number: row.invoice_number,

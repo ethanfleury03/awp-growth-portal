@@ -6,7 +6,10 @@ export default {
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/plumberos',
+    url:
+      process.env.DATABASE_DIRECT_URL ||
+      process.env.DATABASE_URL ||
+      'postgres://postgres:postgres@localhost:5432/plumberos',
   },
   strict: true,
   verbose: true,

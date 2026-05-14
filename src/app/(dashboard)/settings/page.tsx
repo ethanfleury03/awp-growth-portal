@@ -11,11 +11,11 @@ import {
   StatCard,
   StatusBadge,
 } from '@/components/ops/ui';
+import Link from 'next/link';
 import { KnowledgeBasePanel } from '@/components/awp/knowledge-base-panel';
 import { ReusableArchitecturePanel } from '@/components/awp/reusable-architecture-panel';
-import { AiUsageCostPanel } from '@/components/awp/ai-usage-cost-panel';
 import { awpBusinessProfile } from '@/lib/awp/config';
-import { Building2, Check, KeyRound, Save, Settings, Sparkles, Wrench } from 'lucide-react';
+import { Building2, Check, CreditCard, KeyRound, Save, Settings, Sparkles, Wrench } from 'lucide-react';
 
 type BusinessProfileState = {
   businessName: string;
@@ -126,7 +126,15 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-6 xl:sticky xl:top-6">
-              <AiUsageCostPanel />
+              <ConsolePanel title="Billing and AI Usage" description="Subscription payment status and assistant usage now live in Billing." icon={CreditCard}>
+                <Link
+                  href="/billing"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--ops-brand)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--ops-brand-strong)]"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  Open Billing
+                </Link>
+              </ConsolePanel>
 
               <ConsolePanel title="Business Contact" description="Default AWP contact details.">
                 <div className="space-y-3 text-sm leading-6 text-[var(--ops-muted)]">

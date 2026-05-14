@@ -3,6 +3,7 @@ import type Stripe from 'stripe';
 import { sql } from '@/lib/db';
 
 export type MarketingPlan = 'starter' | 'pro';
+export type BillingSubscriptionPlan = MarketingPlan | 'awp_crm';
 export type BillingCycle = 'monthly' | 'annual';
 
 export function marketingAppBaseUrl(): string {
@@ -47,6 +48,7 @@ export async function ensureBillingSubscriptionsTable(): Promise<void> {
       status TEXT NOT NULL DEFAULT 'incomplete',
       billing_cycle TEXT NOT NULL DEFAULT 'monthly',
       trial_ends_at TEXT,
+      current_period_start TEXT,
       current_period_end TEXT,
       metadata_json TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -73,7 +75,9 @@ function deriveBillingCycle(priceLookup?: string | null): BillingCycle {
   return /annual|year/i.test(priceLookup) ? 'annual' : 'monthly';
 }
 
-function derivePlan(priceLookup?: string | null): MarketingPlan {
+function derivePlan(priceLookup?: string | null): BillingSubscriptionPlan {
+  if (priceLookup && priceLookup === process.env.STRIPE_PRICE_AWP_CRM_MONTHLY?.trim()) return 'awp_crm';
+  if (/awp[-_]?crm|crm/i.test(priceLookup || '')) return 'awp_crm';
   return /pro/i.test(priceLookup || '') ? 'pro' : 'starter';
 }
 
@@ -87,7 +91,7 @@ export async function upsertBillingSubscriptionFromCheckout(
   if (!subId) return;
 
   const priceId = session.metadata?.price_id || null;
-  const plan = (session.metadata?.plan as MarketingPlan | undefined) || derivePlan(priceId);
+  const plan = (session.metadata?.plan as BillingSubscriptionPlan | undefined) || derivePlan(priceId);
   const billingCycle =
     (session.metadata?.billing_cycle as BillingCycle | undefined) || deriveBillingCycle(priceId);
   const companyId = session.metadata?.company_id || null;
@@ -100,7 +104,7 @@ export async function upsertBillingSubscriptionFromCheckout(
     INSERT INTO billing_subscriptions (
       id, company_id, clerk_user_id, stripe_customer_id, stripe_subscription_id,
       stripe_checkout_session_id, price_id, plan, status, billing_cycle,
-      trial_ends_at, current_period_end, metadata_json, created_at, updated_at
+      trial_ends_at, current_period_start, current_period_end, metadata_json, created_at, updated_at
     ) VALUES (
       ${randomUUID()},
       ${companyId},
@@ -112,6 +116,7 @@ export async function upsertBillingSubscriptionFromCheckout(
       ${plan},
       ${session.status || 'complete'},
       ${billingCycle},
+      ${null},
       ${null},
       ${null},
       ${JSON.stringify(session.metadata || {})},
@@ -130,6 +135,13 @@ export async function upsertBillingSubscriptionFromCheckout(
       metadata_json = excluded.metadata_json,
       updated_at = datetime('now')
   `;
+  if (companyId && stripeCustomerId && plan === 'awp_crm') {
+    await sql`
+      UPDATE companies
+      SET stripe_customer_id = ${stripeCustomerId}, updated_at = datetime('now')
+      WHERE id = ${companyId}
+    `;
+  }
 }
 
 export async function upsertBillingSubscriptionFromSubscription(
@@ -143,6 +155,9 @@ export async function upsertBillingSubscriptionFromSubscription(
   const priceId = subscription.items.data[0]?.price?.id || null;
 
   const trialEndsAt = toIso(subscription.trial_end || null);
+  const currentPeriodStart = toIso(
+    (subscription as unknown as { current_period_start?: number }).current_period_start || null,
+  );
   const currentPeriodEnd = toIso(
     (subscription as unknown as { current_period_end?: number }).current_period_end || null,
   );
@@ -163,7 +178,7 @@ export async function upsertBillingSubscriptionFromSubscription(
       }
     | undefined;
 
-  const plan = (existing?.plan as MarketingPlan | undefined) || derivePlan(priceId);
+  const plan = (existing?.plan as BillingSubscriptionPlan | undefined) || derivePlan(priceId);
   const billingCycle =
     (existing?.billing_cycle as BillingCycle | undefined) || deriveBillingCycle(priceId);
 
@@ -172,7 +187,7 @@ export async function upsertBillingSubscriptionFromSubscription(
     INSERT INTO billing_subscriptions (
       id, company_id, clerk_user_id, stripe_customer_id, stripe_subscription_id,
       stripe_checkout_session_id, price_id, plan, status, billing_cycle,
-      trial_ends_at, current_period_end, metadata_json, created_at, updated_at
+      trial_ends_at, current_period_start, current_period_end, metadata_json, created_at, updated_at
     ) VALUES (
       ${randomUUID()},
       ${existing?.company_id || null},
@@ -185,6 +200,7 @@ export async function upsertBillingSubscriptionFromSubscription(
       ${subscription.status},
       ${billingCycle},
       ${trialEndsAt},
+      ${currentPeriodStart},
       ${currentPeriodEnd},
       ${JSON.stringify(subscription.metadata || {})},
       datetime('now'),
@@ -197,10 +213,18 @@ export async function upsertBillingSubscriptionFromSubscription(
       status = excluded.status,
       billing_cycle = excluded.billing_cycle,
       trial_ends_at = excluded.trial_ends_at,
+      current_period_start = excluded.current_period_start,
       current_period_end = excluded.current_period_end,
       metadata_json = excluded.metadata_json,
       updated_at = datetime('now')
   `;
+  if (existing?.company_id && stripeCustomerId && plan === 'awp_crm') {
+    await sql`
+      UPDATE companies
+      SET stripe_customer_id = ${stripeCustomerId}, updated_at = datetime('now')
+      WHERE id = ${existing.company_id}
+    `;
+  }
 }
 
 export async function markBillingSubscriptionPastDue(
