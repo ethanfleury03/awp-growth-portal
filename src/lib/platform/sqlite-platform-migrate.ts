@@ -38,6 +38,10 @@ function backfillBranchId(db: Database.Database, table: string) {
 }
 
 export function applyPlatformMigrations(db: Database.Database) {
+  if (tableExists(db, 'companies') && !tableColumns(db, 'companies').has('status')) {
+    db.exec(`ALTER TABLE companies ADD COLUMN status TEXT NOT NULL DEFAULT 'active'`);
+  }
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS branches (
       id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
@@ -68,6 +72,27 @@ export function applyPlatformMigrations(db: Database.Database) {
 
     CREATE INDEX IF NOT EXISTS idx_user_memberships_user_id ON user_memberships(user_id);
     CREATE INDEX IF NOT EXISTS idx_user_memberships_company_id ON user_memberships(company_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_user_memberships_user_company
+      ON user_memberships(user_id, company_id);
+
+    CREATE TABLE IF NOT EXISTS portal_destinations (
+      id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
+      company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+      destination_key TEXT NOT NULL UNIQUE,
+      label TEXT NOT NULL,
+      launch_url TEXT NOT NULL,
+      is_default INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_portal_destinations_company
+      ON portal_destinations(company_id);
+    CREATE INDEX IF NOT EXISTS idx_portal_destinations_status
+      ON portal_destinations(status);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_portal_destinations_company_default
+      ON portal_destinations(company_id)
+      WHERE is_default = 1;
 
     CREATE TABLE IF NOT EXISTS role_permissions (
       id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
