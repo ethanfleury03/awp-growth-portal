@@ -1,6 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getAdminPortalHref, isAdminPortalHost } from '@/lib/auth/admin-portal';
 import { PORTAL_APP_PATH, shouldRouteRootToPortalApp } from '@/lib/auth/portal-entry-host';
 
 const clerkProxyUrl =
@@ -41,38 +40,8 @@ const isPublicRoute = createRouteMatcher([
   '/twitter-image',
 ]);
 
-function adminHostAllowsPath(pathname: string) {
-  return (
-    pathname === '/super-admin' ||
-    pathname.startsWith('/super-admin/') ||
-    pathname.startsWith('/sign-in') ||
-    pathname.startsWith('/sign-up') ||
-    pathname.startsWith('/account-unassigned') ||
-    pathname.startsWith('/module-disabled') ||
-    pathname.startsWith('/api/') ||
-    pathname === '/favicon.ico' ||
-    pathname === '/icon.svg' ||
-    pathname === '/apple-icon' ||
-    pathname === '/manifest.webmanifest' ||
-    pathname === '/robots.txt' ||
-    pathname === '/opengraph-image' ||
-    pathname === '/twitter-image'
-  );
-}
-
 export default clerkMiddleware(
   async (auth, req) => {
-    const isAdminHost = isAdminPortalHost(req.nextUrl.hostname);
-    if (isAdminHost && !adminHostAllowsPath(req.nextUrl.pathname)) {
-      const url = req.nextUrl.clone();
-      url.pathname = '/super-admin';
-      url.search = '';
-      return NextResponse.redirect(url);
-    }
-    if (!isAdminHost && req.nextUrl.pathname.startsWith('/super-admin')) {
-      return NextResponse.redirect(getAdminPortalHref(req.nextUrl.pathname + req.nextUrl.search));
-    }
-
     if (shouldRouteRootToPortalApp(req.nextUrl.pathname)) {
       const url = req.nextUrl.clone();
       url.pathname = PORTAL_APP_PATH;

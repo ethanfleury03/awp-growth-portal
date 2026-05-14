@@ -56,8 +56,6 @@ const EXEMPT_FILES = new Set<string>([
   'src/app/api/setup/route.ts',
   // Geocode has no tenant state.
   'src/app/api/geocode/route.ts',
-  // Super-admin system health intentionally reports global operational counts.
-  'src/app/api/admin/system-health/route.ts',
 ]);
 
 function normalize(p: string): string {

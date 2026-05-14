@@ -31,9 +31,6 @@ import clsx from 'clsx';
 import { cn } from '@/lib/ops';
 import { roleAtLeast } from '@/lib/auth/types';
 
-const adminPortalUrl =
-  (process.env.NEXT_PUBLIC_ADMIN_PORTAL_URL || 'https://admin.wnyautomation.com').replace(/\/+$/, '');
-
 const MODULE_ICONS: Record<ModuleKey, LucideIcon> = {
   dashboard: LayoutDashboard,
   leads: Users,
@@ -192,16 +189,6 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
             </Link>
           );
         })}
-        {user?.role === 'super_admin' ? (
-          <Link
-            href={`${adminPortalUrl}/super-admin`}
-            onClick={handleNavigate}
-            className={navLinkClass(navItemIsActive(pathname, '/super-admin'))}
-          >
-            <Settings className="w-[18px] h-[18px] flex-shrink-0 opacity-90" strokeWidth={1.75} aria-hidden />
-            <span className="font-medium leading-none">Super Admin</span>
-          </Link>
-        ) : null}
       </nav>
 
       <div className="mt-auto relative z-10">

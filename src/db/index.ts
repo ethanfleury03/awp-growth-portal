@@ -6,9 +6,6 @@
  * runs `SET LOCAL app.company_id = $1`. RLS policies on tenant tables use
  * `current_setting('app.company_id')` to enforce isolation at the DB layer.
  *
- * For super-admin or webhook work that legitimately needs cross-tenant access,
- * use `withSuperAdmin(async (tx) => ...)` — it sets `app.role = 'super_admin'`
- * which the RLS policies honor as a bypass.
  */
 
 import { drizzle } from 'drizzle-orm/neon-serverless';
@@ -49,18 +46,6 @@ export async function withTenant<T>(
       (await import('drizzle-orm')).sql.raw(
         `SET LOCAL app.company_id = '${companyId.replace(/'/g, "''")}'`,
       ),
-    );
-    return fn(tx as unknown as Database);
-  });
-}
-
-export async function withSuperAdmin<T>(
-  fn: (tx: Database) => Promise<T>,
-): Promise<T> {
-  const db = getDb();
-  return db.transaction(async (tx) => {
-    await tx.execute(
-      (await import('drizzle-orm')).sql.raw(`SET LOCAL app.role = 'super_admin'`),
     );
     return fn(tx as unknown as Database);
   });

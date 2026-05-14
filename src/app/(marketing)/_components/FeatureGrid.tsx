@@ -123,7 +123,7 @@ export function FeatureGrid() {
         </div>
 
         <p className="mt-10 text-sm text-[var(--brand-slate-muted)]">
-          Plus: super-admin panel, feature flags, privacy export/delete, CSV import, inbound SMS, Inngest
+          Plus: feature flags, privacy export/delete, CSV import, inbound SMS, Inngest
           background jobs, Sentry, structured logging, Postgres + SQLite dual-driver, Clerk auth.
         </p>
       </div>

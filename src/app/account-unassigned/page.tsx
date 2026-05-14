@@ -1,21 +1,5 @@
 import Link from 'next/link';
 import { currentUser } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
-import { getAdminPortalHref } from '@/lib/auth/admin-portal';
-
-const DEFAULT_SUPER_ADMIN_EMAILS = ['ethan@wnyautomation.com'];
-
-function configuredSuperAdminEmails() {
-  return new Set(
-    [
-      ...DEFAULT_SUPER_ADMIN_EMAILS,
-      ...(process.env.PORTAL_GATEWAY_ADMIN_EMAILS || process.env.GATEWAY_SUPER_ADMIN_EMAILS || '')
-        .split(',')
-        .map((email) => email.trim().toLowerCase())
-        .filter(Boolean),
-    ],
-  );
-}
 
 export default async function AccountUnassignedPage() {
   const user = await currentUser().catch(() => null);
@@ -23,9 +7,6 @@ export default async function AccountUnassignedPage() {
     user?.primaryEmailAddress?.emailAddress ||
     user?.emailAddresses?.[0]?.emailAddress ||
     null;
-  if (email && configuredSuperAdminEmails().has(email.trim().toLowerCase())) {
-    redirect(getAdminPortalHref('/super-admin'));
-  }
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-16 text-slate-950">

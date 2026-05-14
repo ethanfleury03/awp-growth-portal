@@ -38,7 +38,7 @@ export async function isFeatureEnabled(
   return enabled;
 }
 
-/** Called by super-admin UI to nuke the cache after a flag flip. */
+/** Called after a feature flag update to clear the per-process cache. */
 export function clearFeatureFlagCache(companyId?: string) {
   if (!companyId) {
     cache.clear();

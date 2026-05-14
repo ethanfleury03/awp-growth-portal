@@ -17,7 +17,6 @@ import path from 'path';
 import { applyReceptionistMigrations } from '@/lib/receptionist/sqlite-migrate';
 import { applyEstimatesMigrations } from '@/lib/estimates/sqlite-estimate-migrate';
 import { applyAuthMigrations } from '@/lib/auth/sqlite-auth-migrate';
-import { seedAdminUser } from '@/lib/auth/seed-admin';
 import { applyPaymentsMigrations } from '@/lib/payments/sqlite-payments-migrate';
 import { applyPlatformMigrations } from '@/lib/platform/sqlite-platform-migrate';
 import { applyTenancyMigrations } from '@/lib/platform/sqlite-tenancy-migrate';
@@ -28,7 +27,6 @@ import { applyGrowthMigrations } from '@/lib/growth/sqlite-growth-migrate';
 import { applyAiMigrations } from '@/lib/ai/sqlite-ai-migrate';
 import { applyClientConfigMigrations } from '@/lib/platform/sqlite-client-config-migrate';
 import { applyMarketingAgentMigrations } from '@/lib/marketing-agent/sqlite-marketing-agent-migrate';
-import { applyAdminTicketMigrations } from '@/lib/admin/sqlite-admin-ticket-migrate';
 
 type PgPoolType = import('@neondatabase/serverless').Pool;
 
@@ -210,10 +208,6 @@ export function getDb(): Database.Database {
   applyAiMigrations(dbInstance);
   applyMarketingAgentMigrations(dbInstance);
   applyClientConfigMigrations(dbInstance);
-  applyAdminTicketMigrations(dbInstance);
-  if (process.env.NODE_ENV !== 'test') {
-    seedAdminUser(dbInstance);
-  }
 
   return dbInstance;
 }
