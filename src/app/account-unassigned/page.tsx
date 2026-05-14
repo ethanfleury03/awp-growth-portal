@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { currentUser } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
+import { getAdminPortalUrl, isConfiguredAdminEmail } from '@/lib/auth/admin-redirect';
 
 export default async function AccountUnassignedPage() {
   const user = await currentUser().catch(() => null);
@@ -7,6 +9,9 @@ export default async function AccountUnassignedPage() {
     user?.primaryEmailAddress?.emailAddress ||
     user?.emailAddresses?.[0]?.emailAddress ||
     null;
+  if (isConfiguredAdminEmail(email)) {
+    redirect(getAdminPortalUrl('/admin'));
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-16 text-slate-950">

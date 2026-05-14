@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { getAdminPortalUrl } from '@/lib/auth/admin-redirect';
 import { PORTAL_APP_PATH, shouldRouteRootToPortalApp } from '@/lib/auth/portal-entry-host';
 
 const clerkProxyUrl =
@@ -42,6 +43,15 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware(
   async (auth, req) => {
+    if (
+      req.nextUrl.pathname === '/admin' ||
+      req.nextUrl.pathname.startsWith('/admin/') ||
+      req.nextUrl.pathname === '/super-admin' ||
+      req.nextUrl.pathname.startsWith('/super-admin/')
+    ) {
+      return NextResponse.redirect(getAdminPortalUrl('/admin'));
+    }
+
     if (shouldRouteRootToPortalApp(req.nextUrl.pathname)) {
       const url = req.nextUrl.clone();
       url.pathname = PORTAL_APP_PATH;
