@@ -28,6 +28,12 @@ function cleanGatewayUrl(value: string) {
   return value.trim().replace(/\/+$/, "");
 }
 
+export function requiresGatewayAccessConfig(env: NodeJS.ProcessEnv = process.env) {
+  if (env.PORTAL_GATEWAY_REQUIRED === "false") return false;
+  if (env.PORTAL_GATEWAY_REQUIRED === "true") return true;
+  return env.NODE_ENV === "production" || env.VERCEL === "1" || Boolean(env.VERCEL_ENV);
+}
+
 export function getGatewayAccessConfig(env: NodeJS.ProcessEnv = process.env) {
   const gatewayUrl = cleanGatewayUrl(env.PORTAL_GATEWAY_URL || env.NEXT_PUBLIC_PORTAL_GATEWAY_URL || "");
   const serviceToken = (env.PORTAL_GATEWAY_SERVICE_TOKEN || "").trim();
@@ -50,6 +56,9 @@ export async function verifyGatewayPortalAccess({
 }): Promise<GatewayAccessResult> {
   const config = getGatewayAccessConfig();
   if (!config.configured) {
+    if (requiresGatewayAccessConfig()) {
+      return { configured: true, allowed: false, reason: "gateway_not_configured" };
+    }
     return { configured: false, allowed: true, reason: "not_configured" };
   }
 

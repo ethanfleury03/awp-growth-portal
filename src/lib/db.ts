@@ -11,6 +11,7 @@
  */
 
 import Database from 'better-sqlite3';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
@@ -29,6 +30,52 @@ import { applyClientConfigMigrations } from '@/lib/platform/sqlite-client-config
 import { applyMarketingAgentMigrations } from '@/lib/marketing-agent/sqlite-marketing-agent-migrate';
 
 type PgPoolType = import('@neondatabase/serverless').Pool;
+type SqlRuntimeContext = {
+  companyId?: string;
+  role?: 'super_admin';
+};
+
+const sqlRuntimeContext = new AsyncLocalStorage<SqlRuntimeContext>();
+
+export function getSqlRuntimeContext(): SqlRuntimeContext | undefined {
+  return sqlRuntimeContext.getStore();
+}
+
+export function enterTenantContext(companyId: string) {
+  const normalizedCompanyId = companyId.trim();
+  if (!normalizedCompanyId) return;
+  sqlRuntimeContext.enterWith({
+    ...(sqlRuntimeContext.getStore() || {}),
+    companyId: normalizedCompanyId,
+  });
+}
+
+export async function withTenantContext<T>(
+  companyId: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const normalizedCompanyId = companyId.trim();
+  if (!normalizedCompanyId) {
+    throw new Error('withTenantContext requires a companyId');
+  }
+  return sqlRuntimeContext.run(
+    {
+      ...(sqlRuntimeContext.getStore() || {}),
+      companyId: normalizedCompanyId,
+    },
+    fn,
+  );
+}
+
+export async function withSuperAdminContext<T>(fn: () => Promise<T>): Promise<T> {
+  return sqlRuntimeContext.run(
+    {
+      ...(sqlRuntimeContext.getStore() || {}),
+      role: 'super_admin',
+    },
+    fn,
+  );
+}
 
 export function getDatabaseMode(env: NodeJS.ProcessEnv = process.env): 'postgres' | 'sqlite' {
   return env.DATABASE_URL ? 'postgres' : 'sqlite';
@@ -239,10 +286,32 @@ export class SqlQuery implements PromiseLike<Record<string, unknown>[]> {
     const args = flat.args;
 
     const pool = getPgPool();
-    const res = await pool.query(text, args as unknown[]);
-    // Neon's query returns rows for anything returning; INSERT without
-    // RETURNING resolves with rows=[].
-    return (res.rows as Record<string, unknown>[]) || [];
+    const context = getSqlRuntimeContext();
+    if (!context?.companyId && context?.role !== 'super_admin') {
+      const res = await pool.query(text, args as unknown[]);
+      // Neon's query returns rows for anything returning; INSERT without
+      // RETURNING resolves with rows=[].
+      return (res.rows as Record<string, unknown>[]) || [];
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      if (context.role === 'super_admin') {
+        await client.query(`SELECT set_config('app.role', 'super_admin', true)`);
+      }
+      if (context.companyId) {
+        await client.query(`SELECT set_config('app.company_id', $1, true)`, [context.companyId]);
+      }
+      const res = await client.query(text, args as unknown[]);
+      await client.query('COMMIT');
+      return (res.rows as Record<string, unknown>[]) || [];
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   then<TResult1 = Record<string, unknown>[], TResult2 = never>(

@@ -1,5 +1,5 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { sql } from '@/lib/db';
+import { enterTenantContext, getDatabaseMode, sql, withSuperAdminContext } from '@/lib/db';
 import {
   getGatewayAccessConfig,
   verifyGatewayPortalAccess,
@@ -12,6 +12,12 @@ import type { SessionUser, UserRole } from '@/lib/auth/types';
  * `portal_users` row matched by email for company/role.
  */
 export async function getPortalUser(): Promise<SessionUser | null> {
+  const user = await withSuperAdminContext(resolvePortalUser);
+  if (user?.companyId) enterTenantContext(user.companyId);
+  return user;
+}
+
+async function resolvePortalUser(): Promise<SessionUser | null> {
   const { userId } = await auth();
   if (!userId) return null;
 
@@ -51,6 +57,20 @@ export async function getPortalUser(): Promise<SessionUser | null> {
   }
 
   const gatewayConfig = getGatewayAccessConfig();
+  const canonicalAccess =
+    portalRowId && companyId
+      ? await resolveCanonicalPortalAccess({ portalRowId, companyId })
+      : null;
+
+  if (canonicalAccess) {
+    companyId = canonicalAccess.companyId;
+    branchId = canonicalAccess.branchId || branchId;
+    role = canonicalAccess.role;
+  } else if (portalRowId && companyId) {
+    companyId = '';
+    branchId = '';
+  }
+
   if (shouldVerifyGatewayAccess(gatewayConfig.configured, portalRowId, companyId)) {
     const gatewayAccess = await verifyGatewayPortalAccess({ clerkUserId: userId, email });
     if (gatewayAccess.configured && gatewayAccess.allowed) {
@@ -138,6 +158,101 @@ export function shouldVerifyGatewayAccess(
   companyId: string,
 ) {
   return gatewayConfigured && !(portalRowId && companyId);
+}
+
+async function tableExists(table: string) {
+  if (getDatabaseMode() === 'sqlite') {
+    const rows = await sql`
+      SELECT name AS table_name
+      FROM sqlite_master
+      WHERE type = 'table' AND name = ${table}
+      LIMIT 1
+    `;
+    return Boolean((rows[0] as { table_name?: string } | undefined)?.table_name);
+  }
+  const rows = await sql`
+    SELECT to_regclass(${`public.${table}`}) AS table_name
+  `;
+  return Boolean((rows[0] as { table_name?: string } | undefined)?.table_name);
+}
+
+async function columnExists(table: string, column: string) {
+  if (getDatabaseMode() === 'sqlite') {
+    const rows = await sql`
+      SELECT name
+      FROM pragma_table_info(${table})
+      WHERE name = ${column}
+      LIMIT 1
+    `;
+    return Boolean((rows[0] as { name?: string } | undefined)?.name);
+  }
+  const rows = await sql`
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = ${table}
+        AND column_name = ${column}
+    ) AS exists
+  `;
+  return Boolean((rows[0] as { exists?: boolean } | undefined)?.exists);
+}
+
+async function resolveCanonicalPortalAccess({
+  portalRowId,
+  companyId,
+}: {
+  portalRowId: string;
+  companyId: string;
+}) {
+  if (!(await tableExists('portal_destinations'))) return null;
+  const destinationKey = getGatewayAccessConfig().destinationKey;
+  const hasCompanyStatus = await columnExists('companies', 'status');
+  const rows = hasCompanyStatus
+    ? await sql`
+        SELECT
+          m.company_id,
+          m.branch_id,
+          m.role
+        FROM portal_users u
+        JOIN user_memberships m ON m.user_id = u.id
+        JOIN companies c ON c.id = m.company_id
+        JOIN portal_destinations d ON d.company_id = m.company_id
+        WHERE u.id = ${portalRowId}
+          AND m.company_id = ${companyId}
+          AND u.is_active = true
+          AND m.status = 'active'
+          AND c.status = 'active'
+          AND d.status = 'active'
+          AND d.destination_key = ${destinationKey}
+        ORDER BY CASE WHEN m.branch_id IS NULL THEN 1 ELSE 0 END, m.created_at ASC
+        LIMIT 1
+      `
+    : await sql`
+        SELECT
+          m.company_id,
+          m.branch_id,
+          m.role
+        FROM portal_users u
+        JOIN user_memberships m ON m.user_id = u.id
+        JOIN companies c ON c.id = m.company_id
+        JOIN portal_destinations d ON d.company_id = m.company_id
+        WHERE u.id = ${portalRowId}
+          AND m.company_id = ${companyId}
+          AND u.is_active = true
+          AND m.status = 'active'
+          AND d.status = 'active'
+          AND d.destination_key = ${destinationKey}
+        ORDER BY CASE WHEN m.branch_id IS NULL THEN 1 ELSE 0 END, m.created_at ASC
+        LIMIT 1
+      `;
+  const row = rows[0] as { company_id?: string; branch_id?: string; role?: string } | undefined;
+  if (!row?.company_id) return null;
+  return {
+    companyId: String(row.company_id),
+    branchId: row.branch_id ? String(row.branch_id) : '',
+    role: normalizeGatewayRole(String(row.role || 'staff')),
+  };
 }
 
 export function normalizeGatewayRole(role: string): UserRole {
