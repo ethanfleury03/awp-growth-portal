@@ -13,7 +13,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl();
   const now = new Date();
   const pages = [
-    '/',
     '/features',
     '/industries',
     '/pricing',
@@ -30,7 +29,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return pages.map((path) => ({
     url: `${base}${path}`,
     lastModified: now,
-    changeFrequency: path === '/' ? 'daily' : 'weekly',
-    priority: path === '/' ? 1 : 0.7,
+    changeFrequency: 'weekly',
+    priority: 0.7,
   }));
 }

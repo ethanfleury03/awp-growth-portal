@@ -31,11 +31,18 @@ const isPublicRoute = createRouteMatcher([
   '/api/health',
   '/_next/(.*)',
   '/favicon.ico',
+  '/icon.svg',
+  '/apple-icon',
+  '/manifest.webmanifest',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/opengraph-image',
+  '/twitter-image',
 ]);
 
 export default clerkMiddleware(
   async (auth, req) => {
-    if (shouldRouteRootToPortalApp(req.headers.get('host'), req.nextUrl.pathname)) {
+    if (shouldRouteRootToPortalApp(req.nextUrl.pathname)) {
       const url = req.nextUrl.clone();
       url.pathname = PORTAL_APP_PATH;
       return NextResponse.redirect(url);

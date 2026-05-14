@@ -1,10 +1,10 @@
 # Marketing Site Operations
 
-This document covers the public marketing site under `/`, `/features`, `/pricing`, `/industries`, `/about`, and `/contact`.
+This document covers the public marketing pages under `/features`, `/pricing`, `/industries`, `/about`, and `/contact`. The root path `/` is the portal entry point and redirects to `/app`.
 
 ## Content map
 
-- Homepage: `src/app/(marketing)/page.tsx`
+- Portal entry redirect: `src/app/(marketing)/page.tsx`
 - Features page: `src/app/(marketing)/features/page.tsx`
 - Pricing page: `src/app/(marketing)/pricing/page.tsx`
 - Industries page: `src/app/(marketing)/industries/page.tsx`
