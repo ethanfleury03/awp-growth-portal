@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { sql, withSuperAdminContext } from '@/lib/db';
 
 /**
  * Public customer portal endpoint. Authenticated only by the customer's
@@ -10,6 +10,7 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ token: string }> },
 ) {
+  return withSuperAdminContext(async () => {
   const { token } = await params;
   if (!token || token.length < 8) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
@@ -62,5 +63,6 @@ export async function GET(
     invoices,
     estimates,
     jobs,
+  });
   });
 }

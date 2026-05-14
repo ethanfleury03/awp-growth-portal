@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { withSuperAdminContext } from '@/lib/db';
 import { getTwilioWebhookUrlForSignature, handleTwilioInboundVoice } from '@/lib/receptionist/receptionist-live';
 
 /** Twilio signs the webhook using the full form body; validation must receive every field. */
@@ -21,14 +22,14 @@ export async function POST(request: Request) {
     const signature = request.headers.get('x-twilio-signature');
     const webhookUrlForSignature = getTwilioWebhookUrlForSignature(request);
 
-    const result = await handleTwilioInboundVoice({
+    const result = await withSuperAdminContext(() => handleTwilioInboundVoice({
       twilioCallSid: formParams.CallSid ?? '',
       from: formParams.From ?? '',
       to: formParams.To ?? '',
       signature,
       webhookUrlForSignature,
       formParams,
-    });
+    }));
 
     return new NextResponse(result.twiml, {
       status: result.status,

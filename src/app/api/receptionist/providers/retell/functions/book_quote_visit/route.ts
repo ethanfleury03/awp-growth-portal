@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { withSuperAdminContext } from '@/lib/db';
 import { logReceptionistHardening } from '@/lib/receptionist/hardening/heuristics';
 import { mergeReceptionistMetaPartial } from '@/lib/receptionist/repository';
 import { receptionistService } from '@/lib/receptionist/service';
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
   if (!verifyRetellToolSecret(request)) {
     return NextResponse.json(toolJsonError('Unauthorized', 'unauthorized'), { status: 401 });
   }
+  return withSuperAdminContext(async () => {
   const body = await readRetellToolJson(request, 'book_quote_visit');
   const callId = await resolvePlumberCallIdFromToolBody(body, 'book_quote_visit');
   if (!callId) {
@@ -71,4 +73,5 @@ export async function POST(request: Request) {
       }),
     );
   }
+  });
 }

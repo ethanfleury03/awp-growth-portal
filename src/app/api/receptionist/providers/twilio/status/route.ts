@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { withSuperAdminContext } from '@/lib/db';
 import { handleTwilioStatusCallback } from '@/lib/receptionist/receptionist-live';
 
 export async function POST(request: Request) {
@@ -7,6 +8,6 @@ export async function POST(request: Request) {
   for (const [k, v] of form.entries()) {
     params.set(k, String(v));
   }
-  await handleTwilioStatusCallback(params);
+  await withSuperAdminContext(() => handleTwilioStatusCallback(params));
   return new NextResponse(null, { status: 204 });
 }

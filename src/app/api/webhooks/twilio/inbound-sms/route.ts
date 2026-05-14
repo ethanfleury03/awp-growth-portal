@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { sql, withSuperAdminContext } from '@/lib/db';
 import { getTwilioWebhookUrlForSignature, verifyTwilioRequest } from '@/lib/receptionist/receptionist-live';
 
 /**
@@ -68,6 +68,7 @@ export async function POST(request: Request) {
   const body = String(formParams.Body || '').trim().toUpperCase();
   if (!from || !to) return twiml();
 
+  return withSuperAdminContext(async () => {
   const companyId = await resolveCompanyIdForInboundSms(to);
   if (!companyId) return twiml();
 
@@ -94,4 +95,5 @@ export async function POST(request: Request) {
 
   // Unhandled inbound — empty response so Twilio doesn't retry.
   return twiml();
+  });
 }

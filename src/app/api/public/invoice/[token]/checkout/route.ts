@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { sql } from '@/lib/db';
+import { sql, withSuperAdminContext } from '@/lib/db';
 import { invoiceAmountsCents } from '@/lib/payments/invoice-money';
 import { createInvoicePaymentCheckoutSession } from '@/lib/payments/payment-service';
 import { invoicePaymentsAllowed } from '@/lib/payments/policy';
@@ -17,6 +17,7 @@ const bodySchema = z.object({
 type Ctx = { params: Promise<{ token: string }> };
 
 export async function POST(request: Request, ctx: Ctx) {
+  return withSuperAdminContext(async () => {
   try {
     const { token } = await ctx.params;
     const { max, windowMs } = publicRateLimitConfig();
@@ -76,4 +77,5 @@ export async function POST(request: Request, ctx: Ctx) {
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 400 });
   }
+  });
 }

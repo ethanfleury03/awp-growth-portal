@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Webhook } from 'svix';
+import { withSuperAdminContext } from '@/lib/db';
 import { markClerkUserDeleted, syncClerkUser, type ClerkUserEventData } from '@/lib/auth/clerk-sync';
 
 /**
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
+  return withSuperAdminContext(async () => {
   try {
     if (evt.type === 'user.created' || evt.type === 'user.updated') {
       return NextResponse.json(await syncClerkUser(evt.data as ClerkUserEventData));
@@ -65,4 +67,5 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
+  });
 }
