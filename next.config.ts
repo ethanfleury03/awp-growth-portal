@@ -7,7 +7,7 @@ const devExtraOrigins = (process.env.NEXT_PUBLIC_DEV_EXTRA_ORIGINS ?? "")
   .filter(Boolean);
 
 const isProd = process.env.NODE_ENV === "production";
-const clerkSources = "https://*.clerk.accounts.dev https://*.clerk.dev https://clerk.wnyautomation.com https://wnyautomation.com";
+const clerkSources = "https://*.clerk.accounts.dev https://*.clerk.dev https://wnyautomation.com";
 
 /**
  * Security headers. We deliberately use a permissive CSP in dev (Next's HMR

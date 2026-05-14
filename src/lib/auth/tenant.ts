@@ -63,5 +63,18 @@ export function isPortalResponse(v: unknown): v is NextResponse {
 }
 
 export async function requireSuperAdmin(): Promise<SessionUser | NextResponse> {
-  return requirePortalOrRespond('super_admin');
+  const user = await getPortalUser().catch(() => null);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (!canAccessStaging(user.role)) {
+    return NextResponse.json(
+      { error: 'Forbidden', reason: STAGING_SUPER_ADMIN_ONLY_REASON },
+      { status: 403 },
+    );
+  }
+  if (!roleAtLeast(user.role, 'super_admin')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  return user;
 }

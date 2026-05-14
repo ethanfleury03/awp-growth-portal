@@ -11,7 +11,7 @@ export default async function DashboardLayout({
 }>) {
   await auth.protect();
   const user = await getPortalUser();
-  if (!user?.companyId) redirect('/account-unassigned');
+  if (!user?.companyId && user?.role !== 'super_admin') redirect('/account-unassigned');
   if (!canAccessStaging(user.role)) redirect('/module-disabled?module=staging&reason=role');
   return <DashboardShell>{children}</DashboardShell>;
 }

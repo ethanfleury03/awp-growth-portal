@@ -51,7 +51,7 @@ export async function getPortalUser(): Promise<SessionUser | null> {
   }
 
   const gatewayConfig = getGatewayAccessConfig();
-  if (gatewayConfig.configured) {
+  if (shouldVerifyGatewayAccess(gatewayConfig.configured, portalRowId, companyId)) {
     const gatewayAccess = await verifyGatewayPortalAccess({ clerkUserId: userId, email });
     if (gatewayAccess.configured && gatewayAccess.allowed) {
       const gatewayCompanyId = await resolveGatewayLocalCompanyId(gatewayAccess);
@@ -132,9 +132,18 @@ export async function getPortalUser(): Promise<SessionUser | null> {
   };
 }
 
-function normalizeGatewayRole(role: string): UserRole {
+export function shouldVerifyGatewayAccess(
+  gatewayConfigured: boolean,
+  portalRowId: string | null,
+  companyId: string,
+) {
+  return gatewayConfigured && !(portalRowId && companyId);
+}
+
+export function normalizeGatewayRole(role: string): UserRole {
   const normalized = role.trim().toLowerCase();
-  if (normalized === 'owner' || normalized === 'super_admin') return 'admin';
+  if (normalized === 'super_admin') return 'super_admin';
+  if (normalized === 'owner') return 'admin';
   if (normalized === 'admin') return 'admin';
   if (normalized === 'dispatcher') return 'dispatcher';
   if (normalized === 'tech') return 'tech';
