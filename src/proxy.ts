@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { getAdminPortalUrl } from '@/lib/auth/admin-redirect';
+import { getGatewayLoginUrl } from '@/lib/auth/gateway-login';
 import { PORTAL_APP_PATH, shouldRouteRootToPortalApp } from '@/lib/auth/portal-entry-host';
 
 const clerkProxyUrl =
@@ -60,6 +61,12 @@ export default clerkMiddleware(
     }
 
     if (isPublicRoute(req)) {
+      if (req.nextUrl.pathname === '/sign-in' || req.nextUrl.pathname.startsWith('/sign-in/')) {
+        return NextResponse.redirect(getGatewayLoginUrl(), 307);
+      }
+      if (req.nextUrl.pathname === '/sign-up' || req.nextUrl.pathname.startsWith('/sign-up/')) {
+        return NextResponse.redirect(getGatewayLoginUrl(), 307);
+      }
       return NextResponse.next();
     }
     const { userId } = await auth();
@@ -68,10 +75,7 @@ export default clerkMiddleware(
       if (url.pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      url.pathname = '/sign-in';
-      const returnPath = req.nextUrl.pathname + (req.nextUrl.search || '');
-      url.searchParams.set('redirect_url', returnPath);
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(getGatewayLoginUrl(), 307);
     }
     return NextResponse.next();
   },

@@ -30,6 +30,7 @@ import { MODULE_CATALOG, type ModuleKey } from '@/lib/modules/catalog';
 import clsx from 'clsx';
 import { cn } from '@/lib/ops';
 import { roleAtLeast } from '@/lib/auth/types';
+import { getGatewayLoginUrl } from '@/lib/auth/gateway-login';
 
 const MODULE_ICONS: Record<ModuleKey, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -66,7 +67,7 @@ function ClerkSignOutIconButton({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      onClick={() => signOut({ redirectUrl: '/' })}
+      onClick={() => signOut({ redirectUrl: getGatewayLoginUrl() })}
       title="Sign out"
       className={className}
     >
