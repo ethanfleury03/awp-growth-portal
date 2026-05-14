@@ -1,5 +1,11 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { enterTenantContext, getDatabaseMode, sql, withSuperAdminContext } from '@/lib/db';
+import {
+  enterTenantContext,
+  getDatabaseMode,
+  prepareSqlRuntimeContext,
+  sql,
+  withSuperAdminContext,
+} from '@/lib/db';
 import {
   getGatewayAccessConfig,
   verifyGatewayPortalAccess,
@@ -12,6 +18,7 @@ import type { SessionUser, UserRole } from '@/lib/auth/types';
  * `portal_users` row matched by email for company/role.
  */
 export async function getPortalUser(): Promise<SessionUser | null> {
+  prepareSqlRuntimeContext();
   const user = await withSuperAdminContext(resolvePortalUser);
   if (user?.companyId) enterTenantContext(user.companyId);
   return user;

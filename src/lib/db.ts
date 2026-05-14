@@ -41,13 +41,19 @@ export function getSqlRuntimeContext(): SqlRuntimeContext | undefined {
   return sqlRuntimeContext.getStore();
 }
 
+export function prepareSqlRuntimeContext(): SqlRuntimeContext {
+  const existing = sqlRuntimeContext.getStore();
+  if (existing) return existing;
+  const context: SqlRuntimeContext = {};
+  sqlRuntimeContext.enterWith(context);
+  return context;
+}
+
 export function enterTenantContext(companyId: string) {
   const normalizedCompanyId = companyId.trim();
   if (!normalizedCompanyId) return;
-  sqlRuntimeContext.enterWith({
-    ...(sqlRuntimeContext.getStore() || {}),
-    companyId: normalizedCompanyId,
-  });
+  const context = prepareSqlRuntimeContext();
+  context.companyId = normalizedCompanyId;
 }
 
 export async function withTenantContext<T>(
