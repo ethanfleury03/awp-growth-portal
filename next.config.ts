@@ -7,6 +7,7 @@ const devExtraOrigins = (process.env.NEXT_PUBLIC_DEV_EXTRA_ORIGINS ?? "")
   .filter(Boolean);
 
 const isProd = process.env.NODE_ENV === "production";
+const isStaging = process.env.APP_ENV === "staging";
 const clerkSources = "https://*.clerk.accounts.dev https://*.clerk.dev https://clerk.wnyautomation.com https://wnyautomation.com";
 
 /**
@@ -33,6 +34,7 @@ const csp = [
   .join("; ");
 
 const securityHeaders = [
+  isStaging ? { key: "X-Robots-Tag", value: "noindex, nofollow" } : null,
   { key: "Content-Security-Policy", value: csp },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
