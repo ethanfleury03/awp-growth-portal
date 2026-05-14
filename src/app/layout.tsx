@@ -29,7 +29,8 @@ const clerkLocalization = {
 } as const;
 
 const clerkProxyUrl =
-  process.env.NEXT_PUBLIC_CLERK_PROXY_URL || "https://wnyautomation.com/clerk-proxy";
+  process.env.NEXT_PUBLIC_CLERK_PROXY_URL ||
+  (process.env.APP_ENV === "staging" ? undefined : "https://wnyautomation.com/clerk-proxy");
 
 const appSans = Manrope({
   variable: "--font-app-sans",
@@ -93,7 +94,7 @@ export default async function RootLayout({
           signInUrl="/sign-in"
           signUpUrl="/sign-up"
           localization={clerkLocalization}
-          proxyUrl={clerkProxyUrl}
+          {...(clerkProxyUrl ? { proxyUrl: clerkProxyUrl } : {})}
         >
           <div className="flex-1 min-h-0">{children}</div>
           <ConsentManager />
