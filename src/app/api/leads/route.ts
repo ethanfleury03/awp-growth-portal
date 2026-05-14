@@ -19,6 +19,7 @@ export async function GET(request: Request) {
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '100');
   const search = searchParams.get('search');
+  const excludeDemo = searchParams.get('exclude_demo') === 'true';
 
   const offset = (page - 1) * limit;
 
@@ -54,6 +55,10 @@ export async function GET(request: Request) {
     if (source && source !== 'all') {
       query = sql`${query} AND l.source = ${source}`;
       countQuery = sql`${countQuery} AND l.source = ${source}`;
+    }
+    if (excludeDemo) {
+      query = sql`${query} AND (l.lead_context_json IS NULL OR l.lead_context_json NOT LIKE '%"demoData":true%')`;
+      countQuery = sql`${countQuery} AND (l.lead_context_json IS NULL OR l.lead_context_json NOT LIKE '%"demoData":true%')`;
     }
     if (search) {
       query = sql`${query} AND (c.name LIKE ${'%' + search + '%'} OR c.phone LIKE ${'%' + search + '%'} OR l.location LIKE ${'%' + search + '%'} OR l.issue LIKE ${'%' + search + '%'})`;
