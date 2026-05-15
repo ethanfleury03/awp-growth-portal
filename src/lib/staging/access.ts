@@ -7,5 +7,5 @@ export function canAccessStaging(
   role: UserRole | null | undefined,
   env: NodeJS.ProcessEnv = process.env,
 ): boolean {
-  return !isStagingEnvironment(env) || role === 'super_admin';
+  return !isStagingEnvironment(env) || Boolean(role);
 }

@@ -15,10 +15,11 @@ describe('staging environment helpers', () => {
     expect(isStagingEnvironment(env({ APP_ENV: 'production' }))).toBe(false);
   });
 
-  it('allows only super admins inside staging', () => {
+  it('allows active portal roles inside staging', () => {
     expect(canAccessStaging('super_admin', env({ APP_ENV: 'staging' }))).toBe(true);
-    expect(canAccessStaging('admin', env({ APP_ENV: 'staging' }))).toBe(false);
-    expect(canAccessStaging('viewer', env({ APP_ENV: 'staging' }))).toBe(false);
+    expect(canAccessStaging('admin', env({ APP_ENV: 'staging' }))).toBe(true);
+    expect(canAccessStaging('viewer', env({ APP_ENV: 'staging' }))).toBe(true);
+    expect(canAccessStaging(null, env({ APP_ENV: 'staging' }))).toBe(false);
     expect(canAccessStaging('admin', env({ APP_ENV: 'production' }))).toBe(true);
   });
 

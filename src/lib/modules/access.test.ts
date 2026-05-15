@@ -43,16 +43,12 @@ describe('module access', () => {
     expect(access.ok).toBe(true);
   });
 
-  it('blocks tenant users in the staging environment', async () => {
+  it('allows active tenant users in the staging environment', async () => {
     const previous = process.env.APP_ENV;
     process.env.APP_ENV = 'staging';
     try {
       const access = await getModuleAccess(user, 'crm');
-      expect(access.ok).toBe(false);
-      if (!access.ok) {
-        expect(access.status).toBe(403);
-        expect(access.error).toBe('staging_super_admin_only');
-      }
+      expect(access.ok).toBe(true);
     } finally {
       if (previous === undefined) delete process.env.APP_ENV;
       else process.env.APP_ENV = previous;
