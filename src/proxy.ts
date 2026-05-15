@@ -1,11 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { getAdminPortalUrl } from '@/lib/auth/admin-redirect';
+import { getClerkProxyUrl } from '@/lib/clerk-proxy-config';
 import { getGatewayLoginUrl } from '@/lib/auth/gateway-login';
 import { PORTAL_APP_PATH, shouldRouteRootToPortalApp } from '@/lib/auth/portal-entry-host';
-
-const clerkProxyUrl =
-  process.env.NEXT_PUBLIC_CLERK_PROXY_URL || 'https://wnyautomation.com/clerk-proxy';
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -20,6 +18,7 @@ const isPublicRoute = createRouteMatcher([
   '/industries(.*)',
   '/pricing(.*)',
   '/legal(.*)',
+  '/clerk-proxy(.*)',
   '/estimate/(.*)',
   '/pay/(.*)',
   '/portal/(.*)',
@@ -80,7 +79,7 @@ export default clerkMiddleware(
     return NextResponse.next();
   },
   {
-    proxyUrl: clerkProxyUrl,
+    proxyUrl: getClerkProxyUrl(),
   },
 );
 

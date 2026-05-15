@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { absoluteUrl, getSiteUrl } from "@/lib/marketing/site";
 import { ConsentManager } from "@/components/consent/ConsentManager";
+import { getClerkProxyUrl } from "@/lib/clerk-proxy-config";
 
 const clerkLocalization = {
   signIn: {
@@ -27,10 +28,6 @@ const clerkLocalization = {
     },
   },
 } as const;
-
-const clerkProxyUrl =
-  process.env.NEXT_PUBLIC_CLERK_PROXY_URL ||
-  (process.env.APP_ENV === "staging" ? undefined : "https://wnyautomation.com/clerk-proxy");
 
 const appSans = Manrope({
   variable: "--font-app-sans",
@@ -85,6 +82,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const clerkProxyUrl = getClerkProxyUrl();
+
   return (
     <html lang="en">
       <body
