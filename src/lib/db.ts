@@ -28,6 +28,7 @@ import { applyGrowthMigrations } from '@/lib/growth/sqlite-growth-migrate';
 import { applyAiMigrations } from '@/lib/ai/sqlite-ai-migrate';
 import { applyClientConfigMigrations } from '@/lib/platform/sqlite-client-config-migrate';
 import { applyMarketingAgentMigrations } from '@/lib/marketing-agent/sqlite-marketing-agent-migrate';
+import { applyTicketBoardMigrations } from '@/lib/tickets/sqlite-ticket-board-migrate';
 
 type PgPoolType = import('@neondatabase/serverless').Pool;
 type SqlRuntimeContext = {
@@ -261,6 +262,7 @@ export function getDb(): Database.Database {
   applyAiMigrations(dbInstance);
   applyMarketingAgentMigrations(dbInstance);
   applyClientConfigMigrations(dbInstance);
+  applyTicketBoardMigrations(dbInstance);
 
   return dbInstance;
 }
