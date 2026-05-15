@@ -22,6 +22,7 @@ const serviceModules: ModuleKey[] = [
   'dashboard',
   'crm',
   'customers',
+  'tickets',
   'estimates',
   'invoices',
   'marketing',

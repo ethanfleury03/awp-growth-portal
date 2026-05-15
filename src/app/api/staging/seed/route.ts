@@ -44,6 +44,15 @@ async function upsertStagingCompany() {
       is_primary = true,
       updated_at = datetime('now')
   `;
+
+  await sql`
+    INSERT INTO feature_flags (company_id, key, value, flag_key, enabled, payload_json)
+    VALUES (${AWP_COMPANY_ID}, 'module.tickets', 'true', 'module.tickets', true, null)
+    ON CONFLICT (company_id, flag_key) DO UPDATE SET
+      enabled = true,
+      value = 'true',
+      updated_at = datetime('now')
+  `;
 }
 
 export async function GET(request: Request) {
