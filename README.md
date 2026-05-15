@@ -23,6 +23,12 @@ tracked in Git. Hosted production/preview environments must set `DATABASE_URL`;
 the app refuses to use SQLite there so client data cannot land on ephemeral
 runtime storage.
 
+Production DB = shared WNY Automation platform source of truth. AWP is a client
+portal and schema consumer; `wnyautomation-admin` owns shared production Drizzle
+migrations. AWP should not generate or apply production migrations for shared
+tables such as `companies`, `portal_users`, `user_memberships`, and
+`portal_destinations`.
+
 ## Useful Commands
 
 ```bash
@@ -47,6 +53,10 @@ PORTAL_GATEWAY_DESTINATION_KEY=awp-growth-portal
 
 With those variables present, direct visits to this portal require both a local
 portal assignment and a matching gateway assignment.
+
+For deployment verification, call `GET /api/internal/db-info` with
+`PORTAL_GATEWAY_SERVICE_TOKEN` or `WNY_INTERNAL_STATUS_TOKEN`. The response
+returns only non-secret DB identity fields and expected-table checks.
 
 ## Docs
 

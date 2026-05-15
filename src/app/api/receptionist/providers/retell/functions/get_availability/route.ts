@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { withSuperAdminContext } from '@/lib/db';
 import { getAvailabilityForAgent } from '@/lib/receptionist/agent-context';
 import {
   auditTool,
@@ -12,8 +13,10 @@ export async function POST(request: Request) {
   if (!verifyRetellToolSecret(request)) {
     return NextResponse.json(toolJsonError('Unauthorized', 'unauthorized'), { status: 401 });
   }
+  return withSuperAdminContext(async () => {
   const body = await readRetellToolJson(request, 'get_availability');
   await auditTool(undefined, 'get_availability', body, { ok: true }, 'ok');
   const availability = await getAvailabilityForAgent();
   return NextResponse.json(toolJsonOk({ availability }));
+  });
 }

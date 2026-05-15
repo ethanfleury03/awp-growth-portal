@@ -11,13 +11,13 @@
  */
 
 import Database from 'better-sqlite3';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { applyReceptionistMigrations } from '@/lib/receptionist/sqlite-migrate';
 import { applyEstimatesMigrations } from '@/lib/estimates/sqlite-estimate-migrate';
 import { applyAuthMigrations } from '@/lib/auth/sqlite-auth-migrate';
-import { seedAdminUser } from '@/lib/auth/seed-admin';
 import { applyPaymentsMigrations } from '@/lib/payments/sqlite-payments-migrate';
 import { applyPlatformMigrations } from '@/lib/platform/sqlite-platform-migrate';
 import { applyTenancyMigrations } from '@/lib/platform/sqlite-tenancy-migrate';
@@ -28,9 +28,60 @@ import { applyGrowthMigrations } from '@/lib/growth/sqlite-growth-migrate';
 import { applyAiMigrations } from '@/lib/ai/sqlite-ai-migrate';
 import { applyClientConfigMigrations } from '@/lib/platform/sqlite-client-config-migrate';
 import { applyMarketingAgentMigrations } from '@/lib/marketing-agent/sqlite-marketing-agent-migrate';
-import { applyAdminTicketMigrations } from '@/lib/admin/sqlite-admin-ticket-migrate';
 
 type PgPoolType = import('@neondatabase/serverless').Pool;
+type SqlRuntimeContext = {
+  companyId?: string;
+  role?: 'super_admin';
+};
+
+const sqlRuntimeContext = new AsyncLocalStorage<SqlRuntimeContext>();
+
+export function getSqlRuntimeContext(): SqlRuntimeContext | undefined {
+  return sqlRuntimeContext.getStore();
+}
+
+export function prepareSqlRuntimeContext(): SqlRuntimeContext {
+  const existing = sqlRuntimeContext.getStore();
+  if (existing) return existing;
+  const context: SqlRuntimeContext = {};
+  sqlRuntimeContext.enterWith(context);
+  return context;
+}
+
+export function enterTenantContext(companyId: string) {
+  const normalizedCompanyId = companyId.trim();
+  if (!normalizedCompanyId) return;
+  const context = prepareSqlRuntimeContext();
+  context.companyId = normalizedCompanyId;
+}
+
+export async function withTenantContext<T>(
+  companyId: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const normalizedCompanyId = companyId.trim();
+  if (!normalizedCompanyId) {
+    throw new Error('withTenantContext requires a companyId');
+  }
+  return sqlRuntimeContext.run(
+    {
+      ...(sqlRuntimeContext.getStore() || {}),
+      companyId: normalizedCompanyId,
+    },
+    fn,
+  );
+}
+
+export async function withSuperAdminContext<T>(fn: () => Promise<T>): Promise<T> {
+  return sqlRuntimeContext.run(
+    {
+      ...(sqlRuntimeContext.getStore() || {}),
+      role: 'super_admin',
+    },
+    fn,
+  );
+}
 
 export function getDatabaseMode(env: NodeJS.ProcessEnv = process.env): 'postgres' | 'sqlite' {
   return env.DATABASE_URL ? 'postgres' : 'sqlite';
@@ -210,10 +261,6 @@ export function getDb(): Database.Database {
   applyAiMigrations(dbInstance);
   applyMarketingAgentMigrations(dbInstance);
   applyClientConfigMigrations(dbInstance);
-  applyAdminTicketMigrations(dbInstance);
-  if (process.env.NODE_ENV !== 'test') {
-    seedAdminUser(dbInstance);
-  }
 
   return dbInstance;
 }
@@ -245,10 +292,32 @@ export class SqlQuery implements PromiseLike<Record<string, unknown>[]> {
     const args = flat.args;
 
     const pool = getPgPool();
-    const res = await pool.query(text, args as unknown[]);
-    // Neon's query returns rows for anything returning; INSERT without
-    // RETURNING resolves with rows=[].
-    return (res.rows as Record<string, unknown>[]) || [];
+    const context = getSqlRuntimeContext();
+    if (!context?.companyId && context?.role !== 'super_admin') {
+      const res = await pool.query(text, args as unknown[]);
+      // Neon's query returns rows for anything returning; INSERT without
+      // RETURNING resolves with rows=[].
+      return (res.rows as Record<string, unknown>[]) || [];
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      if (context.role === 'super_admin') {
+        await client.query(`SELECT set_config('app.role', 'super_admin', true)`);
+      }
+      if (context.companyId) {
+        await client.query(`SELECT set_config('app.company_id', $1, true)`, [context.companyId]);
+      }
+      const res = await client.query(text, args as unknown[]);
+      await client.query('COMMIT');
+      return (res.rows as Record<string, unknown>[]) || [];
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   then<TResult1 = Record<string, unknown>[], TResult2 = never>(

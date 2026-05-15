@@ -185,46 +185,6 @@ CREATE TABLE IF NOT EXISTS growth_records (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE IF NOT EXISTS admin_ticket_buckets (
-  id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
-  name TEXT NOT NULL,
-  color TEXT NOT NULL DEFAULT '#2f6b4f',
-  sort_order INTEGER NOT NULL DEFAULT 0,
-  is_active INTEGER NOT NULL DEFAULT 1,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE IF NOT EXISTS admin_tickets (
-  id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
-  bucket_id TEXT NOT NULL REFERENCES admin_ticket_buckets(id) ON DELETE RESTRICT,
-  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  project_id TEXT REFERENCES growth_records(id) ON DELETE SET NULL,
-  title TEXT NOT NULL,
-  description TEXT,
-  priority TEXT NOT NULL DEFAULT 'normal',
-  requester_email TEXT,
-  source TEXT NOT NULL DEFAULT 'admin',
-  due_date TEXT,
-  sort_order INTEGER NOT NULL DEFAULT 0,
-  created_by_user_id TEXT,
-  updated_by_user_id TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE IF NOT EXISTS admin_ticket_comments (
-  id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
-  ticket_id TEXT NOT NULL REFERENCES admin_tickets(id) ON DELETE CASCADE,
-  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  author_user_id TEXT,
-  author_role TEXT NOT NULL,
-  author_name TEXT,
-  author_email TEXT,
-  body TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
 CREATE TABLE IF NOT EXISTS jobs (
   id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
   company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -311,18 +271,6 @@ CREATE INDEX IF NOT EXISTS idx_growth_records_company_type ON growth_records(com
 CREATE UNIQUE INDEX IF NOT EXISTS idx_growth_records_source_key
   ON growth_records(company_id, record_type, source_key)
   WHERE source_key IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_admin_ticket_buckets_active
-  ON admin_ticket_buckets(is_active, sort_order);
-CREATE INDEX IF NOT EXISTS idx_admin_tickets_bucket_order
-  ON admin_tickets(bucket_id, sort_order, updated_at);
-CREATE INDEX IF NOT EXISTS idx_admin_tickets_company
-  ON admin_tickets(company_id, updated_at);
-CREATE INDEX IF NOT EXISTS idx_admin_tickets_project
-  ON admin_tickets(project_id);
-CREATE INDEX IF NOT EXISTS idx_admin_ticket_comments_ticket_created
-  ON admin_ticket_comments(ticket_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_admin_ticket_comments_company_created
-  ON admin_ticket_comments(company_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_jobs_company_id ON jobs(company_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_customer_id ON jobs(customer_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_lead_id ON jobs(lead_id);

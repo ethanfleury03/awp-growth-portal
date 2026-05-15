@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
+import { withSuperAdminContext } from '@/lib/db';
 import { handleRetellWebhook } from '@/lib/receptionist/receptionist-live';
 
 export async function POST(request: Request) {
   const raw = await request.text();
   const signature = request.headers.get('x-retell-signature');
-  const result = await handleRetellWebhook(raw, signature);
+  const result = await withSuperAdminContext(() => handleRetellWebhook(raw, signature));
   if (!result.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: result.status });
   }

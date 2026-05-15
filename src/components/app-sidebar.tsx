@@ -31,6 +31,7 @@ import { MODULE_CATALOG, type ModuleKey } from '@/lib/modules/catalog';
 import clsx from 'clsx';
 import { cn } from '@/lib/ops';
 import { roleAtLeast } from '@/lib/auth/types';
+import { getGatewayLoginUrl } from '@/lib/auth/gateway-login';
 
 const MODULE_ICONS: Record<ModuleKey, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -68,7 +69,7 @@ function ClerkSignOutIconButton({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      onClick={() => signOut({ redirectUrl: '/' })}
+      onClick={() => signOut({ redirectUrl: getGatewayLoginUrl() })}
       title="Sign out"
       className={className}
     >
@@ -191,16 +192,6 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
             </Link>
           );
         })}
-        {user?.role === 'super_admin' ? (
-          <Link
-            href="/super-admin"
-            onClick={handleNavigate}
-            className={navLinkClass(navItemIsActive(pathname, '/super-admin'))}
-          >
-            <Settings className="w-[18px] h-[18px] flex-shrink-0 opacity-90" strokeWidth={1.75} aria-hidden />
-            <span className="font-medium leading-none">Super Admin</span>
-          </Link>
-        ) : null}
       </nav>
 
       <div className="mt-auto relative z-10">

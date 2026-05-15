@@ -1,6 +1,6 @@
 const BASE = process.env.MARKETING_BASE_URL || 'http://localhost:3003';
-const START_ROUTES = ['/', '/features', '/pricing', '/industries', '/about', '/contact'];
-const ALLOWED_PREFIXES = ['/', '/features', '/pricing', '/industries', '/about', '/contact', '/legal'];
+const START_ROUTES = ['/features', '/pricing', '/industries', '/about', '/contact'];
+const ALLOWED_PREFIXES = ['/features', '/pricing', '/industries', '/about', '/contact', '/legal'];
 const AUTH_REDIRECT_PREFIXES = ['/login', '/sign-in', '/sign-up'];
 
 function normalizeHref(href) {
@@ -19,6 +19,7 @@ function normalizeHref(href) {
   }
   if (href.startsWith('/')) {
     const clean = href.split('#')[0];
+    if (clean === '/') return null;
     if (clean.startsWith('/api') || clean.startsWith('/app') || clean.startsWith('/_next')) return null;
     if (!ALLOWED_PREFIXES.some((prefix) => clean === prefix || clean.startsWith(`${prefix}/`))) {
       return null;

@@ -1,5 +1,9 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { getGatewayAccessConfig, verifyGatewayPortalAccess } from './gateway-access';
+import {
+  getGatewayAccessConfig,
+  requiresGatewayAccessConfig,
+  verifyGatewayPortalAccess,
+} from './gateway-access';
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -25,6 +29,13 @@ describe('gateway access config', () => {
     expect(config.configured).toBe(true);
     expect(config.gatewayUrl).toBe('https://app.wnyautomation.com');
     expect(config.destinationKey).toBe('awp-growth-portal');
+  });
+
+  it('requires gateway config in hosted production unless disabled', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    expect(requiresGatewayAccessConfig()).toBe(true);
+    process.env.PORTAL_GATEWAY_REQUIRED = 'false';
+    expect(requiresGatewayAccessConfig()).toBe(false);
   });
 });
 
@@ -77,5 +88,20 @@ describe('verifyGatewayPortalAccess', () => {
 
     expect(result.allowed).toBe(false);
     if (!result.allowed) expect(result.reason).toBe('destination_not_allowed');
+  });
+
+  it('fails closed when production config is missing', async () => {
+    delete process.env.PORTAL_GATEWAY_URL;
+    delete process.env.PORTAL_GATEWAY_SERVICE_TOKEN;
+    vi.stubEnv('NODE_ENV', 'production');
+
+    const result = await verifyGatewayPortalAccess({
+      clerkUserId: 'user_1',
+      email: 'client@example.com',
+    });
+
+    expect(result.configured).toBe(true);
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('gateway_not_configured');
   });
 });

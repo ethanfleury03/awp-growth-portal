@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { sql, withSuperAdminContext } from '@/lib/db';
 import { listLineItemsForInvoiceIds } from '@/lib/invoices/invoice-line-items';
 import { invoiceAmountsCents } from '@/lib/payments/invoice-money';
 
 type Ctx = { params: Promise<{ token: string }> };
 
 export async function GET(_request: Request, ctx: Ctx) {
+  return withSuperAdminContext(async () => {
   try {
     const { token } = await ctx.params;
     const rows = await sql`
@@ -51,4 +52,5 @@ export async function GET(_request: Request, ctx: Ctx) {
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 });
   }
+  });
 }

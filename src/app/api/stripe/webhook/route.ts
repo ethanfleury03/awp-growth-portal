@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
-import { sql } from '@/lib/db';
+import { sql, withSuperAdminContext } from '@/lib/db';
 import { getStripe } from '@/lib/payments/stripe';
 import {
   applyChargeRefund,
@@ -51,6 +51,7 @@ export async function POST(request: Request) {
     }
   }
 
+  return withSuperAdminContext(async () => {
   const dupRows = await sql`SELECT 1 FROM payment_events WHERE stripe_event_id = ${event.id} LIMIT 1`;
   if (dupRows.length) {
     return NextResponse.json({ received: true, duplicate: true });
@@ -141,4 +142,5 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ received: true });
+  });
 }

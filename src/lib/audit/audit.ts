@@ -22,23 +22,7 @@ export type AuditAction =
   | 'team.deactivate'
   | 'connect.onboard_start'
   | 'connect.status_refresh'
-  | 'feature_flag.update'
-  | 'tenant.create'
-  | 'tenant.update'
-  | 'tenant.user.assign'
-  | 'tenant.user.update'
-  | 'tenant.modules.update'
-  | 'tenant.branding.update'
-  | 'tenant.crm_config.update'
-  | 'admin_ticket.create'
-  | 'admin_ticket.update'
-  | 'admin_ticket.comment'
-  | 'admin_ticket.delete'
-  | 'admin_ticket_bucket.create'
-  | 'admin_ticket_bucket.update'
-  | 'admin_ticket_bucket.delete'
-  | 'super_admin.impersonate'
-  | 'webhook.replay';
+  | 'feature_flag.update';
 
 export interface AuditWriteInput {
   actor: Pick<SessionUser, 'id' | 'email' | 'role' | 'companyId'>;

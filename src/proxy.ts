@@ -1,5 +1,8 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { getAdminPortalUrl } from '@/lib/auth/admin-redirect';
+import { getGatewayLoginUrl } from '@/lib/auth/gateway-login';
+import { PORTAL_APP_PATH, shouldRouteRootToPortalApp } from '@/lib/auth/portal-entry-host';
 
 const clerkProxyUrl =
   process.env.NEXT_PUBLIC_CLERK_PROXY_URL || 'https://wnyautomation.com/clerk-proxy';
@@ -21,6 +24,7 @@ const isPublicRoute = createRouteMatcher([
   '/pay/(.*)',
   '/portal/(.*)',
   '/api/public/(.*)',
+  '/api/internal/(.*)',
   '/api/marketing/(.*)',
   '/api/stripe/webhook',
   '/api/webhooks/(.*)',
@@ -30,11 +34,39 @@ const isPublicRoute = createRouteMatcher([
   '/api/health',
   '/_next/(.*)',
   '/favicon.ico',
+  '/icon.svg',
+  '/apple-icon',
+  '/manifest.webmanifest',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/opengraph-image',
+  '/twitter-image',
 ]);
 
 export default clerkMiddleware(
   async (auth, req) => {
+    if (
+      req.nextUrl.pathname === '/admin' ||
+      req.nextUrl.pathname.startsWith('/admin/') ||
+      req.nextUrl.pathname === '/super-admin' ||
+      req.nextUrl.pathname.startsWith('/super-admin/')
+    ) {
+      return NextResponse.redirect(getAdminPortalUrl('/admin'));
+    }
+
+    if (shouldRouteRootToPortalApp(req.nextUrl.pathname)) {
+      const url = req.nextUrl.clone();
+      url.pathname = PORTAL_APP_PATH;
+      return NextResponse.redirect(url);
+    }
+
     if (isPublicRoute(req)) {
+      if (req.nextUrl.pathname === '/sign-in' || req.nextUrl.pathname.startsWith('/sign-in/')) {
+        return NextResponse.redirect(getGatewayLoginUrl(), 307);
+      }
+      if (req.nextUrl.pathname === '/sign-up' || req.nextUrl.pathname.startsWith('/sign-up/')) {
+        return NextResponse.redirect(getGatewayLoginUrl(), 307);
+      }
       return NextResponse.next();
     }
     const { userId } = await auth();
@@ -43,10 +75,7 @@ export default clerkMiddleware(
       if (url.pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      url.pathname = '/sign-in';
-      const returnPath = req.nextUrl.pathname + (req.nextUrl.search || '');
-      url.searchParams.set('redirect_url', returnPath);
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(getGatewayLoginUrl(), 307);
     }
     return NextResponse.next();
   },

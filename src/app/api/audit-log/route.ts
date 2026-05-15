@@ -10,8 +10,7 @@ export async function GET(request: Request) {
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || '100'), 1), 500);
   const action = url.searchParams.get('action');
   const entityType = url.searchParams.get('entity_type');
-  const requestedCompanyId = url.searchParams.get('companyId');
-  const companyId = auth.role === 'super_admin' && requestedCompanyId ? requestedCompanyId : auth.companyId;
+  const companyId = auth.companyId;
 
   if (action && entityType) {
     const rows = await sql`

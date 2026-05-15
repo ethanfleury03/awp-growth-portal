@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { withSuperAdminContext } from '@/lib/db';
 import { receptionistService } from '@/lib/receptionist/service';
 import {
   auditTool,
@@ -14,6 +15,7 @@ export async function POST(request: Request) {
   if (!verifyRetellToolSecret(request)) {
     return NextResponse.json(toolJsonError('Unauthorized', 'unauthorized'), { status: 401 });
   }
+  return withSuperAdminContext(async () => {
   const body = await readRetellToolJson(request, 'flag_emergency');
   const callId = await resolvePlumberCallIdFromToolBody(body, 'flag_emergency');
   if (!callId) {
@@ -28,4 +30,5 @@ export async function POST(request: Request) {
     await auditTool(callId, 'flag_emergency', body, { error: msg }, 'error');
     return NextResponse.json(toolJsonError(msg, 'tool_error'), { status: 400 });
   }
+  });
 }

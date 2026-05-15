@@ -28,13 +28,30 @@ function cleanGatewayUrl(value: string) {
   return value.trim().replace(/\/+$/, "");
 }
 
+function isProductionPortalUrl(value: string) {
+  if (!value) return false;
+  try {
+    const host = new URL(value).hostname;
+    return host === "app.wnyautomation.com" || host === "admin.wnyautomation.com" || host === "awp.wnyautomation.com";
+  } catch {
+    return false;
+  }
+}
+
+export function requiresGatewayAccessConfig(env: NodeJS.ProcessEnv = process.env) {
+  if (env.PORTAL_GATEWAY_REQUIRED === "false") return false;
+  if (env.PORTAL_GATEWAY_REQUIRED === "true") return true;
+  return env.NODE_ENV === "production" || env.VERCEL === "1" || Boolean(env.VERCEL_ENV);
+}
+
 export function getGatewayAccessConfig(env: NodeJS.ProcessEnv = process.env) {
   const gatewayUrl = cleanGatewayUrl(env.PORTAL_GATEWAY_URL || env.NEXT_PUBLIC_PORTAL_GATEWAY_URL || "");
   const serviceToken = (env.PORTAL_GATEWAY_SERVICE_TOKEN || "").trim();
   const destinationKey = (env.PORTAL_GATEWAY_DESTINATION_KEY || "awp-growth-portal").trim();
+  const stagingMisconfigured = env.APP_ENV === "staging" && (!gatewayUrl || isProductionPortalUrl(gatewayUrl));
 
   return {
-    configured: Boolean(gatewayUrl && serviceToken && destinationKey),
+    configured: Boolean(gatewayUrl && serviceToken && destinationKey && !stagingMisconfigured),
     gatewayUrl,
     serviceToken,
     destinationKey,
@@ -50,6 +67,9 @@ export async function verifyGatewayPortalAccess({
 }): Promise<GatewayAccessResult> {
   const config = getGatewayAccessConfig();
   if (!config.configured) {
+    if (requiresGatewayAccessConfig()) {
+      return { configured: true, allowed: false, reason: "gateway_not_configured" };
+    }
     return { configured: false, allowed: true, reason: "not_configured" };
   }
 

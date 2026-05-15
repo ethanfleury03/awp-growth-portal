@@ -1,28 +1,7 @@
 import Link from 'next/link';
 import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
-
-const DEFAULT_GATEWAY_ADMIN_EMAILS = ['ethan@wnyautomation.com'];
-
-function configuredGatewayAdminEmails() {
-  return new Set(
-    [
-      ...DEFAULT_GATEWAY_ADMIN_EMAILS,
-      ...(process.env.PORTAL_GATEWAY_ADMIN_EMAILS || process.env.GATEWAY_SUPER_ADMIN_EMAILS || '')
-        .split(',')
-        .map((email) => email.trim().toLowerCase())
-        .filter(Boolean),
-    ],
-  );
-}
-
-function gatewayAdminUrl() {
-  const base =
-    process.env.PORTAL_GATEWAY_URL ||
-    process.env.NEXT_PUBLIC_GATEWAY_URL ||
-    'https://app.wnyautomation.com';
-  return `${base.replace(/\/$/, '')}/admin`;
-}
+import { getAdminPortalUrl, isConfiguredAdminEmail } from '@/lib/auth/admin-redirect';
 
 export default async function AccountUnassignedPage() {
   const user = await currentUser().catch(() => null);
@@ -30,8 +9,8 @@ export default async function AccountUnassignedPage() {
     user?.primaryEmailAddress?.emailAddress ||
     user?.emailAddresses?.[0]?.emailAddress ||
     null;
-  if (email && configuredGatewayAdminEmails().has(email.trim().toLowerCase())) {
-    redirect(gatewayAdminUrl());
+  if (isConfiguredAdminEmail(email)) {
+    redirect(getAdminPortalUrl('/admin'));
   }
 
   return (

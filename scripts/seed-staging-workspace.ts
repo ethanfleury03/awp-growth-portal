@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { sql } from '../src/lib/db';
+import { sql, withSuperAdminContext } from '../src/lib/db';
 import { ensureAwpDemoData } from '../src/lib/awp/seed';
 import { MODULE_CATALOG } from '../src/lib/modules/catalog';
 import { getIndustryPreset } from '../src/lib/modules/presets';
@@ -562,32 +562,34 @@ async function seedOperationalMockData(companyId: string, branchId: string) {
 async function main() {
   requireStaging();
 
-  const companyId = await upsertAwpCompany();
-  const branchId = await ensurePrimaryBranch(companyId);
+  await withSuperAdminContext(async () => {
+    const companyId = await upsertAwpCompany();
+    const branchId = await ensurePrimaryBranch(companyId);
 
-  await upsertUser({
-    id: AWP_ADMIN_ID,
-    companyId,
-    branchId,
-    email: process.env.STAGING_AWP_ADMIN_EMAIL || 'staging.awp.admin@wnyautomation.test',
-    name: 'AWP Staging Admin',
-    role: 'admin',
+    await upsertUser({
+      id: AWP_ADMIN_ID,
+      companyId,
+      branchId,
+      email: process.env.STAGING_AWP_ADMIN_EMAIL || 'staging.awp.admin@wnyautomation.test',
+      name: 'AWP Staging Admin',
+      role: 'admin',
+    });
+    await upsertUser({
+      id: AWP_VIEWER_ID,
+      companyId,
+      branchId,
+      email: 'staging.awp.viewer@wnyautomation.test',
+      name: 'AWP Staging Viewer',
+      role: 'viewer',
+    });
+
+    await seedModules(companyId);
+    await ensureAwpDemoData(companyId, branchId);
+    await seedOperationalMockData(companyId, branchId);
+
+    console.log('[seed-staging-workspace] Seed complete');
+    console.log({ companyId, branchId });
   });
-  await upsertUser({
-    id: AWP_VIEWER_ID,
-    companyId,
-    branchId,
-    email: 'staging.awp.viewer@wnyautomation.test',
-    name: 'AWP Staging Viewer',
-    role: 'viewer',
-  });
-
-  await seedModules(companyId);
-  await ensureAwpDemoData(companyId, branchId);
-  await seedOperationalMockData(companyId, branchId);
-
-  console.log('[seed-staging-workspace] Seed complete');
-  console.log({ companyId, branchId });
 }
 
 main().catch((error) => {

@@ -6,22 +6,14 @@ function bearerToken(request: Request) {
   return header.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() || '';
 }
 
-function authorized(request: Request) {
-  const token =
-    bearerToken(request) ||
-    request.headers.get('x-gateway-service-token') ||
-    request.headers.get('x-internal-status-token') ||
-    '';
-  const allowed = [
-    process.env.PORTAL_GATEWAY_SERVICE_TOKEN,
-    process.env.WNY_INTERNAL_STATUS_TOKEN,
-  ].filter((value): value is string => Boolean(value));
-
-  return allowed.length > 0 && allowed.includes(token);
+function configuredToken() {
+  return (process.env.WNY_INTERNAL_STATUS_TOKEN || process.env.PORTAL_GATEWAY_SERVICE_TOKEN || '').trim();
 }
 
 export async function GET(request: Request) {
-  if (!authorized(request)) {
+  const token = bearerToken(request) || request.headers.get('x-gateway-service-token') || '';
+  const expected = configuredToken();
+  if (!expected || token !== expected) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -61,7 +61,3 @@ export async function requirePortalOrRespond(
 export function isPortalResponse(v: unknown): v is NextResponse {
   return v instanceof NextResponse;
 }
-
-export async function requireSuperAdmin(): Promise<SessionUser | NextResponse> {
-  return requirePortalOrRespond('super_admin');
-}

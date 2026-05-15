@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { withSuperAdminContext } from '@/lib/db';
 import { expireEstimateIfNeeded, getEstimateByPublicToken } from '@/lib/estimates/service';
 import { createEstimateDepositCheckoutSession } from '@/lib/payments/payment-service';
 import { estimateDepositAmountCents, onlinePaymentsActive } from '@/lib/payments/policy';
@@ -17,6 +18,7 @@ const bodySchema = z.object({
 type Ctx = { params: Promise<{ token: string }> };
 
 export async function POST(request: Request, ctx: Ctx) {
+  return withSuperAdminContext(async () => {
   try {
     const { token } = await ctx.params;
     const { max, windowMs } = publicRateLimitConfig();
@@ -80,4 +82,5 @@ export async function POST(request: Request, ctx: Ctx) {
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 400 });
   }
+  });
 }

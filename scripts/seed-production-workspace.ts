@@ -17,7 +17,7 @@ const sampleClient = {
 };
 
 const superAdmin = {
-  email: (process.env.SEED_SUPER_ADMIN_EMAIL || 'ethan.fleuryy@gmail.com').toLowerCase(),
+  email: (process.env.SEED_SUPER_ADMIN_EMAIL || 'ethan@wnyautomation.com').toLowerCase(),
   name: process.env.SEED_SUPER_ADMIN_NAME || 'Ethan Fleury',
 };
 

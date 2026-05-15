@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { withSuperAdminContext } from '@/lib/db';
 import { markEstimateViewedByToken } from '@/lib/estimates/service';
 import { buildEstimatePresentation } from '@/lib/estimates/service';
 import {
@@ -10,6 +11,7 @@ import {
 type Ctx = { params: Promise<{ token: string }> };
 
 export async function POST(request: Request, ctx: Ctx) {
+  return withSuperAdminContext(async () => {
   try {
     const { token } = await ctx.params;
     const { max, windowMs } = publicRateLimitConfig();
@@ -28,4 +30,5 @@ export async function POST(request: Request, ctx: Ctx) {
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 400 });
   }
+  });
 }
