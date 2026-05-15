@@ -32,6 +32,7 @@ export type AuditAction =
   | 'tenant.crm_config.update'
   | 'admin_ticket.create'
   | 'admin_ticket.update'
+  | 'admin_ticket.comment'
   | 'admin_ticket.delete'
   | 'admin_ticket_bucket.create'
   | 'admin_ticket_bucket.update'

@@ -47,3 +47,26 @@ export const adminTickets = pgTable(
     projectIdx: index('idx_admin_tickets_project').on(t.projectId),
   }),
 );
+
+export const adminTicketComments = pgTable(
+  'admin_ticket_comments',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    ticketId: uuid('ticket_id')
+      .notNull()
+      .references(() => adminTickets.id, { onDelete: 'cascade' }),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    authorUserId: text('author_user_id'),
+    authorRole: text('author_role').notNull(),
+    authorName: text('author_name'),
+    authorEmail: text('author_email'),
+    body: text('body').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    ticketCreatedIdx: index('idx_admin_ticket_comments_ticket_created').on(t.ticketId, t.createdAt),
+    companyCreatedIdx: index('idx_admin_ticket_comments_company_created').on(t.companyId, t.createdAt),
+  }),
+);

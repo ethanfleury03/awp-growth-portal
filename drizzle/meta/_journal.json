@@ -71,6 +71,13 @@
       "when": 1778798400000,
       "tag": "0010_admin_ticket_board",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778806800000,
+      "tag": "0011_admin_ticket_comments",
+      "breakpoints": true
     }
   ]
 }

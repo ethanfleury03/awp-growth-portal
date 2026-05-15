@@ -5,6 +5,7 @@ export type ModuleKey =
   | 'leads'
   | 'crm'
   | 'customers'
+  | 'tickets'
   | 'jobs'
   | 'estimates'
   | 'invoices'
@@ -57,6 +58,15 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     description: 'Customer records and customer history.',
     defaultEnabled: true,
     requiredRole: 'staff',
+  },
+  {
+    key: 'tickets',
+    flagKey: 'module.tickets',
+    label: 'Tickets',
+    route: '/tickets',
+    description: 'Shared task board for admin-created requests and client progress conversations.',
+    defaultEnabled: true,
+    requiredRole: 'viewer',
   },
   {
     key: 'estimates',

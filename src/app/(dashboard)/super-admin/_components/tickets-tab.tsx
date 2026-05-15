@@ -53,6 +53,8 @@ type Project = {
 type Ticket = {
   id: string;
   bucket_id: string;
+  bucket_name: string;
+  bucket_color: string;
   company_id: string;
   project_id: string | null;
   title: string;
@@ -71,6 +73,9 @@ type Ticket = {
   company_accent_color: string | null;
   project_title: string | null;
   project_status: string | null;
+  comment_count: number | string;
+  latest_comment_body: string | null;
+  latest_comment_at: string | null;
 };
 
 type BoardResponse = {

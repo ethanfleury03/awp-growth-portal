@@ -213,6 +213,18 @@ CREATE TABLE IF NOT EXISTS admin_tickets (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS admin_ticket_comments (
+  id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
+  ticket_id TEXT NOT NULL REFERENCES admin_tickets(id) ON DELETE CASCADE,
+  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  author_user_id TEXT,
+  author_role TEXT NOT NULL,
+  author_name TEXT,
+  author_email TEXT,
+  body TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS jobs (
   id TEXT PRIMARY KEY DEFAULT (uuid()) NOT NULL,
   company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -307,6 +319,10 @@ CREATE INDEX IF NOT EXISTS idx_admin_tickets_company
   ON admin_tickets(company_id, updated_at);
 CREATE INDEX IF NOT EXISTS idx_admin_tickets_project
   ON admin_tickets(project_id);
+CREATE INDEX IF NOT EXISTS idx_admin_ticket_comments_ticket_created
+  ON admin_ticket_comments(ticket_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_admin_ticket_comments_company_created
+  ON admin_ticket_comments(company_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_jobs_company_id ON jobs(company_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_customer_id ON jobs(customer_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_lead_id ON jobs(lead_id);
