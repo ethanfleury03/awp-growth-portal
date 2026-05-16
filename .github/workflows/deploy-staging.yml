@@ -1,0 +1,48 @@
+name: Deploy AWP staging
+
+on:
+  push:
+    branches:
+      - staging
+
+concurrency:
+  group: awp-staging-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to Vercel staging
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      HAS_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Report missing Vercel token
+        if: env.HAS_VERCEL_TOKEN != 'true'
+        run: |
+          echo "::notice::Skipping staging deploy because the VERCEL_TOKEN repository secret is not configured."
+
+      - name: Set up Node
+        if: env.HAS_VERCEL_TOKEN == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Vercel CLI
+        if: env.HAS_VERCEL_TOKEN == 'true'
+        run: npm install --global vercel@latest
+
+      - name: Link Vercel project
+        if: env.HAS_VERCEL_TOKEN == 'true'
+        run: vercel link --yes --project wnyautomation-portal --scope wny-automation --token="$VERCEL_TOKEN"
+
+      - name: Pull staging environment
+        if: env.HAS_VERCEL_TOKEN == 'true'
+        run: vercel pull --yes --environment=staging --scope wny-automation --token="$VERCEL_TOKEN"
+
+      - name: Deploy staging
+        if: env.HAS_VERCEL_TOKEN == 'true'
+        run: vercel deploy --target=staging --yes --scope wny-automation --token="$VERCEL_TOKEN"
