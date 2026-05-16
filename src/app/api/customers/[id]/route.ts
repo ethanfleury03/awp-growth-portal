@@ -1,6 +1,8 @@
 import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requirePortalUser } from '@/lib/auth/tenant';
+import { isPortalResponse } from '@/lib/auth/tenant';
+import { normalizeCustomerPayload } from '@/lib/customers/validation';
+import { requireModuleOrRespond } from '@/lib/modules/access';
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Unknown error';
@@ -9,10 +11,8 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const portal = await requirePortalUser().catch(() => null);
-  if (!portal) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const portal = await requireModuleOrRespond('customers');
+  if (isPortalResponse(portal)) return portal;
 
   const { id } = await params;
 
@@ -61,6 +61,73 @@ export async function GET(
       invoices,
       estimates,
     });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const portal = await requireModuleOrRespond('customers');
+  if (isPortalResponse(portal)) return portal;
+
+  const { id } = await params;
+  const parsed = normalizeCustomerPayload(await request.json());
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
+  const customer = parsed.value;
+
+  try {
+    const existing = await sql`
+      SELECT id FROM customers
+      WHERE id = ${id} AND company_id = ${portal.companyId}
+      LIMIT 1
+    `;
+    if (!existing.length) {
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+    }
+
+    const result = await sql`
+      UPDATE customers
+      SET name = ${customer.name},
+          email = ${customer.email},
+          phone = ${customer.phone},
+          address = ${customer.address},
+          notes = ${customer.notes},
+          updated_at = NOW()
+      WHERE id = ${id} AND company_id = ${portal.companyId}
+      RETURNING *
+    `;
+
+    return NextResponse.json({ customer: result[0] });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const portal = await requireModuleOrRespond('customers');
+  if (isPortalResponse(portal)) return portal;
+
+  const { id } = await params;
+
+  try {
+    const deleted = await sql`
+      DELETE FROM customers
+      WHERE id = ${id} AND company_id = ${portal.companyId}
+      RETURNING id
+    `;
+    if (!deleted.length) {
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error: unknown) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }

@@ -122,13 +122,16 @@ export default function CustomersPage() {
     if (!confirm('Are you sure you want to delete this customer?')) return;
     
     try {
-      const res = await fetch(`/api/customers?id=${customerId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/customers/${customerId}`, { method: 'DELETE' });
       const data = await res.json();
       if (!data.error) {
         fetchCustomers();
+      } else {
+        alert(data.error);
       }
     } catch (err) {
       console.error('Failed to delete customer:', err);
+      alert('Failed to delete customer');
     }
   };
 

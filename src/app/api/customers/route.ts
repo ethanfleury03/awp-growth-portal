@@ -2,6 +2,7 @@ import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { isPortalResponse } from '@/lib/auth/tenant';
 import { requireModuleOrRespond } from '@/lib/modules/access';
+import { normalizeCustomerPayload } from '@/lib/customers/validation';
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Unknown error';
@@ -66,23 +67,27 @@ export async function POST(request: Request) {
   const portal = await requireModuleOrRespond('customers');
   if (isPortalResponse(portal)) return portal;
 
-  const body = await request.json();
+  const parsed = normalizeCustomerPayload(await request.json());
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
+  const customer = parsed.value;
   
   try {
     const result = await sql`
       INSERT INTO customers (company_id, name, email, phone, address, notes)
       VALUES (
         ${portal.companyId},
-        ${body.name},
-        ${body.email || null},
-        ${body.phone},
-        ${body.address || null},
-        ${body.notes || null}
+        ${customer.name},
+        ${customer.email},
+        ${customer.phone},
+        ${customer.address},
+        ${customer.notes}
       )
       RETURNING *
     `;
 
-    return NextResponse.json({ customer: result[0] });
+    return NextResponse.json({ customer: result[0] }, { status: 201 });
   } catch (error: unknown) {
     console.error('Error creating customer:', error);
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
@@ -96,10 +101,15 @@ export async function PUT(request: Request) {
 
   const body = await request.json();
   const { id, ...updates } = body;
+  const parsed = normalizeCustomerPayload(updates);
 
   if (!id) {
     return NextResponse.json({ error: 'ID required' }, { status: 400 });
   }
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
+  const customer = parsed.value;
 
   try {
     const existing = await sql`
@@ -113,11 +123,11 @@ export async function PUT(request: Request) {
 
     const result = await sql`
       UPDATE customers 
-      SET name = ${updates.name || null},
-          email = ${updates.email || null},
-          phone = ${updates.phone || null},
-          address = ${updates.address || null},
-          notes = ${updates.notes || null},
+      SET name = ${customer.name},
+          email = ${customer.email},
+          phone = ${customer.phone},
+          address = ${customer.address},
+          notes = ${customer.notes},
           updated_at = NOW()
       WHERE id = ${id} AND company_id = ${portal.companyId}
       RETURNING *
