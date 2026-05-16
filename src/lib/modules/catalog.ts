@@ -65,7 +65,7 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     label: 'Tickets',
     route: '/tickets',
     description: 'Shared task board for admin-created requests and client progress conversations.',
-    defaultEnabled: true,
+    defaultEnabled: false,
     requiredRole: 'viewer',
   },
   {
