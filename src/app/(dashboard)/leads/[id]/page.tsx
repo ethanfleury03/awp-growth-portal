@@ -216,23 +216,12 @@ export default function LeadDetailPage() {
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
             <div className="space-y-6">
-              <ConsolePanel title="Qualification Details" description="Site readiness and buyer/project fit for the next sales conversation.">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {[
-                    ['Lead type', context.leadType],
-                    ['Company', context.company],
-                    ['Project location', lead.location],
-                    ['Intended use', context.intendedUse],
-                    ['Owns land?', context.ownsLand],
-                    ['Has site access?', context.hasSiteAccess],
-                    ['Utilities available?', context.utilitiesAvailable],
-                    ['Timeline', context.timeline],
-                  ].map(([label, value]) => (
-                    <div key={String(label)} className="rounded-[22px] border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ops-muted)]">{String(label)}</p>
-                      <p className="mt-2 text-sm font-semibold text-[var(--ops-text)]">{String(value || '-')}</p>
-                    </div>
-                  ))}
+              <ConsolePanel title="Qualification Details" description="Coming soon.">
+                <div className="flex min-h-[220px] items-center justify-center rounded-[22px] border border-dashed border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-6 py-8 text-center">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ops-muted)]">Coming soon</p>
+                    <p className="mt-2 text-sm font-semibold text-[var(--ops-text)]">Qualification details are not ready yet.</p>
+                  </div>
                 </div>
               </ConsolePanel>
 
