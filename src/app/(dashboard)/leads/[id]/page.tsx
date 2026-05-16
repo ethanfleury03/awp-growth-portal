@@ -225,20 +225,12 @@ export default function LeadDetailPage() {
                 </div>
               </ConsolePanel>
 
-              <ConsolePanel title="Notes and AI Summary" description="Use this for call prep, follow-up drafting, and handoff context.">
-                <div className="space-y-4">
-                  <div className="rounded-[22px] border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ops-muted)]">AI Summary</p>
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-text)]">
-                      {String(context.aiSummary || lead.ai_qualification || 'No AI summary yet.')}
-                    </p>
-                  </div>
-                  <div className="rounded-[22px] border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ops-muted)]">Internal Notes</p>
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-text)]">
-                      {String(context.notes || lead.description || 'No notes yet.')}
-                    </p>
-                  </div>
+              <ConsolePanel title="AI Summary" description="Use this for call prep, follow-up drafting, and handoff context.">
+                <div className="rounded-[22px] border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ops-muted)]">AI Summary</p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-text)]">
+                    {String(context.aiSummary || lead.ai_qualification || 'No AI summary yet.')}
+                  </p>
                 </div>
               </ConsolePanel>
 
