@@ -5,11 +5,14 @@ import { getClerkProxyUrl } from '@/lib/clerk-proxy-config';
 import { getGatewayLoginUrl } from '@/lib/auth/gateway-login';
 import { PORTAL_APP_PATH, shouldRouteRootToPortalApp } from '@/lib/auth/portal-entry-host';
 
+const GATEWAY_FALLBACK_COOKIE = 'awp_gateway_fallback';
+
 const isPublicRoute = createRouteMatcher([
   '/',
   '/login(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
+  '/gateway-fallback',
   '/account-unassigned(.*)',
   '/module-disabled(.*)',
   '/about(.*)',
@@ -68,6 +71,11 @@ export default clerkMiddleware(
       }
       return NextResponse.next();
     }
+
+    if (req.cookies.has(GATEWAY_FALLBACK_COOKIE)) {
+      return NextResponse.next();
+    }
+
     const { userId } = await auth();
     if (!userId) {
       const url = req.nextUrl.clone();

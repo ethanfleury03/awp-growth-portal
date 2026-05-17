@@ -11,6 +11,7 @@ import {
   verifyGatewayPortalAccess,
   type GatewayAccessAllowed,
 } from '@/lib/auth/gateway-access';
+import { readGatewayFallbackSession } from '@/lib/auth/gateway-fallback';
 import type { SessionUser, UserRole } from '@/lib/auth/types';
 
 /**
@@ -25,6 +26,9 @@ export async function getPortalUser(): Promise<SessionUser | null> {
 }
 
 async function resolvePortalUser(): Promise<SessionUser | null> {
+  const fallbackUser = await resolveGatewayFallbackPortalUser();
+  if (fallbackUser) return fallbackUser;
+
   const { userId } = await auth();
   if (!userId) return null;
 
@@ -156,6 +160,83 @@ async function resolvePortalUser(): Promise<SessionUser | null> {
     companyId,
     branchId: branchId || null,
     avatarInitials: initials,
+  };
+}
+
+async function resolveGatewayFallbackPortalUser(): Promise<SessionUser | null> {
+  const fallback = await readGatewayFallbackSession();
+  if (!fallback?.email) return null;
+
+  const normalizedEmail = fallback.email.trim().toLowerCase();
+  const rows = await sql`
+    SELECT id, company_id, email, name, role, is_active
+    FROM portal_users
+    WHERE lower(email) = ${normalizedEmail}
+    LIMIT 1
+  `;
+  const row = rows[0] as
+    | {
+        id?: string;
+        company_id?: string | null;
+        email?: string;
+        name?: string | null;
+        role?: string | null;
+        is_active?: boolean | number | string;
+      }
+    | undefined;
+  if (!row?.id || !row.company_id || row.is_active === false || row.is_active === 0 || row.is_active === '0') {
+    return null;
+  }
+
+  const portalRowId = String(row.id);
+  const companyId = String(row.company_id);
+  let role = normalizeGatewayRole(String(row.role || fallback.role || 'staff'));
+  let branchId = '';
+
+  const memberships = await sql`
+    SELECT branch_id, role
+    FROM user_memberships
+    WHERE user_id = ${portalRowId}
+      AND company_id = ${companyId}
+      AND status = 'active'
+    ORDER BY CASE WHEN branch_id IS NULL THEN 1 ELSE 0 END, created_at ASC
+    LIMIT 1
+  `;
+  const membership = memberships[0] as { branch_id?: string | null; role?: string | null } | undefined;
+  if (!membership) return null;
+  if (membership.branch_id) branchId = String(membership.branch_id);
+  if (membership.role) role = normalizeGatewayRole(String(membership.role));
+
+  if (!branchId) {
+    await ensurePrimaryBranch(companyId);
+    const branches = await sql`
+      SELECT id
+      FROM branches
+      WHERE company_id = ${companyId}
+      ORDER BY is_primary DESC, created_at ASC
+      LIMIT 1
+    `;
+    branchId = String((branches[0] as { id?: string } | undefined)?.id || '');
+  }
+
+  const email = String(row.email || normalizedEmail).trim().toLowerCase();
+  const name = String(row.name || fallback.name || email);
+  const parts = name.split(/\s+/).filter(Boolean);
+  const avatarInitials =
+    parts
+      .map((w) => w[0] ?? '')
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || email.slice(0, 2).toUpperCase();
+
+  return {
+    id: portalRowId,
+    email,
+    name,
+    role,
+    companyId,
+    branchId: branchId || null,
+    avatarInitials,
   };
 }
 
