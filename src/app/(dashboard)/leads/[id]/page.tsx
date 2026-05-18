@@ -14,7 +14,7 @@ import {
 } from '@/components/ops/ui';
 import { pipelineLabel, sourceFromSlug } from '@/lib/awp/config';
 import { formatCurrency, formatDateLabel, parseJsonSafely } from '@/lib/ops';
-import { ArrowLeft, Bot, CalendarClock, FileText, Loader2, Mail, MessageSquareText, Send, Users } from 'lucide-react';
+import { ArrowLeft, Bot, CalendarClock, FileText, Loader2, Mail, MessageSquareText, Pencil, Save, Send, Trash2, Users, X } from 'lucide-react';
 
 type Row = Record<string, unknown>;
 type LeadNote = {
@@ -24,6 +24,7 @@ type LeadNote = {
   author_email: string | null;
   body: string;
   created_at: string;
+  updated_at?: string | null;
 };
 
 function contextForLead(lead: Row) {
@@ -62,6 +63,12 @@ function noteTimestamp(value: string) {
   }).format(date);
 }
 
+function noteUpdatedLabel(note: LeadNote) {
+  if (!note.updated_at || note.updated_at === note.created_at) return '';
+  const timestamp = noteTimestamp(note.updated_at);
+  return timestamp ? `Edited ${timestamp}` : 'Edited';
+}
+
 export default function LeadDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [lead, setLead] = useState<Row | null>(null);
@@ -69,10 +76,13 @@ export default function LeadDetailPage() {
   const [notes, setNotes] = useState<LeadNote[]>([]);
   const [err, setErr] = useState('');
   const [noteDraft, setNoteDraft] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editNoteDraft, setEditNoteDraft] = useState('');
   const [noteError, setNoteError] = useState('');
   const [loading, setLoading] = useState(true);
   const [notesLoading, setNotesLoading] = useState(true);
   const [noteSaving, setNoteSaving] = useState(false);
+  const [noteActionId, setNoteActionId] = useState<string | null>(null);
   const notesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -147,6 +157,65 @@ export default function LeadDetailPage() {
       setNoteError(e instanceof Error ? e.message : 'Failed to save note.');
     } finally {
       setNoteSaving(false);
+    }
+  }
+
+  function startEditingNote(note: LeadNote) {
+    setNoteError('');
+    setEditingNoteId(note.id);
+    setEditNoteDraft(note.body);
+  }
+
+  function cancelEditingNote() {
+    setEditingNoteId(null);
+    setEditNoteDraft('');
+  }
+
+  async function handleUpdateNote(noteId: string) {
+    const body = editNoteDraft.trim();
+    if (!body || noteActionId) {
+      setNoteError('Note body is required.');
+      return;
+    }
+
+    setNoteActionId(noteId);
+    setNoteError('');
+    try {
+      const res = await fetch(`/api/leads/${id}/notes`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ noteId, body }),
+      });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || 'Failed to update note.');
+      setNotes((current) => current.map((note) => (note.id === noteId ? (j.note as LeadNote) : note)));
+      cancelEditingNote();
+    } catch (e) {
+      setNoteError(e instanceof Error ? e.message : 'Failed to update note.');
+    } finally {
+      setNoteActionId(null);
+    }
+  }
+
+  async function handleDeleteNote(note: LeadNote) {
+    if (noteActionId || !confirm('Delete this note?')) return;
+
+    const previous = notes;
+    setNotes((current) => current.filter((item) => item.id !== note.id));
+    if (editingNoteId === note.id) cancelEditingNote();
+    setNoteActionId(note.id);
+    setNoteError('');
+    try {
+      const res = await fetch(`/api/leads/${id}/notes?noteId=${encodeURIComponent(note.id)}`, {
+        method: 'DELETE',
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || 'Failed to delete note.');
+    } catch (e) {
+      setNotes(previous);
+      setNoteError(e instanceof Error ? e.message : 'Failed to delete note.');
+    } finally {
+      setNoteActionId(null);
     }
   }
 
@@ -313,14 +382,78 @@ export default function LeadDetailPage() {
                               {noteInitials(note)}
                             </div>
                             <div className="min-w-0 flex-1 rounded-[20px] border border-[var(--ops-border)] bg-[var(--ops-surface)] px-4 py-3">
-                              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                                <p className="text-sm font-semibold text-[var(--ops-text)]">{noteAuthor(note)}</p>
-                                <span className="text-xs capitalize text-[var(--ops-muted)]">{noteRoleLabel(note.author_role)}</span>
-                                {noteTimestamp(note.created_at) ? (
-                                  <span className="text-xs text-[var(--ops-muted)]">{noteTimestamp(note.created_at)}</span>
-                                ) : null}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                                    <p className="text-sm font-semibold text-[var(--ops-text)]">{noteAuthor(note)}</p>
+                                    <span className="text-xs capitalize text-[var(--ops-muted)]">{noteRoleLabel(note.author_role)}</span>
+                                    {noteTimestamp(note.created_at) ? (
+                                      <span className="text-xs text-[var(--ops-muted)]">{noteTimestamp(note.created_at)}</span>
+                                    ) : null}
+                                  </div>
+                                  {noteUpdatedLabel(note) ? (
+                                    <p className="mt-1 text-xs text-[var(--ops-muted)]">{noteUpdatedLabel(note)}</p>
+                                  ) : null}
+                                </div>
+                                <div className="flex shrink-0 items-center gap-1">
+                                  <button
+                                    type="button"
+                                    title="Edit note"
+                                    aria-label="Edit note"
+                                    disabled={Boolean(noteActionId)}
+                                    onClick={() => startEditingNote(note)}
+                                    className="grid h-7 w-7 place-items-center rounded-md text-[var(--ops-muted)] transition hover:bg-[var(--ops-surface-subtle)] hover:text-[var(--ops-text)] disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    title="Delete note"
+                                    aria-label="Delete note"
+                                    disabled={Boolean(noteActionId)}
+                                    onClick={() => void handleDeleteNote(note)}
+                                    className="grid h-7 w-7 place-items-center rounded-md text-[var(--ops-muted)] transition hover:bg-[var(--ops-danger-soft)] hover:text-[var(--ops-danger-ink)] disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    {noteActionId === note.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                  </button>
+                                </div>
                               </div>
-                              <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-[var(--ops-text)]">{note.body}</p>
+                              {editingNoteId === note.id ? (
+                                <div className="mt-3 space-y-2">
+                                  <textarea
+                                    value={editNoteDraft}
+                                    onChange={(event) => setEditNoteDraft(event.target.value)}
+                                    maxLength={4000}
+                                    rows={4}
+                                    className="w-full resize-none rounded-[16px] border border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-3 py-2 text-sm leading-6 text-[var(--ops-text)] outline-none transition focus:border-[var(--ops-brand)] focus:ring-2 focus:ring-[var(--ops-brand-soft)]"
+                                  />
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="text-xs text-[var(--ops-muted)]">{editNoteDraft.trim().length.toLocaleString()} / 4,000</span>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        type="button"
+                                        disabled={noteActionId === note.id}
+                                        onClick={cancelEditingNote}
+                                        className="inline-flex h-8 items-center gap-1 rounded-md border border-[var(--ops-border)] px-2.5 text-xs font-semibold text-[var(--ops-text)] transition hover:bg-[var(--ops-surface-subtle)] disabled:cursor-not-allowed disabled:opacity-50"
+                                      >
+                                        <X className="h-3.5 w-3.5" />
+                                        Cancel
+                                      </button>
+                                      <button
+                                        type="button"
+                                        disabled={noteActionId === note.id || !editNoteDraft.trim()}
+                                        onClick={() => void handleUpdateNote(note.id)}
+                                        className="inline-flex h-8 items-center gap-1 rounded-md bg-[var(--ops-brand)] px-2.5 text-xs font-semibold text-white transition hover:bg-[var(--ops-brand-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+                                      >
+                                        {noteActionId === note.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                                        Save
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-[var(--ops-text)]">{note.body}</p>
+                              )}
                             </div>
                           </div>
                         ))}

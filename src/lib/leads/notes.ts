@@ -13,6 +13,7 @@ export type LeadNote = {
   author_email: string | null;
   body: string;
   created_at: string;
+  updated_at?: string | null;
 };
 
 type LeadContext = Record<string, unknown>;
@@ -58,6 +59,7 @@ function normalizeLeadNotes(value: unknown): LeadNote[] {
       author_email: note.author_email || null,
       body: note.body,
       created_at: note.created_at || new Date(0).toISOString(),
+      updated_at: note.updated_at || null,
     }))
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 }
@@ -128,5 +130,77 @@ export async function addLeadNote(input: {
     `;
 
     return note;
+  });
+}
+
+export async function updateLeadNote(input: {
+  leadId: string;
+  companyId: string;
+  noteId: string;
+  body: string;
+}): Promise<LeadNote> {
+  const parsed = normalizeLeadNoteBody(input.body);
+  if (!parsed.ok) throw new Error(parsed.error);
+
+  return withTenantContext(input.companyId, async () => {
+    const context = await getCompanyLeadContext(input.leadId, input.companyId);
+    if (!context) {
+      throw new Error('Lead not found.');
+    }
+
+    const now = new Date().toISOString();
+    let updatedNote: LeadNote | null = null;
+    const leadNotes = normalizeLeadNotes(context.leadNotes).map((note) => {
+      if (note.id !== input.noteId) return note;
+      updatedNote = {
+        ...note,
+        body: parsed.body,
+        updated_at: now,
+      };
+      return updatedNote;
+    });
+
+    if (!updatedNote) {
+      throw new Error('Note not found.');
+    }
+
+    await sql`
+      UPDATE leads
+      SET
+        lead_context_json = ${JSON.stringify({ ...context, leadNotes })},
+        updated_at = datetime('now')
+      WHERE id = ${input.leadId}
+        AND company_id = ${input.companyId}
+    `;
+
+    return updatedNote;
+  });
+}
+
+export async function deleteLeadNote(input: {
+  leadId: string;
+  companyId: string;
+  noteId: string;
+}): Promise<void> {
+  return withTenantContext(input.companyId, async () => {
+    const context = await getCompanyLeadContext(input.leadId, input.companyId);
+    if (!context) {
+      throw new Error('Lead not found.');
+    }
+
+    const leadNotes = normalizeLeadNotes(context.leadNotes);
+    const nextLeadNotes = leadNotes.filter((note) => note.id !== input.noteId);
+    if (nextLeadNotes.length === leadNotes.length) {
+      throw new Error('Note not found.');
+    }
+
+    await sql`
+      UPDATE leads
+      SET
+        lead_context_json = ${JSON.stringify({ ...context, leadNotes: nextLeadNotes })},
+        updated_at = datetime('now')
+      WHERE id = ${input.leadId}
+        AND company_id = ${input.companyId}
+    `;
   });
 }
