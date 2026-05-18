@@ -38,6 +38,8 @@ export function isStagingEnvironment(env: Env = process.env): boolean {
 }
 
 export function isProductionEnvironment(env: Env = process.env): boolean {
+  const vercelEnv = env.VERCEL_ENV?.trim().toLowerCase();
+  if (vercelEnv === 'production') return true;
   return getAppEnvironment(env).toLowerCase() === 'production';
 }
 

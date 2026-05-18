@@ -9,6 +9,7 @@ describe('AWP demo seed guard', () => {
   it('does not run demo seeding in production by default', () => {
     expect(isAwpDemoSeedEnabled(env({ APP_ENV: 'production' }))).toBe(false);
     expect(isAwpDemoSeedEnabled(env({ VERCEL_ENV: 'production', NODE_ENV: 'production' }))).toBe(false);
+    expect(isAwpDemoSeedEnabled(env({ APP_ENV: 'staging', VERCEL_ENV: 'production' }))).toBe(false);
   });
 
   it('allows demo seeding in staging and preview environments', () => {

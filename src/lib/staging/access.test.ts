@@ -3,6 +3,7 @@ import { canAccessStaging } from '@/lib/staging/access';
 import {
   getConfiguredStagingPortalUrl,
   getStagingHealthUrl,
+  isProductionEnvironment,
   isStagingEnvironment,
 } from '@/lib/staging/config';
 
@@ -13,6 +14,11 @@ describe('staging environment helpers', () => {
     expect(isStagingEnvironment(env({ APP_ENV: 'staging' }))).toBe(true);
     expect(isStagingEnvironment(env({ VERCEL_ENV: 'preview' }))).toBe(false);
     expect(isStagingEnvironment(env({ APP_ENV: 'production' }))).toBe(false);
+  });
+
+  it('treats Vercel production as production even if APP_ENV is mis-set', () => {
+    expect(isProductionEnvironment(env({ APP_ENV: 'staging', VERCEL_ENV: 'production' }))).toBe(true);
+    expect(isProductionEnvironment(env({ APP_ENV: 'staging', VERCEL_ENV: 'preview' }))).toBe(false);
   });
 
   it('allows active portal roles inside staging', () => {
