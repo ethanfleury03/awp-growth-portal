@@ -162,9 +162,15 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     }
 
+    const deletedLeads = await sql`
+      DELETE FROM leads
+      WHERE customer_id = ${id} AND company_id = ${portal.companyId}
+      RETURNING id
+    `;
+
     await sql`DELETE FROM customers WHERE id = ${id} AND company_id = ${portal.companyId}`;
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, deletedLeads: deletedLeads.length });
   } catch (error: unknown) {
     console.error('Error deleting customer:', error);
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
