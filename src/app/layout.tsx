@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { absoluteUrl, getSiteUrl } from "@/lib/marketing/site";
 import { ConsentManager } from "@/components/consent/ConsentManager";
+import { PwaServiceWorker } from "@/app/pwa-service-worker";
 import { getClerkProxyUrl } from "@/lib/clerk-proxy-config";
 
 const clerkLocalization = {
@@ -45,6 +46,20 @@ export const metadata: Metadata = {
   description:
     "WNY Automation Portal gives clients one secure place to manage automations, leads, workflows, reporting, and account activity.",
   metadataBase: new URL(getSiteUrl()),
+  applicationName: "WNY Automation",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "WNY Automation",
+    statusBarStyle: "default",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: [{ url: "/icon", type: "image/png", sizes: "512x512" }],
+    apple: [{ url: "/apple-icon", type: "image/png", sizes: "180x180" }],
+  },
   alternates: {
     canonical: "/",
   },
@@ -74,6 +89,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
   themeColor: "#0E1A2B",
 };
 
@@ -98,6 +116,7 @@ export default async function RootLayout({
           <div className="flex-1 min-h-0">{children}</div>
           <ConsentManager />
         </ClerkProvider>
+        <PwaServiceWorker />
       </body>
     </html>
   );

@@ -65,7 +65,7 @@ export default function CustomerDetailPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 bg-gray-50">
-      <main className="flex-1 min-h-0 overflow-auto p-8 max-w-4xl mx-auto space-y-6 w-full">
+      <main className="flex-1 min-h-0 overflow-auto p-4 sm:p-6 xl:p-8 max-w-4xl mx-auto space-y-6 w-full">
         <Link
           href="/customers"
           className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline"

@@ -39,6 +39,7 @@ const isPublicRoute = createRouteMatcher([
   '/_next/(.*)',
   '/favicon.ico',
   '/icon.svg',
+  '/icon',
   '/apple-icon',
   '/manifest.webmanifest',
   '/robots.txt',
