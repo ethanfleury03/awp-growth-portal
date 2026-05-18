@@ -139,6 +139,7 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     defaultEnabled: true,
     requiredRole: 'staff',
     dependencies: ['crm'],
+    stagingOnly: true,
   },
   {
     key: 'ai-assistant',

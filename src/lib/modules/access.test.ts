@@ -62,11 +62,13 @@ describe('module access', () => {
     const previous = process.env.APP_ENV;
     process.env.APP_ENV = 'production';
     try {
-      const access = await getModuleAccess({ ...user, role: 'super_admin' }, 'marketing');
-      expect(access.ok).toBe(false);
-      if (!access.ok) {
-        expect(access.status).toBe(403);
-        expect(access.error).toBe('Module not available');
+      for (const moduleKey of ['marketing', 'outreach'] as const) {
+        const access = await getModuleAccess({ ...user, role: 'super_admin' }, moduleKey);
+        expect(access.ok).toBe(false);
+        if (!access.ok) {
+          expect(access.status).toBe(403);
+          expect(access.error).toBe('Module not available');
+        }
       }
     } finally {
       if (previous === undefined) delete process.env.APP_ENV;
@@ -74,14 +76,17 @@ describe('module access', () => {
     }
   });
 
-  it('allows marketing when staging enables it', async () => {
+  it('allows staging-only modules when staging enables them', async () => {
     const previous = process.env.APP_ENV;
     process.env.APP_ENV = 'staging';
-    mockedGetEnabledModules.mockResolvedValueOnce(['dashboard', 'crm', 'marketing']);
+    mockedGetEnabledModules.mockResolvedValue(['dashboard', 'crm', 'marketing', 'outreach']);
     try {
-      const access = await getModuleAccess(user, 'marketing');
-      expect(access.ok).toBe(true);
+      for (const moduleKey of ['marketing', 'outreach'] as const) {
+        const access = await getModuleAccess(user, moduleKey);
+        expect(access.ok).toBe(true);
+      }
     } finally {
+      mockedGetEnabledModules.mockResolvedValue(['dashboard', 'crm']);
       if (previous === undefined) delete process.env.APP_ENV;
       else process.env.APP_ENV = previous;
     }
