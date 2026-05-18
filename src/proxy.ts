@@ -12,6 +12,7 @@ const isStagingDummyAuth =
   process.env.APP_ENV === 'staging' &&
   process.env.STAGING_USE_CLERK_SATELLITES !== '1' &&
   Boolean(process.env.PORTAL_GATEWAY_FALLBACK_SECRET);
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -53,7 +54,31 @@ const isPublicRoute = createRouteMatcher([
   '/twitter-image',
 ]);
 
+function requestHost(req: NextRequest) {
+  const forwardedHost = req.headers.get('x-forwarded-host') || req.headers.get('host');
+  return (forwardedHost?.split(',')[0]?.trim().split(':')[0] || req.nextUrl.hostname).toLowerCase();
+}
+
+function isKnownNonProductionHost(host: string) {
+  return LOCAL_HOSTS.has(host) || host.startsWith('staging.') || host.includes('.staging.');
+}
+
+function shouldBlockProductionMockRoute(req: NextRequest) {
+  const pathname = req.nextUrl.pathname;
+  if (
+    !pathname.startsWith('/api/receptionist/mock/') &&
+    pathname !== '/api/receptionist/scenarios'
+  ) {
+    return false;
+  }
+  return !isKnownNonProductionHost(requestHost(req));
+}
+
 function handleSharedRouting(req: NextRequest) {
+  if (shouldBlockProductionMockRoute(req)) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   if (
     req.nextUrl.pathname === '/admin' ||
     req.nextUrl.pathname.startsWith('/admin/') ||
