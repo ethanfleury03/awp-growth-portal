@@ -26,7 +26,7 @@ function getClientIp(request: Request) {
   );
 }
 
-function copyRequestHeaders(request: Request, targetHost: string, clerkProxyUrl: string) {
+function copyRequestHeaders(request: Request, clerkProxyUrl: string) {
   const headers = new Headers();
 
   request.headers.forEach((value, key) => {
@@ -36,7 +36,6 @@ function copyRequestHeaders(request: Request, targetHost: string, clerkProxyUrl:
   });
 
   const requestUrl = new URL(request.url);
-  headers.set('Host', targetHost);
   headers.set('Accept-Encoding', 'identity');
   headers.set('Clerk-Proxy-Url', clerkProxyUrl);
   headers.set('Clerk-Secret-Key', process.env.CLERK_SECRET_KEY || '');
@@ -89,7 +88,7 @@ async function proxyClerkRequest(request: Request) {
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
   const init: RequestInit & { duplex?: 'half' } = {
     method: request.method,
-    headers: copyRequestHeaders(request, targetUrl.host, clerkProxyUrl),
+    headers: copyRequestHeaders(request, clerkProxyUrl),
     body: hasBody ? request.body : undefined,
     redirect: 'manual',
   };
