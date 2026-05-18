@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function AssetsRedirectPage() {
-  redirect('/marketing?tab=assets');
+  redirect('/marketing');
 }

@@ -81,9 +81,9 @@ export async function GET(request: Request) {
 function growthRecordHref(recordType: string) {
   if (recordType === 'campaign') return '/outreach?tab=campaigns';
   if (recordType === 'lead_list') return '/outreach?tab=lists';
-  if (recordType === 'asset') return '/marketing?tab=assets';
-  if (recordType === 'seo_task') return '/marketing?tab=seo';
-  if (recordType === 'project') return '/marketing?tab=projects';
+  if (recordType === 'asset') return '/marketing';
+  if (recordType === 'seo_task') return '/marketing';
+  if (recordType === 'project') return '/marketing';
   if (recordType === 'ai_prompt_template') return '/ai-assistant';
   return '/app';
 }

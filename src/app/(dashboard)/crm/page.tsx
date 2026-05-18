@@ -1,9 +1,6 @@
 'use client';
 
-import Link from 'next/link';
 import { LeadPipelineBoard } from '@/components/awp/lead-pipeline-board';
-import { CrmWorkspaceTabs } from '@/components/awp/crm-tabs';
-import { opsButtonClass } from '@/components/ops/ui';
 import { BriefcaseBusiness } from 'lucide-react';
 
 export default function CrmPage() {
@@ -24,12 +21,6 @@ export default function CrmPage() {
                     Manage cabin opportunities in one configurable pipeline.
                   </p>
                 </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <CrmWorkspaceTabs active="pipeline" />
-                <Link href="/crm/marketing-agent" className={opsButtonClass('secondary', 'sm')}>
-                  Open Agent
-                </Link>
               </div>
             </div>
           </header>

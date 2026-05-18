@@ -1,5 +1,5 @@
-import { MarketingAgentPage } from '@/components/awp/marketing-agent-page';
+import { redirect } from 'next/navigation';
 
 export default function CrmMarketingAgentPage() {
-  return <MarketingAgentPage />;
+  redirect('/marketing');
 }

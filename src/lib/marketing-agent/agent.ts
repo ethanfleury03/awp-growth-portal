@@ -909,7 +909,7 @@ async function executeTool(input: {
       status: 'succeeded',
       title,
       description: 'Created a draft email asset for review.',
-      href: '/marketing?tab=assets',
+      href: '/marketing',
       recordId: String(record.id),
       output: { id: record.id },
     };
@@ -974,7 +974,7 @@ async function executeTool(input: {
       status: 'succeeded',
       title,
       description: 'Created a client-facing document draft in the output pad.',
-      href: '/marketing?tab=assets',
+      href: '/marketing',
       recordId: String(record.id),
       output: { id: record.id, documentType: textValue(args.documentType, 'Client Document') },
     };
@@ -1029,7 +1029,7 @@ async function executeTool(input: {
       status: 'succeeded',
       title,
       description: 'Created a marketing follow-up task.',
-      href: '/marketing?tab=projects',
+      href: '/marketing',
       recordId: String(record.id),
       output: { id: record.id },
     };

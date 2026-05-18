@@ -11,7 +11,6 @@ import {
   OpsTextarea,
   StatusBadge,
 } from '@/components/ops/ui';
-import { CrmWorkspaceTabs } from '@/components/awp/crm-tabs';
 import { ASSISTANT_MODEL_OPTIONS, DEFAULT_ASSISTANT_MODEL_ID, normalizeAssistantModelId } from '@/lib/ai/models';
 import { formatDateLabel, formatDateTimeLabel } from '@/lib/ops';
 import type { LucideIcon } from 'lucide-react';
@@ -618,12 +617,11 @@ export function MarketingAgentPage() {
         <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-4">
           <AppPageHeader
             icon={Bot}
-            eyebrow="Cabin Buyer CRM"
+            eyebrow="Marketing"
             title="Marketing Agent"
             description="Autonomous CRM-aware growth workspace for lists, campaigns, email drafts, memory, and approval-gated outreach."
             actions={
               <div className="flex flex-wrap items-center gap-2">
-                <CrmWorkspaceTabs active="marketing-agent" />
                 <OpsButton type="button" variant="primary" size="sm" onClick={newMission}>
                   <MessageSquarePlus className="h-4 w-4" />
                   New Mission

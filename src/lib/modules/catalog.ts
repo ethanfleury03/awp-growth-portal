@@ -123,7 +123,7 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     flagKey: 'module.marketing',
     label: 'Marketing',
     route: '/marketing',
-    description: 'Marketing performance and website growth tools.',
+    description: 'AI marketing agent for campaigns, lists, drafts, and growth assets.',
     defaultEnabled: true,
     requiredRole: 'staff',
   },
