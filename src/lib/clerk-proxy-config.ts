@@ -11,7 +11,17 @@ function clean(value: string | undefined) {
   return (value || '').trim();
 }
 
+function isStagingFallbackAuthEnabled() {
+  return process.env.APP_ENV === 'staging' && Boolean(clean(process.env.PORTAL_GATEWAY_FALLBACK_SECRET));
+}
+
+function shouldUseClerkSatellitesInStaging() {
+  return process.env.STAGING_USE_CLERK_SATELLITES === '1';
+}
+
 export function getClerkProxyUrl() {
+  if (isStagingFallbackAuthEnabled() && !shouldUseClerkSatellitesInStaging()) return undefined;
+
   const explicitProxyUrl = clean(process.env.NEXT_PUBLIC_CLERK_PROXY_URL) || clean(process.env.CLERK_PROXY_URL);
   if (explicitProxyUrl) return assertAllowedClerkProxyUrl('NEXT_PUBLIC_CLERK_PROXY_URL', explicitProxyUrl);
 
@@ -104,6 +114,7 @@ export function assertStagingClerkPublishableKey() {
 }
 
 export function isClerkSatellite() {
+  if (isStagingFallbackAuthEnabled() && !shouldUseClerkSatellitesInStaging()) return false;
   return process.env.NEXT_PUBLIC_CLERK_IS_SATELLITE === 'true' || process.env.APP_ENV === 'staging';
 }
 
@@ -129,11 +140,17 @@ function getGatewayAuthBaseUrl() {
 }
 
 export function getClerkSignInUrl() {
+  if (isStagingFallbackAuthEnabled() && !shouldUseClerkSatellitesInStaging()) {
+    return `${getGatewayAuthBaseUrl()}/sign-in?redirect_url=/launch`;
+  }
   if (!isClerkSatellite()) return '/sign-in';
   return `${getGatewayAuthBaseUrl()}/sign-in?redirect_url=/launch`;
 }
 
 export function getClerkSignUpUrl() {
+  if (isStagingFallbackAuthEnabled() && !shouldUseClerkSatellitesInStaging()) {
+    return `${getGatewayAuthBaseUrl()}/sign-in?redirect_url=/launch`;
+  }
   if (!isClerkSatellite()) return '/sign-up';
   return `${getGatewayAuthBaseUrl()}/sign-up?redirect_url=/launch`;
 }
