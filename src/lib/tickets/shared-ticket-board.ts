@@ -6,6 +6,8 @@ export const TICKET_COMMENT_MAX_LENGTH = 4000;
 export const TICKET_TITLE_MAX_LENGTH = 160;
 export const TICKET_DESCRIPTION_MAX_LENGTH = 4000;
 
+export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
+
 const VALID_TICKET_PRIORITIES = new Set(['low', 'normal', 'high', 'urgent']);
 
 export type TicketBucket = {
@@ -49,7 +51,7 @@ export function normalizeTicketCreateInput(input: {
       ok: true;
       title: string;
       description: string | null;
-      priority: 'low' | 'normal' | 'high' | 'urgent';
+      priority: TicketPriority;
       dueDate: string | null;
     }
   | { ok: false; error: string } {
@@ -89,8 +91,36 @@ export function normalizeTicketCreateInput(input: {
     ok: true,
     title,
     description: description || null,
-    priority: priority as 'low' | 'normal' | 'high' | 'urgent',
+    priority: priority as TicketPriority,
     dueDate: dueDate || null,
+  };
+}
+
+export function normalizeTicketUpdateInput(input: {
+  title?: unknown;
+  description?: unknown;
+  priority?: unknown;
+  dueDate?: unknown;
+  bucketId?: unknown;
+}):
+  | {
+      ok: true;
+      title: string;
+      description: string | null;
+      priority: TicketPriority;
+      dueDate: string | null;
+      bucketId: string;
+    }
+  | { ok: false; error: string } {
+  const parsed = normalizeTicketCreateInput(input);
+  if (!parsed.ok) return parsed;
+
+  const bucketId = String(input.bucketId || '').trim();
+  if (!bucketId) return { ok: false, error: 'Status is required.' };
+
+  return {
+    ...parsed,
+    bucketId,
   };
 }
 
@@ -157,7 +187,7 @@ export async function createTicket(input: {
   user: SessionUser;
   title: string;
   description: string | null;
-  priority: 'low' | 'normal' | 'high' | 'urgent';
+  priority: TicketPriority;
   dueDate: string | null;
 }) {
   return withTenantContext(input.user.companyId, async () => {
@@ -219,6 +249,105 @@ export async function createTicket(input: {
       latest_comment_at: null,
       commented_by_current_user: 0,
     };
+  });
+}
+
+export async function updateTicket(input: {
+  user: SessionUser;
+  ticketId: string;
+  title: string;
+  description: string | null;
+  priority: TicketPriority;
+  dueDate: string | null;
+  bucketId: string;
+}) {
+  return withTenantContext(input.user.companyId, async () => {
+    const bucketRows = await sql`
+      SELECT id, name, color, sort_order, is_active
+      FROM admin_ticket_buckets
+      WHERE id = ${input.bucketId}
+        AND is_active = true
+      LIMIT 1
+    `;
+    if (!bucketRows[0]) {
+      throw new Error('Status not found.');
+    }
+
+    const existingRows = await sql`
+      SELECT id, bucket_id, sort_order
+      FROM admin_tickets
+      WHERE id = ${input.ticketId}
+        AND company_id = ${input.user.companyId}
+      LIMIT 1
+    `;
+    const existing = existingRows[0];
+    if (!existing) {
+      throw new Error('Ticket not found.');
+    }
+
+    let sortOrder = Number(existing.sort_order || 0);
+    if (String(existing.bucket_id) !== input.bucketId) {
+      const orderRows = await sql`
+        SELECT COALESCE(MAX(sort_order), 0) AS max_sort_order
+        FROM admin_tickets
+        WHERE company_id = ${input.user.companyId}
+          AND bucket_id = ${input.bucketId}
+      `;
+      sortOrder = Number(orderRows[0]?.max_sort_order || 0) + 1;
+    }
+
+    await sql`
+      UPDATE admin_tickets
+      SET bucket_id = ${input.bucketId},
+          title = ${input.title},
+          description = ${input.description},
+          priority = ${input.priority},
+          due_date = ${input.dueDate},
+          sort_order = ${sortOrder},
+          updated_by_user_id = ${input.user.id},
+          updated_at = NOW()
+      WHERE id = ${input.ticketId}
+        AND company_id = ${input.user.companyId}
+      RETURNING *
+    `;
+
+    const detail = await getCompanyTicketDetail(input.ticketId, input.user.companyId);
+    if (!detail) {
+      throw new Error('Ticket not found.');
+    }
+    return detail.ticket;
+  });
+}
+
+export async function deleteTicket(input: {
+  user: SessionUser;
+  ticketId: string;
+}) {
+  return withTenantContext(input.user.companyId, async () => {
+    const existingRows = await sql`
+      SELECT id
+      FROM admin_tickets
+      WHERE id = ${input.ticketId}
+        AND company_id = ${input.user.companyId}
+      LIMIT 1
+    `;
+    if (!existingRows[0]) {
+      return false;
+    }
+
+    await sql`
+      DELETE FROM admin_ticket_comments
+      WHERE ticket_id = ${input.ticketId}
+        AND company_id = ${input.user.companyId}
+    `;
+
+    const deletedRows = await sql`
+      DELETE FROM admin_tickets
+      WHERE id = ${input.ticketId}
+        AND company_id = ${input.user.companyId}
+      RETURNING id
+    `;
+    return Boolean(deletedRows[0]);
   });
 }
 

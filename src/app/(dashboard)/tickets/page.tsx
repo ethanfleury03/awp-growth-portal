@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock3,
+  Edit3,
   Files,
   Filter,
   Inbox,
@@ -15,9 +16,12 @@ import {
   RefreshCw,
   Search,
   Send,
+  Trash2,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/ops';
+
+type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
 
 type Bucket = {
   id: string;
@@ -70,8 +74,12 @@ type TicketDetailResponse = {
 type CreateTicketDraft = {
   title: string;
   dueDate: string;
-  priority: 'low' | 'normal' | 'high' | 'urgent';
+  priority: TicketPriority;
   description: string;
+};
+
+type EditTicketDraft = CreateTicketDraft & {
+  bucketId: string;
 };
 
 const priorityClass: Record<string, string> = {
@@ -81,7 +89,7 @@ const priorityClass: Record<string, string> = {
   urgent: 'border-[rgba(190,57,82,0.25)] bg-[rgba(190,57,82,0.1)] text-[#be3952]',
 };
 
-const priorityOptions: Array<{ value: CreateTicketDraft['priority']; label: string; description: string }> = [
+const priorityOptions: Array<{ value: TicketPriority; label: string; description: string }> = [
   { value: 'low', label: 'Low', description: 'Nice to have' },
   { value: 'normal', label: 'Normal', description: 'Standard work' },
   { value: 'high', label: 'High', description: 'Needs focus' },
@@ -94,6 +102,16 @@ function emptyTicketDraft(): CreateTicketDraft {
     dueDate: '',
     priority: 'normal',
     description: '',
+  };
+}
+
+function ticketToEditDraft(ticket: Ticket): EditTicketDraft {
+  return {
+    title: ticket.title,
+    dueDate: ticket.due_date ? ticket.due_date.slice(0, 10) : '',
+    priority: priorityOptions.some((option) => option.value === ticket.priority) ? (ticket.priority as TicketPriority) : 'normal',
+    description: ticket.description || '',
+    bucketId: ticket.bucket_id,
   };
 }
 
@@ -137,6 +155,10 @@ export default function TicketsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createDraft, setCreateDraft] = useState<CreateTicketDraft>(() => emptyTicketDraft());
   const [creating, setCreating] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editDraft, setEditDraft] = useState<EditTicketDraft | null>(null);
+  const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const loadBoard = useCallback(async (quiet = false) => {
     if (quiet) setRefreshing(true);
@@ -265,6 +287,64 @@ export default function TicketsPage() {
       setError(err instanceof Error ? err.message : 'Unable to create ticket.');
     } finally {
       setCreating(false);
+    }
+  }
+
+  function startEditTicket(ticket: Ticket) {
+    setEditDraft(ticketToEditDraft(ticket));
+    setError('');
+    setEditOpen(true);
+  }
+
+  async function updateSelectedTicket() {
+    if (!selectedTicket || !editDraft?.title.trim() || updating) return;
+    setUpdating(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/tickets/${selectedTicket.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editDraft.title,
+          dueDate: editDraft.dueDate || null,
+          priority: editDraft.priority,
+          description: editDraft.description,
+          bucketId: editDraft.bucketId,
+        }),
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(json.error || 'Unable to update ticket.');
+      setEditOpen(false);
+      setEditDraft(null);
+      await Promise.all([loadBoard(true), loadDetail(selectedTicket.id)]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to update ticket.');
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  async function deleteSelectedTicket() {
+    if (!selectedTicket || deleting) return;
+    const confirmed = window.confirm(`Delete "${selectedTicket.title}"? This also removes its comments.`);
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/tickets/${selectedTicket.id}`, { method: 'DELETE' });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(json.error || 'Unable to delete ticket.');
+      setSelectedTicketId(null);
+      setDetail(null);
+      setCommentBody('');
+      setEditOpen(false);
+      setEditDraft(null);
+      await loadBoard(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to delete ticket.');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -421,12 +501,15 @@ export default function TicketsPage() {
           loading={detailLoading}
           body={commentBody}
           posting={posting}
+          deleting={deleting}
           onBodyChange={setCommentBody}
           onClose={() => {
             setSelectedTicketId(null);
             setDetail(null);
             setCommentBody('');
           }}
+          onEdit={() => startEditTicket(selectedTicket)}
+          onDelete={() => void deleteSelectedTicket()}
           onPost={postComment}
         />
       ) : null}
@@ -445,6 +528,22 @@ export default function TicketsPage() {
           onCreate={() => void createNewTicket()}
         />
       ) : null}
+
+      {editOpen && editDraft ? (
+        <EditTicketDrawer
+          draft={editDraft}
+          buckets={board.buckets}
+          updating={updating}
+          error={error}
+          onDraftChange={(draft) => setEditDraft(draft)}
+          onClose={() => {
+            if (updating) return;
+            setEditOpen(false);
+            setEditDraft(null);
+          }}
+          onUpdate={() => void updateSelectedTicket()}
+        />
+      ) : null}
     </div>
   );
 }
@@ -455,8 +554,11 @@ function TicketDrawer({
   loading,
   body,
   posting,
+  deleting,
   onBodyChange,
   onClose,
+  onEdit,
+  onDelete,
   onPost,
 }: {
   ticket: Ticket;
@@ -464,8 +566,11 @@ function TicketDrawer({
   loading: boolean;
   body: string;
   posting: boolean;
+  deleting: boolean;
   onBodyChange: (value: string) => void;
   onClose: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
   onPost: () => void;
 }) {
   return (
@@ -485,9 +590,28 @@ function TicketDrawer({
               <h2 className="mt-2 text-xl font-semibold leading-7 text-[var(--ops-text)]">{ticket.title}</h2>
               <p className="mt-1 text-sm text-[var(--ops-muted)]">Updated {formatDateTime(ticket.updated_at)}</p>
             </div>
-            <button type="button" onClick={onClose} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--ops-border)] text-[var(--ops-muted)] hover:bg-[var(--ops-surface-subtle)]">
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={onEdit}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm font-semibold text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)]"
+              >
+                <Edit3 className="h-4 w-4" />
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={onDelete}
+                disabled={deleting}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Delete ticket"
+              >
+                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              </button>
+              <button type="button" onClick={onClose} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--ops-border)] text-[var(--ops-muted)] hover:bg-[var(--ops-surface-subtle)]">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -685,6 +809,155 @@ function CreateTicketDrawer({
               >
                 {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                 {creating ? 'Creating' : 'Create ticket'}
+              </button>
+            </div>
+          </div>
+        </form>
+      </aside>
+    </div>
+  );
+}
+
+function EditTicketDrawer({
+  draft,
+  buckets,
+  updating,
+  error,
+  onDraftChange,
+  onClose,
+  onUpdate,
+}: {
+  draft: EditTicketDraft;
+  buckets: Bucket[];
+  updating: boolean;
+  error: string;
+  onDraftChange: (draft: EditTicketDraft) => void;
+  onClose: () => void;
+  onUpdate: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/20 backdrop-blur-sm">
+      <aside className="flex h-full w-full flex-col border-l border-[var(--ops-border-strong)] bg-[var(--ops-surface-strong)] shadow-[0_18px_44px_-28px_rgba(8,18,35,0.5)] sm:max-w-[32rem]">
+        <div className="border-b border-[var(--ops-border)] px-5 py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--ops-muted)]">Edit ticket</p>
+              <h2 className="mt-1 text-xl font-semibold leading-7 text-[var(--ops-text)]">Update Ticket</h2>
+              <p className="mt-1 text-sm text-[var(--ops-muted)]">Change the request, urgency, due date, or board status.</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={updating}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--ops-border)] text-[var(--ops-muted)] hover:bg-[var(--ops-surface-subtle)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <form
+          className="flex min-h-0 flex-1 flex-col"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onUpdate();
+          }}
+        >
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            <div className="space-y-5">
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Status</span>
+                <select
+                  value={draft.bucketId}
+                  onChange={(event) => onDraftChange({ ...draft, bucketId: event.target.value })}
+                  className="h-11 w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
+                >
+                  {buckets.map((bucket) => (
+                    <option key={bucket.id} value={bucket.id}>
+                      {bucket.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Name</span>
+                <input
+                  value={draft.title}
+                  onChange={(event) => onDraftChange({ ...draft, title: event.target.value.slice(0, 160) })}
+                  className="h-11 w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
+                />
+                <span className="mt-1 block text-xs text-[var(--ops-muted)]">{draft.title.trim().length}/160</span>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Date Needed Done By</span>
+                <input
+                  type="date"
+                  value={draft.dueDate}
+                  onChange={(event) => onDraftChange({ ...draft, dueDate: event.target.value })}
+                  className="h-11 w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
+                />
+              </label>
+
+              <div>
+                <p className="mb-2 text-sm font-semibold text-[var(--ops-text)]">Urgency</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {priorityOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => onDraftChange({ ...draft, priority: option.value })}
+                      className={cn(
+                        'rounded-lg border px-3 py-3 text-left transition',
+                        draft.priority === option.value
+                          ? priorityClass[option.value]
+                          : 'border-[var(--ops-border)] bg-white text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)]',
+                      )}
+                    >
+                      <span className="block text-sm font-semibold">{option.label}</span>
+                      <span className="mt-1 block text-xs opacity-80">{option.description}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Description</span>
+                <textarea
+                  value={draft.description}
+                  onChange={(event) => onDraftChange({ ...draft, description: event.target.value.slice(0, 4000) })}
+                  rows={8}
+                  className="w-full resize-none rounded-lg border border-[var(--ops-border)] bg-white px-3 py-2 text-sm leading-6 text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
+                />
+                <span className="mt-1 block text-xs text-[var(--ops-muted)]">{draft.description.trim().length}/4000</span>
+              </label>
+
+              {error ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {error}
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="border-t border-[var(--ops-border)] px-5 py-4">
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={updating}
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--ops-border)] bg-white px-4 text-sm font-semibold text-[var(--ops-text)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={updating || !draft.title.trim() || !draft.bucketId}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#2f6b4f] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Edit3 className="h-4 w-4" />}
+                {updating ? 'Saving' : 'Save changes'}
               </button>
             </div>
           </div>

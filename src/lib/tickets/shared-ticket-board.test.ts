@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeTicketCreateInput, TICKET_TITLE_MAX_LENGTH } from './shared-ticket-board';
+import {
+  normalizeTicketCreateInput,
+  normalizeTicketUpdateInput,
+  TICKET_TITLE_MAX_LENGTH,
+} from './shared-ticket-board';
 
 describe('normalizeTicketCreateInput', () => {
   it('requires a ticket name', () => {
@@ -45,6 +49,21 @@ describe('normalizeTicketCreateInput', () => {
     expect(normalizeTicketCreateInput({ title: 'x'.repeat(TICKET_TITLE_MAX_LENGTH + 1) })).toEqual({
       ok: false,
       error: `Ticket name must be ${TICKET_TITLE_MAX_LENGTH.toLocaleString()} characters or fewer.`,
+    });
+  });
+
+  it('requires a status when updating a ticket', () => {
+    expect(normalizeTicketUpdateInput({ title: 'Ticket', bucketId: '' })).toEqual({
+      ok: false,
+      error: 'Status is required.',
+    });
+    expect(normalizeTicketUpdateInput({ title: 'Ticket', bucketId: 'bucket-1' })).toEqual({
+      ok: true,
+      title: 'Ticket',
+      description: null,
+      priority: 'normal',
+      dueDate: null,
+      bucketId: 'bucket-1',
     });
   });
 });
