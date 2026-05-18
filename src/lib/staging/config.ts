@@ -38,9 +38,13 @@ export function isStagingEnvironment(env: Env = process.env): boolean {
 }
 
 export function isProductionEnvironment(env: Env = process.env): boolean {
+  const productionNames = new Set(['production', 'prod', 'main']);
   const vercelEnv = env.VERCEL_ENV?.trim().toLowerCase();
-  if (vercelEnv === 'production') return true;
-  return getAppEnvironment(env).toLowerCase() === 'production';
+  if (vercelEnv && productionNames.has(vercelEnv)) return true;
+  const appEnv = env.APP_ENV?.trim().toLowerCase();
+  if (appEnv && productionNames.has(appEnv)) return true;
+  if (appEnv || vercelEnv) return false;
+  return env.NODE_ENV === 'production';
 }
 
 export function getCurrentDeploymentUrl(env: Env = process.env): string | null {
