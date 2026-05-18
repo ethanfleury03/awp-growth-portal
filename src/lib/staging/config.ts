@@ -37,6 +37,10 @@ export function isStagingEnvironment(env: Env = process.env): boolean {
   return getAppEnvironment(env).toLowerCase() === 'staging';
 }
 
+export function isProductionEnvironment(env: Env = process.env): boolean {
+  return getAppEnvironment(env).toLowerCase() === 'production';
+}
+
 export function getCurrentDeploymentUrl(env: Env = process.env): string | null {
   return normalizeHttpUrl(
     env.NEXT_PUBLIC_APP_URL ||
