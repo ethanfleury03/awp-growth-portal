@@ -17,11 +17,12 @@ export function getClerkProxyUrl() {
     return `${assertStagingSafeUrl('NEXT_PUBLIC_APP_BASE_URL', appBaseUrl).replace(/\/$/, '')}/clerk-proxy`;
   }
 
-  return 'https://wnyautomation.com/clerk-proxy';
+  return undefined;
 }
 
 export function getClerkProxyVerificationUrl() {
-  return (process.env.CLERK_PROXY_VERIFICATION_URL?.trim() || getClerkProxyUrl()).replace(/\/$/, '');
+  const verificationUrl = process.env.CLERK_PROXY_VERIFICATION_URL?.trim() || getClerkProxyUrl();
+  return verificationUrl?.replace(/\/$/, '');
 }
 
 function assertStagingSafeUrl(name: string, value: string) {
