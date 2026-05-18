@@ -5,7 +5,11 @@ import "./globals.css";
 import { absoluteUrl, getSiteUrl } from "@/lib/marketing/site";
 import { ConsentManager } from "@/components/consent/ConsentManager";
 import { PwaServiceWorker } from "@/app/pwa-service-worker";
-import { getClerkProxyUrl } from "@/lib/clerk-proxy-config";
+import {
+  getClerkRuntimeProps,
+  getClerkSignInUrl,
+  getClerkSignUpUrl,
+} from "@/lib/clerk-proxy-config";
 
 const clerkLocalization = {
   signIn: {
@@ -100,7 +104,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const clerkProxyUrl = getClerkProxyUrl();
+  const clerkRuntimeProps = getClerkRuntimeProps();
 
   return (
     <html lang="en">
@@ -108,10 +112,10 @@ export default async function RootLayout({
         className={`${appSans.variable} ${appMono.variable} antialiased min-h-screen flex flex-col bg-white`}
       >
         <ClerkProvider
-          signInUrl="/sign-in"
-          signUpUrl="/sign-up"
+          signInUrl={getClerkSignInUrl()}
+          signUpUrl={getClerkSignUpUrl()}
           localization={clerkLocalization}
-          {...(clerkProxyUrl ? { proxyUrl: clerkProxyUrl } : {})}
+          {...clerkRuntimeProps}
         >
           <div className="flex-1 min-h-0">{children}</div>
           <ConsentManager />

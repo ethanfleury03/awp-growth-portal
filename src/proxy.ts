@@ -1,13 +1,12 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { getAdminPortalUrl } from '@/lib/auth/admin-redirect';
-import { getClerkProxyUrl } from '@/lib/clerk-proxy-config';
+import { getClerkRuntimeProps } from '@/lib/clerk-proxy-config';
 import { getGatewayLoginUrl } from '@/lib/auth/gateway-login';
 import { PORTAL_APP_PATH, shouldRouteRootToPortalApp } from '@/lib/auth/portal-entry-host';
 
 const GATEWAY_FALLBACK_COOKIE = 'awp_gateway_fallback';
-const clerkProxyUrl = getClerkProxyUrl();
-const clerkMiddlewareOptions = clerkProxyUrl ? { proxyUrl: clerkProxyUrl } : undefined;
+const clerkMiddlewareOptions = getClerkRuntimeProps();
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -90,7 +89,7 @@ export default clerkMiddleware(
     }
     return NextResponse.next();
   },
-  clerkMiddlewareOptions,
+  Object.keys(clerkMiddlewareOptions).length > 0 ? clerkMiddlewareOptions : undefined,
 );
 
 export const config = {
