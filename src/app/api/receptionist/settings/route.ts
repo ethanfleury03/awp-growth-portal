@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isPortalResponse } from '@/lib/auth/tenant';
 import { requireModuleOrRespond } from '@/lib/modules/access';
+import { isReceptionistMockAllowed } from '@/lib/receptionist/mock-access';
 import { receptionistService } from '@/lib/receptionist/service';
 import { patchSettingsSchema } from '@/lib/receptionist/validation';
 
@@ -13,7 +14,10 @@ export async function GET() {
 
   try {
     const settings = await receptionistService.getSettings(portal.companyId);
-    return NextResponse.json({ settings });
+    return NextResponse.json({
+      settings,
+      capabilities: { mockAllowed: isReceptionistMockAllowed() },
+    });
   } catch (error: unknown) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
@@ -25,8 +29,14 @@ async function applySettingsUpdate(request: Request, companyId: string) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
+  if (parsed.data.provider_type === 'mock' && !isReceptionistMockAllowed()) {
+    return NextResponse.json({ error: 'Mock provider is not available in production.' }, { status: 400 });
+  }
   const settings = await receptionistService.updateSettings(companyId, parsed.data);
-  return NextResponse.json({ settings });
+  return NextResponse.json({
+    settings,
+    capabilities: { mockAllowed: isReceptionistMockAllowed() },
+  });
 }
 
 export async function PUT(request: Request) {

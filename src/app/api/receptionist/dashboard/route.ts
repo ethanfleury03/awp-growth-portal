@@ -3,6 +3,7 @@ import { receptionistService } from '@/lib/receptionist/service';
 import { getAppBaseUrl } from '@/lib/receptionist/receptionist-live';
 import { isPortalResponse } from '@/lib/auth/tenant';
 import { requireModuleOrRespond } from '@/lib/modules/access';
+import { isReceptionistMockAllowed } from '@/lib/receptionist/mock-access';
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Unknown error';
@@ -26,6 +27,7 @@ export async function GET() {
         process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_ACCOUNT_SID,
       ),
       toolSecretSet: Boolean(process.env.RETELL_TOOL_SHARED_SECRET),
+      mockAllowed: isReceptionistMockAllowed(),
       appBaseUrl: getAppBaseUrl(),
       voiceWebhookPath: '/api/receptionist/providers/twilio/voice',
       retellWebhookPath: '/api/receptionist/providers/retell/webhook',

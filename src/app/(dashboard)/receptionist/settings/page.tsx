@@ -67,6 +67,7 @@ export default function ReceptionistSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [ok, setOk] = useState('');
+  const [mockAllowed, setMockAllowed] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +81,7 @@ export default function ReceptionistSettingsPage() {
             ...data.settings,
             retell_agent_id: data.settings.retell_agent_id ?? null,
           });
+          setMockAllowed(data.capabilities?.mockAllowed ?? true);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Load failed');
@@ -124,6 +126,7 @@ export default function ReceptionistSettingsPage() {
     setSaving(true);
     setError('');
     setOk('');
+    const providerType = !mockAllowed && settings.provider_type === 'mock' ? 'retell' : settings.provider_type;
     try {
       const res = await fetch('/api/receptionist/settings', {
         method: 'PUT',
@@ -139,7 +142,7 @@ export default function ReceptionistSettingsPage() {
           emergency_keywords_json: settings.emergency_keywords_json,
           booking_rules_json: settings.booking_rules_json,
           default_call_outcome_rules_json: settings.default_call_outcome_rules_json,
-          provider_type: settings.provider_type,
+          provider_type: providerType,
           provider_config_json: settings.provider_config_json,
           internal_instructions: settings.internal_instructions,
           callback_booking_enabled: Boolean(settings.callback_booking_enabled),
@@ -150,6 +153,7 @@ export default function ReceptionistSettingsPage() {
       const data = await res.json();
       if (data.error) throw new Error(typeof data.error === 'string' ? data.error : 'Validation failed');
       setSettings(data.settings);
+      setMockAllowed(data.capabilities?.mockAllowed ?? mockAllowed);
       setOk('Settings saved.');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed');
@@ -316,8 +320,11 @@ export default function ReceptionistSettingsPage() {
                     <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ops-muted)]">
                       Provider type
                     </label>
-                    <OpsSelect value={settings.provider_type} onChange={(event) => updateField('provider_type', event.target.value)}>
-                      <option value="mock">mock (local demo)</option>
+                    <OpsSelect
+                      value={!mockAllowed && settings.provider_type === 'mock' ? 'retell' : settings.provider_type}
+                      onChange={(event) => updateField('provider_type', event.target.value)}
+                    >
+                      {mockAllowed ? <option value="mock">mock (local demo)</option> : null}
                       <option value="retell">retell + Twilio (live)</option>
                       <option value="twilio">twilio (legacy stub)</option>
                       <option value="custom">custom</option>
