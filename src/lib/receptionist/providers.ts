@@ -3,6 +3,8 @@
  * Mock flow uses repository + service directly; Twilio would implement these hooks.
  */
 
+import { isProductionEnvironment } from '@/lib/staging/config';
+
 export type InboundVoicePayload = Record<string, unknown>;
 
 export interface ReceptionistTelephonyProvider {
@@ -52,10 +54,15 @@ export class TwilioReceptionistProvider implements ReceptionistTelephonyProvider
   }
 }
 
-export function getTelephonyProviderFromEnv(): ReceptionistTelephonyProvider {
-  const t = (process.env.RECEPTIONIST_PROVIDER || 'mock').toLowerCase();
+export function getTelephonyProviderFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): ReceptionistTelephonyProvider {
+  const t = (env.RECEPTIONIST_PROVIDER?.trim() || (isProductionEnvironment(env) ? 'twilio' : 'mock')).toLowerCase();
   if (t === 'twilio' || t === 'retell' || t === 'custom') {
     return new TwilioReceptionistProvider();
+  }
+  if (t === 'mock' && isProductionEnvironment(env)) {
+    throw new Error('RECEPTIONIST_PROVIDER=mock is not allowed in production.');
   }
   return new MockReceptionistProvider();
 }

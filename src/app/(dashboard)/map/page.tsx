@@ -111,16 +111,6 @@ const statusLabels: Record<string, string> = {
   nurture: 'Nurture',
 };
 
-
-
-// Cabin CRM fallback data for local map demos when the authenticated API is unavailable.
-const sampleLeads: MapLead[] = [
-  { id: '1', customerName: 'Robert S.', customerPhone: '(555) 123-4567', location: 'Saranac Lake, NY', service: 'Four-season cabin inquiry', status: 'new_lead', source: 'website', date: 'Feb 23', lat: 44.3295, lng: -74.1313 },
-  { id: '2', customerName: 'Jennifer L.', customerPhone: '(555) 456-7890', location: 'Lake Placid, NY', service: 'Guest house planning call', status: 'qualified', source: 'referral', date: 'Feb 20', lat: 44.2795, lng: -73.9799 },
-  { id: '3', customerName: 'Pine Ridge Campground', customerPhone: '(555) 345-6789', location: 'Tupper Lake, NY', service: 'Campground unit expansion', status: 'proposal_sent', source: 'outreach', date: 'Feb 21', lat: 44.2239, lng: -74.4641 },
-  { id: '4', customerName: 'Sarah M.', customerPhone: '(555) 234-5678', location: 'Keene, NY', service: 'Site details needed', status: 'site_details_needed', source: 'phone', date: 'Feb 22', lat: 44.2564, lng: -73.7912 },
-];
-
 // Simple MapBounds - just return null for now
 function MapBounds() {
   return null;
@@ -172,15 +162,17 @@ export default function MapPage() {
   const [selectedLead, setSelectedLead] = useState<MapLead | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [leafletLib, setLeafletLib] = useState<LeafletModule | null>(null);
+  const [fetchError, setFetchError] = useState(false);
 
   // Fetch leads and geocode them
   useEffect(() => {
     const fetchLeads = async () => {
       try {
         const res = await fetch('/api/leads');
+        if (!res.ok) throw new Error(`Lead request failed with ${res.status}`);
         const data = await res.json();
         
-        if (data.leads) {
+        if (Array.isArray(data.leads)) {
           const addressCache = new Map<string, { lat: number; lng: number } | null>();
 
           // Geocode each unique address once, then fan the result back out.
@@ -212,7 +204,7 @@ export default function MapPage() {
               return {
                 id: lead.id,
                 customerName: lead.customer_name || 'Unknown',
-                customerPhone: lead.customer_phone || '(555) 000-0000',
+                customerPhone: lead.customer_phone || 'No phone',
                 location: lead.location || 'Unknown',
                 service: lead.issue || 'Service',
                 status: lead.status,
@@ -223,11 +215,16 @@ export default function MapPage() {
               };
             })
           );
+          setFetchError(false);
           setLeads(geocodedLeads);
+        } else {
+          setFetchError(false);
+          setLeads([]);
         }
       } catch (err) {
         console.error('Failed to fetch leads:', err);
-        setLeads(sampleLeads);
+        setFetchError(true);
+        setLeads([]);
       } finally {
         setLoading(false);
       }
@@ -346,6 +343,16 @@ export default function MapPage() {
           {loading ? (
             <div className="absolute inset-x-0 top-0 z-[1000] bg-white/90 px-4 py-2 text-center text-sm font-medium text-gray-600 shadow-sm">
               Loading cabin locations...
+            </div>
+          ) : null}
+          {!loading && fetchError ? (
+            <div className="absolute inset-x-0 top-0 z-[1000] bg-white/90 px-4 py-2 text-center text-sm font-medium text-red-700 shadow-sm">
+              Could not load live locations.
+            </div>
+          ) : null}
+          {!loading && !fetchError && filteredLeads.length === 0 ? (
+            <div className="absolute inset-x-0 top-0 z-[1000] bg-white/90 px-4 py-2 text-center text-sm font-medium text-gray-600 shadow-sm">
+              No live locations to map yet.
             </div>
           ) : null}
           <MapContainer 

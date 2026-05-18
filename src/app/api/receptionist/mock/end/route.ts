@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { isPortalResponse } from '@/lib/auth/tenant';
 import { requireModuleOrRespond } from '@/lib/modules/access';
+import { rejectReceptionistMockInProduction } from '@/lib/receptionist/mock-access';
 import { receptionistService } from '@/lib/receptionist/service';
 
 const getErrorMessage = (error: unknown) =>
@@ -15,6 +16,9 @@ const bodySchema = z
   .strict();
 
 export async function POST(request: Request) {
+  const blocked = rejectReceptionistMockInProduction();
+  if (blocked) return blocked;
+
   const portal = await requireModuleOrRespond('receptionist');
   if (isPortalResponse(portal)) return portal;
 
