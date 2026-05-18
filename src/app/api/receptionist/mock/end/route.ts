@@ -16,7 +16,7 @@ const bodySchema = z
   .strict();
 
 export async function POST(request: Request) {
-  const blocked = rejectReceptionistMockInProduction();
+  const blocked = rejectReceptionistMockInProduction(process.env, request);
   if (blocked) return blocked;
 
   const portal = await requireModuleOrRespond('receptionist');

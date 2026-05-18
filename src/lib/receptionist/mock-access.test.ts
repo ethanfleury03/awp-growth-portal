@@ -6,6 +6,10 @@ function env(overrides: Partial<NodeJS.ProcessEnv>): NodeJS.ProcessEnv {
   return { NODE_ENV: 'test', ...overrides } as NodeJS.ProcessEnv;
 }
 
+function requestFor(url: string): Request {
+  return new Request(url);
+}
+
 describe('receptionist mock access guard', () => {
   it('allows mock call tooling outside production by default', () => {
     expect(isReceptionistMockAllowed(env({ APP_ENV: 'staging' }))).toBe(true);
@@ -19,6 +23,11 @@ describe('receptionist mock access guard', () => {
     expect(isReceptionistMockAllowed(env({ VERCEL_ENV: 'production', NODE_ENV: 'production' }))).toBe(false);
     expect(isReceptionistMockAllowed(env({ VERCEL_ENV: 'production', RECEPTIONIST_MOCK_CALLS_ENABLED: '1' }))).toBe(false);
     expect(isReceptionistMockAllowed(env({ APP_ENV: 'unexpected', NODE_ENV: 'production' }))).toBe(false);
+  });
+
+  it('uses request host as the final production-domain guard', () => {
+    expect(isReceptionistMockAllowed(env({ APP_ENV: 'staging' }), requestFor('https://staging.awp.wnyautomation.com/api/receptionist/scenarios'))).toBe(true);
+    expect(isReceptionistMockAllowed(env({ APP_ENV: 'staging' }), requestFor('https://awp.wnyautomation.com/api/receptionist/scenarios'))).toBe(false);
   });
 
   it('does not default the telephony provider to mock in production', () => {
