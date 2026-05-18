@@ -64,6 +64,7 @@ interface IntegrationSummary {
   retellReady: boolean;
   twilioReady: boolean;
   toolSecretSet: boolean;
+  mockAllowed: boolean;
   appBaseUrl: string;
   voiceWebhookPath: string;
   retellWebhookPath: string;
@@ -192,6 +193,11 @@ export default function ReceptionistDashboardPage() {
 
   const loadScenarios = useCallback(async () => {
     const res = await fetch('/api/receptionist/scenarios');
+    if (res.status === 404) {
+      setScenarios([]);
+      setScenarioId('');
+      return;
+    }
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     const list = data.scenarios || [];
@@ -458,7 +464,11 @@ export default function ReceptionistDashboardPage() {
             eyebrow="Wave 1 / Receptionist"
             icon={Bot}
             title="AI Receptionist Command Center"
-            description="Run live or mock calls, watch transcript progression, surface urgent follow-up, and hand clean CRM context back to the office."
+            description={
+              integration?.mockAllowed
+                ? 'Run live or simulated calls, watch transcript progression, surface urgent follow-up, and hand clean CRM context back to the office.'
+                : 'Run live calls, watch transcript progression, surface urgent follow-up, and hand clean CRM context back to the office.'
+            }
             actions={
               <>
                 <Link href="/calls" className={opsButtonClass('secondary')}>
@@ -481,7 +491,7 @@ export default function ReceptionistDashboardPage() {
               <StatusBadge tone={integration?.toolSecretSet ? 'success' : 'warning'}>
                 Tool secret {integration?.toolSecretSet ? 'set' : 'missing'}
               </StatusBadge>
-              <StatusBadge tone="neutral">Provider {humanizeToken(integration?.providerType || 'mock')}</StatusBadge>
+              <StatusBadge tone="neutral">Provider {humanizeToken(integration?.providerType || 'retell')}</StatusBadge>
               {integration?.appBaseUrl ? <StatusBadge tone="muted" mono>Base {integration.appBaseUrl}</StatusBadge> : null}
             </div>
           </AppPageHeader>
@@ -493,7 +503,7 @@ export default function ReceptionistDashboardPage() {
           ) : null}
 
           <KpiStrip className="xl:grid-cols-6">
-            <StatCard label="Active or mock" value={loading ? '…' : stats.activeCalls} meta="Current live session load" tone="brand" icon={Headphones} />
+            <StatCard label="Active calls" value={loading ? '…' : stats.activeCalls} meta="Current live session load" tone="brand" icon={Headphones} />
             <StatCard label="Urgent action" value={loading ? '…' : stats.urgentActionNeeded} meta="Needs human follow-up now" tone="danger" icon={ShieldAlert} />
             <StatCard label="Emergencies" value={loading ? '…' : stats.emergenciesFlagged} meta="Safety-flagged calls" tone="danger" icon={AlertTriangle} />
             <StatCard label="Callbacks" value={loading ? '…' : stats.callbackBookings} meta={`${stats.quoteVisitBookings} quote visits booked`} tone="success" icon={PhoneCall} />
@@ -588,11 +598,12 @@ export default function ReceptionistDashboardPage() {
                 </div>
               </ConsolePanel>
 
-              <ConsolePanel
-                title="Simulation mode"
-                description="Keep demo tooling nearby without letting it dominate the primary operations surface."
-                icon={Wand2}
-              >
+              {integration?.mockAllowed ? (
+                <ConsolePanel
+                  title="Simulation mode"
+                  description="Keep demo tooling nearby without letting it dominate the primary operations surface."
+                  icon={Wand2}
+                >
                 <div className="space-y-4">
                   <div>
                     <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ops-muted)]">
@@ -648,7 +659,8 @@ export default function ReceptionistDashboardPage() {
                     {activeDetail?.status ? <StatusBadge tone="neutral">{humanizeToken(activeDetail.status)}</StatusBadge> : null}
                   </div>
                 </div>
-              </ConsolePanel>
+                </ConsolePanel>
+              ) : null}
             </div>
 
             <div className="space-y-6">
@@ -671,12 +683,20 @@ export default function ReceptionistDashboardPage() {
                 {activeCallId ? (
                   <TimelineList
                     items={transcriptItems}
-                    empty="Transcript will appear as the mock call advances."
+                    empty={
+                      integration?.mockAllowed
+                        ? 'Transcript will appear as the simulated call advances.'
+                        : 'Transcript will appear after a live call is selected.'
+                    }
                   />
                 ) : (
                   <EmptyState
                     title="No live call selected"
-                    description="Start a sample scenario from the left rail to stream a transcript here, or review a previous call below."
+                    description={
+                      integration?.mockAllowed
+                        ? 'Start a sample scenario from the left rail to stream a transcript here, or review a previous call below.'
+                        : 'Select a recent live call below to review its transcript and extracted context.'
+                    }
                     icon={Bot}
                   />
                 )}
