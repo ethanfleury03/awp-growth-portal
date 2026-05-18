@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { getAdminPortalUrl } from '@/lib/auth/admin-redirect';
+import { getGatewayLoginUrl } from '@/lib/auth/gateway-login';
 import { getPortalUser } from '@/lib/auth/portal-user';
 import { canAccessStaging } from '@/lib/staging/access';
 
@@ -12,6 +13,7 @@ export default async function DashboardLayout({
 }>) {
   let user = await getPortalUser();
   if (!user) {
+    if (process.env.APP_ENV === 'staging') redirect(getGatewayLoginUrl());
     await auth.protect();
     user = await getPortalUser();
   }
