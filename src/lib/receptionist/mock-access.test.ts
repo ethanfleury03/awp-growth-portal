@@ -15,6 +15,7 @@ describe('receptionist mock access guard', () => {
   it('blocks mock call tooling in production by default', () => {
     expect(isReceptionistMockAllowed(env({ APP_ENV: 'production' }))).toBe(false);
     expect(isReceptionistMockAllowed(env({ VERCEL_ENV: 'production', NODE_ENV: 'production' }))).toBe(false);
+    expect(isReceptionistMockAllowed(env({ VERCEL_ENV: 'production', RECEPTIONIST_MOCK_CALLS_ENABLED: '1' }))).toBe(false);
   });
 
   it('does not default the telephony provider to mock in production', () => {

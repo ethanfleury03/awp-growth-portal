@@ -211,13 +211,13 @@ export function isAwpDemoSeedEnabled(env: NodeJS.ProcessEnv = process.env) {
   if (['1', 'true', 'yes', 'on'].includes(explicit)) return true;
   if (['0', 'false', 'no', 'off'].includes(explicit)) return false;
 
+  const vercelEnv = cleanEnv(env.VERCEL_ENV);
+  if (vercelEnv === 'production') return false;
+  if (vercelEnv === 'preview') return true;
+
   const appEnv = cleanEnv(env.APP_ENV);
   if (appEnv === 'staging' || appEnv === 'development' || appEnv === 'test') return true;
   if (appEnv === 'production') return false;
-
-  const vercelEnv = cleanEnv(env.VERCEL_ENV);
-  if (vercelEnv === 'preview') return true;
-  if (vercelEnv === 'production') return false;
 
   return cleanEnv(env.NODE_ENV) !== 'production';
 }

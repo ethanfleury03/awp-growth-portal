@@ -9,9 +9,10 @@ function cleanFlag(value: string | undefined): string | null {
 }
 
 export function isReceptionistMockAllowed(env: NodeJS.ProcessEnv = process.env): boolean {
+  if (isProductionEnvironment(env)) return false;
   const explicit = cleanFlag(env.RECEPTIONIST_MOCK_CALLS_ENABLED);
   if (explicit) return TRUE_VALUES.has(explicit);
-  return !isProductionEnvironment(env);
+  return true;
 }
 
 export function rejectReceptionistMockInProduction(
