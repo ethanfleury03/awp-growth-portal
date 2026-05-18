@@ -14,6 +14,9 @@ function cleanFlag(value: string | undefined): string | null {
 
 function hostFromRequest(request?: Request): string | null {
   if (!request) return null;
+  const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  const headerHost = forwardedHost?.split(',')[0]?.trim().split(':')[0]?.toLowerCase();
+  if (headerHost) return headerHost;
   try {
     return new URL(request.url).hostname.toLowerCase();
   } catch {
