@@ -100,7 +100,8 @@ export function MobileBottomNav() {
 
   const navItems = useMemo<NavItem[]>(() => {
     const enabledModules = new Set(
-      workspace?.enabledModules ?? MODULE_CATALOG.filter((module) => module.defaultEnabled).map((module) => module.key),
+      workspace?.enabledModules ??
+        MODULE_CATALOG.filter((module) => module.defaultEnabled && !module.stagingOnly).map((module) => module.key),
     );
 
     return MODULE_CATALOG.filter((module) => {

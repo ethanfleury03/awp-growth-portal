@@ -4,7 +4,7 @@ import { requireModuleOrRespond } from '@/lib/modules/access';
 import { runMarketingAgent } from '@/lib/marketing-agent/agent';
 
 export async function POST(request: Request) {
-  const auth = await requireModuleOrRespond('crm');
+  const auth = await requireModuleOrRespond('marketing');
   if (isPortalResponse(auth)) return auth;
 
   const body = await request.json().catch(() => ({}));

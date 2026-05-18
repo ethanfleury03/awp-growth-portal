@@ -6,6 +6,9 @@ vi.mock('@/lib/workspace/workspace', () => ({
 }));
 
 import { getModuleAccess } from '@/lib/modules/access';
+import { getEnabledModules } from '@/lib/workspace/workspace';
+
+const mockedGetEnabledModules = vi.mocked(getEnabledModules);
 
 const user: SessionUser = {
   id: 'user_1',
@@ -53,6 +56,35 @@ describe('module access', () => {
         expect(access.status).toBe(403);
         expect(access.error).toBe('staging_super_admin_only');
       }
+    } finally {
+      if (previous === undefined) delete process.env.APP_ENV;
+      else process.env.APP_ENV = previous;
+    }
+  });
+
+  it('keeps staging-only modules unavailable outside staging', async () => {
+    const previous = process.env.APP_ENV;
+    process.env.APP_ENV = 'production';
+    try {
+      const access = await getModuleAccess({ ...user, role: 'super_admin' }, 'marketing');
+      expect(access.ok).toBe(false);
+      if (!access.ok) {
+        expect(access.status).toBe(403);
+        expect(access.error).toBe('Module not available');
+      }
+    } finally {
+      if (previous === undefined) delete process.env.APP_ENV;
+      else process.env.APP_ENV = previous;
+    }
+  });
+
+  it('allows marketing when staging enables it', async () => {
+    const previous = process.env.APP_ENV;
+    process.env.APP_ENV = 'staging';
+    mockedGetEnabledModules.mockResolvedValueOnce(['dashboard', 'crm', 'marketing']);
+    try {
+      const access = await getModuleAccess(user, 'marketing');
+      expect(access.ok).toBe(true);
     } finally {
       if (previous === undefined) delete process.env.APP_ENV;
       else process.env.APP_ENV = previous;
