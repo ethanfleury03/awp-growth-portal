@@ -1,6 +1,12 @@
 import { sql } from '@/lib/db';
 import type { SessionUser } from '@/lib/auth/types';
-import { MODULE_CATALOG, type ModuleKey, expandModuleDependencies } from '@/lib/modules/catalog';
+import {
+  MODULE_CATALOG,
+  type ModuleKey,
+  expandModuleDependencies,
+  filterModuleKeysForEnvironment,
+  isModuleAvailableInEnvironment,
+} from '@/lib/modules/catalog';
 import type { CompanyWorkspace } from '@/lib/workspace/types';
 
 const DEFAULT_BRANDING = {
@@ -28,10 +34,11 @@ export async function getEnabledModules(companyId: string): Promise<ModuleKey[]>
   `;
   const byFlag = new Map(rows.map((r) => [String(r.flag_key), parseEnabled(r.enabled)]));
   const enabled = MODULE_CATALOG.filter((mod) => {
+    if (!isModuleAvailableInEnvironment(mod)) return false;
     const stored = byFlag.get(mod.flagKey);
     return stored ?? mod.defaultEnabled;
   }).map((mod) => mod.key);
-  return expandModuleDependencies(enabled);
+  return filterModuleKeysForEnvironment(expandModuleDependencies(enabled));
 }
 
 export async function ensureCompanySettings(companyId: string): Promise<void> {

@@ -5,7 +5,7 @@ import { requireModuleOrRespond } from '@/lib/modules/access';
 import { buildMarketingAgentSnapshot } from '@/lib/marketing-agent/agent';
 
 export async function GET() {
-  const auth = await requireModuleOrRespond('crm');
+  const auth = await requireModuleOrRespond('marketing');
   if (isPortalResponse(auth)) return auth;
 
   try {

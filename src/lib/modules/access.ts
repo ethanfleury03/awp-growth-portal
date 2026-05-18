@@ -4,7 +4,7 @@ import { getPortalUser } from '@/lib/auth/portal-user';
 import type { SessionUser } from '@/lib/auth/types';
 import { roleAtLeast } from '@/lib/auth/types';
 import { getEnabledModules } from '@/lib/workspace/workspace';
-import { MODULE_BY_KEY, type ModuleKey } from '@/lib/modules/catalog';
+import { MODULE_BY_KEY, isModuleAvailableInEnvironment, type ModuleKey } from '@/lib/modules/catalog';
 import { canAccessStaging, STAGING_SUPER_ADMIN_ONLY_REASON } from '@/lib/staging/access';
 
 export type ModuleAccess =
@@ -21,10 +21,13 @@ export async function getModuleAccess(
   if (!canAccessStaging(user.role)) {
     return { ok: false, status: 403, error: STAGING_SUPER_ADMIN_ONLY_REASON, module: moduleKey };
   }
+  const mod = MODULE_BY_KEY.get(moduleKey);
+  if (mod && !isModuleAvailableInEnvironment(mod)) {
+    return { ok: false, status: 403, error: 'Module not available', module: moduleKey };
+  }
   if (user.role === 'super_admin') {
     return { ok: true, user, module: moduleKey };
   }
-  const mod = MODULE_BY_KEY.get(moduleKey);
   if (mod && !roleAtLeast(user.role, mod.requiredRole)) {
     return { ok: false, status: 403, error: 'Forbidden', module: moduleKey };
   }

@@ -131,7 +131,9 @@ export function AppSidebar({ beforeUserCard, mobile = false, onNavigate, onClose
       .catch(() => {});
   }, []);
 
-  const enabledModules = new Set(workspace?.enabledModules ?? MODULE_CATALOG.filter((m) => m.defaultEnabled).map((m) => m.key));
+  const enabledModules = new Set(
+    workspace?.enabledModules ?? MODULE_CATALOG.filter((m) => m.defaultEnabled && !m.stagingOnly).map((m) => m.key),
+  );
   const navItems = MODULE_CATALOG.filter((module) => {
     if (!enabledModules.has(module.key)) return false;
     return user ? roleAtLeast(user.role, module.requiredRole) : true;

@@ -162,7 +162,7 @@ export default function SettingsPage() {
                     Calls, receptionist, dispatch, map, calendar, team, and jobs are outside the normal cabin-owner navigation.
                   </p>
                   <p>
-                    The active owner workspace focuses on CRM pipeline, customers, estimates, invoices, marketing, outreach, AI assistance, reports, and settings.
+                    The active owner workspace focuses on CRM pipeline, customers, estimates, invoices, outreach, AI assistance, reports, and settings.
                   </p>
                 </div>
               </ConsolePanel>

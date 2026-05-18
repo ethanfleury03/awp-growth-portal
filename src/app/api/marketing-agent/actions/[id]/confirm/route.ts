@@ -4,7 +4,7 @@ import { requireModuleOrRespond } from '@/lib/modules/access';
 import { approveMarketingAgentDraft } from '@/lib/marketing-agent/agent';
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireModuleOrRespond('crm');
+  const auth = await requireModuleOrRespond('marketing');
   if (isPortalResponse(auth)) return auth;
   const { id } = await params;
 

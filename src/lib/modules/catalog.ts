@@ -1,4 +1,5 @@
 import type { UserRole } from '@/lib/auth/types';
+import { isStagingEnvironment } from '@/lib/staging/config';
 
 export type ModuleKey =
   | 'dashboard'
@@ -29,6 +30,7 @@ export type ModuleDefinition = {
   defaultEnabled: boolean;
   requiredRole: UserRole;
   dependencies?: ModuleKey[];
+  stagingOnly?: boolean;
 };
 
 export const MODULE_CATALOG: ModuleDefinition[] = [
@@ -126,6 +128,7 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     description: 'AI marketing agent for campaigns, lists, drafts, and growth assets.',
     defaultEnabled: true,
     requiredRole: 'staff',
+    stagingOnly: true,
   },
   {
     key: 'outreach',
@@ -198,6 +201,23 @@ export function moduleForPath(pathname: string): ModuleKey | null {
 
 export function moduleFlagKey(key: ModuleKey): string {
   return MODULE_BY_KEY.get(key)?.flagKey ?? `module.${key}`;
+}
+
+export function isModuleAvailableInEnvironment(
+  module: ModuleDefinition,
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return !module.stagingOnly || isStagingEnvironment(env);
+}
+
+export function filterModuleKeysForEnvironment(
+  keys: Iterable<ModuleKey>,
+  env: NodeJS.ProcessEnv = process.env,
+): ModuleKey[] {
+  const availableKeys = new Set(
+    MODULE_CATALOG.filter((module) => isModuleAvailableInEnvironment(module, env)).map((module) => module.key),
+  );
+  return [...keys].filter((key) => availableKeys.has(key));
 }
 
 export function expandModuleDependencies(keys: Iterable<ModuleKey>): ModuleKey[] {
