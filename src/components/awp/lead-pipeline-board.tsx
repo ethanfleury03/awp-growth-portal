@@ -156,6 +156,7 @@ export function LeadPipelineBoard() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
+  const [deletingLeadId, setDeletingLeadId] = useState<string | null>(null);
   const [draft, setDraft] = useState<LeadDraft | null>(null);
   const [bucketManagerOpen, setBucketManagerOpen] = useState(false);
   const [bucketForm, setBucketForm] = useState<BucketForm>({
@@ -272,6 +273,31 @@ export function LeadPipelineBoard() {
     } finally {
       setSaving(false);
       setDraggedLeadId(null);
+    }
+  }
+
+  async function deleteLead(lead: Lead) {
+    const leadLabel = lead.customer_name || lead.issue || 'this lead';
+    if (!confirm(`Delete "${leadLabel}" from the CRM pipeline?`)) return;
+
+    const previous = leads;
+    setLeads((current) => current.filter((item) => item.id !== lead.id));
+    setDeletingLeadId(lead.id);
+    setSaving(true);
+    setError('');
+
+    try {
+      const response = await fetch(`/api/leads?id=${encodeURIComponent(lead.id)}`, {
+        method: 'DELETE',
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(json.error || 'Failed to delete lead');
+    } catch (err) {
+      setLeads(previous);
+      setError(err instanceof Error ? err.message : 'Failed to delete lead');
+    } finally {
+      setDeletingLeadId(null);
+      setSaving(false);
     }
   }
 
@@ -508,7 +534,23 @@ export function LeadPipelineBoard() {
                                     {lead.customer_phone || lead.customer_email || sourceFromSlug(lead.source)}
                                   </p>
                                 </div>
-                                <GripVertical className="h-4 w-4 shrink-0 text-[var(--ops-muted)]" />
+                                <div className="flex shrink-0 items-center gap-1">
+                                  <button
+                                    type="button"
+                                    title="Delete lead"
+                                    aria-label={`Delete ${lead.customer_name || 'lead'}`}
+                                    disabled={deletingLeadId === lead.id}
+                                    onClick={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      void deleteLead(lead);
+                                    }}
+                                    className="grid h-7 w-7 place-items-center rounded-md text-[var(--ops-muted)] transition hover:bg-[var(--ops-danger-soft)] hover:text-[var(--ops-danger-ink)] disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                  <GripVertical className="h-4 w-4 text-[var(--ops-muted)]" />
+                                </div>
                               </div>
 
                               <p className="mt-2 line-clamp-2 text-[13px] font-medium leading-5 text-[var(--ops-text)]">{lead.issue}</p>
