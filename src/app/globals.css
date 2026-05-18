@@ -151,6 +151,39 @@ body {
   min-height: 0;
 }
 
+.mobile-nav-trigger {
+  top: calc(1rem + env(safe-area-inset-top));
+}
+
+.mobile-bottom-nav {
+  padding-bottom: calc(0.35rem + env(safe-area-inset-bottom));
+}
+
+.mobile-more-sheet {
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 1023px) {
+  .ops-main > main,
+  .ops-main main {
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ops-shell button,
+  .ops-shell input,
+  .ops-shell select,
+  .ops-shell textarea,
+  .ops-shell a[role="button"] {
+    min-height: 44px;
+  }
+
+  .ops-shell input,
+  .ops-shell select,
+  .ops-shell textarea {
+    font-size: 16px;
+  }
+}
+
 /* Restraint pass for older portal screens that still use one-off Tailwind
    utility styling instead of the shared ops components. */
 .ops-shell [class~="rounded-[32px]"],

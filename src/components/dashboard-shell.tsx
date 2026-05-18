@@ -12,6 +12,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 import { AppSidebar } from '@/components/app-sidebar';
 import { CommandPalette } from '@/components/command-palette';
+import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { Menu } from 'lucide-react';
 import type { CompanyWorkspace } from '@/lib/workspace/types';
 import { moduleForPath } from '@/lib/modules/catalog';
@@ -81,13 +82,14 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <button
           type="button"
           onClick={() => setMobileNavOpen(true)}
-          className="fixed left-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--ops-border-strong)] bg-white/90 text-[var(--ops-text)] shadow-[var(--ops-shadow-soft)] backdrop-blur lg:hidden"
+          className="mobile-nav-trigger fixed left-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--ops-border-strong)] bg-white/90 text-[var(--ops-text)] shadow-[var(--ops-shadow-soft)] backdrop-blur lg:hidden"
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Open navigation</span>
         </button>
 
         <div className="ops-main flex h-screen min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{children}</div>
+        <MobileBottomNav />
       </div>
       <CommandPalette />
     </SidebarSlotContext.Provider>

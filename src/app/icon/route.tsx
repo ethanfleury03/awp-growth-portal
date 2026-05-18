@@ -1,13 +1,8 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const size = {
-  width: 180,
-  height: 180,
-};
-export const contentType = 'image/png';
 
-export default function AppleIcon() {
+export async function GET() {
   return new ImageResponse(
     (
       <div
@@ -17,10 +12,10 @@ export default function AppleIcon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: 40,
-          background: 'linear-gradient(135deg, #0f3d35 0%, #147d6f 56%, #f26a1f 100%)',
+          borderRadius: 108,
+          background: 'linear-gradient(135deg, #0f3d35 0%, #147d6f 54%, #f26a1f 100%)',
           color: '#fffdf8',
-          fontSize: 56,
+          fontSize: 164,
           fontWeight: 900,
           letterSpacing: 0,
         }}
@@ -28,6 +23,12 @@ export default function AppleIcon() {
         WNY
       </div>
     ),
-    size,
+    {
+      width: 512,
+      height: 512,
+      headers: {
+        'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+      },
+    },
   );
 }

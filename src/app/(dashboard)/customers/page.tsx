@@ -152,21 +152,21 @@ export default function CustomersPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 bg-gray-50">
       <main className="flex-1 min-h-0 overflow-auto">
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
+        <header className="bg-white border-b border-gray-200 px-4 py-4 sm:px-6 xl:px-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Customers</h1>
             <p className="text-gray-500 text-sm">Manage your customer relationships</p>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="relative">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
+            <div className="relative w-full sm:w-auto">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input 
                 type="text" 
                 placeholder="Search customers..."
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm w-64 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm w-full sm:w-64 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             
@@ -177,9 +177,9 @@ export default function CustomersPage() {
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 xl:p-8">
           {/* Stats Cards */}
-          <div className="grid grid-cols-4 gap-6 mb-6">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
             <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
               <p className="text-gray-500 text-sm mb-1">Total Customers</p>
               <p className="text-3xl font-bold text-gray-900">{loading ? '...' : stats.total}</p>
@@ -204,8 +204,8 @@ export default function CustomersPage() {
           )}
 
           {/* Customers Table */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <table className="w-full">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[900px]">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">Customer</th>
@@ -297,8 +297,8 @@ export default function CustomersPage() {
 
       {/* Add Customer Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 sm:items-center">
+          <div className="max-h-[calc(100vh-2rem)] overflow-auto bg-white rounded-xl p-6 w-full max-w-lg mx-4 mb-4 sm:mb-0">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">Add New Customer</h2>
               <button 
@@ -322,7 +322,7 @@ export default function CustomersPage() {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
                   <input

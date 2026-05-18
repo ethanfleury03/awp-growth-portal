@@ -1,4 +1,4 @@
-import { getClerkProxyUrl, getClerkProxyVerificationUrl } from '@/lib/clerk-proxy-config';
+import { getClerkProxyVerificationUrl } from '@/lib/clerk-proxy-config';
 
 const CLERK_FAPI_ORIGIN = 'https://frontend-api.clerk.dev';
 const CLERK_PROXY_PATH = '/clerk-proxy';
@@ -26,7 +26,7 @@ function getClientIp(request: Request) {
   );
 }
 
-function copyRequestHeaders(request: Request, targetHost: string) {
+function copyRequestHeaders(request: Request, clerkProxyUrl: string) {
   const headers = new Headers();
 
   request.headers.forEach((value, key) => {
@@ -36,9 +36,8 @@ function copyRequestHeaders(request: Request, targetHost: string) {
   });
 
   const requestUrl = new URL(request.url);
-  headers.set('Host', targetHost);
   headers.set('Accept-Encoding', 'identity');
-  headers.set('Clerk-Proxy-Url', getClerkProxyVerificationUrl());
+  headers.set('Clerk-Proxy-Url', clerkProxyUrl);
   headers.set('Clerk-Secret-Key', process.env.CLERK_SECRET_KEY || '');
   headers.set('X-Forwarded-Host', requestUrl.host);
   headers.set('X-Forwarded-Proto', requestUrl.protocol.replace(':', ''));
@@ -49,7 +48,7 @@ function copyRequestHeaders(request: Request, targetHost: string) {
   return headers;
 }
 
-function copyResponseHeaders(response: Response) {
+function copyResponseHeaders(response: Response, clerkProxyUrl: string) {
   const headers = new Headers();
 
   response.headers.forEach((value, key) => {
@@ -64,7 +63,7 @@ function copyResponseHeaders(response: Response) {
     const fapiHost = new URL(CLERK_FAPI_ORIGIN).host;
     const locationUrl = new URL(location, CLERK_FAPI_ORIGIN);
     if (locationUrl.host === fapiHost) {
-      headers.set('Location', `${getClerkProxyUrl()}${locationUrl.pathname}${locationUrl.search}${locationUrl.hash}`);
+      headers.set('Location', `${clerkProxyUrl}${locationUrl.pathname}${locationUrl.search}${locationUrl.hash}`);
     }
   }
 
@@ -72,6 +71,11 @@ function copyResponseHeaders(response: Response) {
 }
 
 async function proxyClerkRequest(request: Request) {
+  const clerkProxyUrl = getClerkProxyVerificationUrl();
+  if (!clerkProxyUrl) {
+    return Response.json({ error: 'Clerk proxy is not enabled for this environment.' }, { status: 404 });
+  }
+
   if (!process.env.CLERK_SECRET_KEY) {
     return Response.json({ error: 'Missing CLERK_SECRET_KEY' }, { status: 500 });
   }
@@ -84,7 +88,7 @@ async function proxyClerkRequest(request: Request) {
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
   const init: RequestInit & { duplex?: 'half' } = {
     method: request.method,
-    headers: copyRequestHeaders(request, targetUrl.host),
+    headers: copyRequestHeaders(request, clerkProxyUrl),
     body: hasBody ? request.body : undefined,
     redirect: 'manual',
   };
@@ -95,7 +99,7 @@ async function proxyClerkRequest(request: Request) {
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
-    headers: copyResponseHeaders(response),
+    headers: copyResponseHeaders(response, clerkProxyUrl),
   });
 }
 
