@@ -80,13 +80,13 @@ describe('module access', () => {
     }
   });
 
-  it('allows staging-only modules when staging enables them', async () => {
+  it('allows staging-only modules for super admins when staging enables them', async () => {
     const previous = process.env.APP_ENV;
     process.env.APP_ENV = 'staging';
     mockedGetEnabledModules.mockResolvedValue(['dashboard', 'crm', 'marketing', 'outreach']);
     try {
       for (const moduleKey of ['marketing', 'outreach'] as const) {
-        const access = await getModuleAccess(user, moduleKey);
+        const access = await getModuleAccess({ ...user, role: 'super_admin' }, moduleKey);
         expect(access.ok).toBe(true);
       }
     } finally {
