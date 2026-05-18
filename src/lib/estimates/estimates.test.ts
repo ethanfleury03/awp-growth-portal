@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { assertStatusTransition } from '@/lib/estimates/validation';
 import { calculateEstimateTotals, lineExtendedCents } from '@/lib/estimates/totals';
 import { allocateEstimateNumber } from '@/lib/estimates/number';
+import { ManualCopyEstimateDeliveryProvider, pickEmailProvider } from '@/lib/estimates/delivery';
 
 vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -73,6 +74,31 @@ describe('estimate number allocation', () => {
     const b = await allocateEstimateNumber('c1', 'EST');
     expect(a).toMatch(/^EST-\d{4}-0001$/);
     expect(b).toMatch(/^EST-\d{4}-0002$/);
+  });
+});
+
+describe('estimate delivery providers', () => {
+  it('does not default to mock delivery in production', () => {
+    const provider = pickEmailProvider({ APP_ENV: 'production', NODE_ENV: 'production' } as NodeJS.ProcessEnv);
+    expect(provider.name).toBe('email_stub');
+  });
+
+  it('uses an explicit manual-copy provider when no recipient exists', async () => {
+    const provider = new ManualCopyEstimateDeliveryProvider();
+    const result = await provider.send({
+      estimateId: 'est_1',
+      estimateNumber: 'EST-2026-0001',
+      customerName: 'Customer',
+      title: 'Scope',
+      totalCents: 1000,
+      expirationDate: null,
+      publicUrl: 'https://example.com/estimate',
+      recipientEmail: null,
+    });
+
+    expect(result.provider).toBe('manual_copy_link');
+    expect(result.status).toBe('sent');
+    expect(result.provider_message_id).toBeNull();
   });
 });
 

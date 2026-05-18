@@ -1,11 +1,15 @@
 import { sql } from '@/lib/db';
 import { normalizeVagueTimingPhrase } from '@/lib/receptionist/hardening/timing';
 import type { ExtractedCallData } from '@/lib/receptionist/types';
+import { isProductionEnvironment } from '@/lib/staging/config';
 
 async function getOrCreateCompanyId(explicit?: string | null) {
   if (explicit) return explicit;
   const companies = await sql`SELECT id FROM companies ORDER BY created_at ASC LIMIT 1`;
   if (companies.length > 0) return companies[0].id as string;
+  if (isProductionEnvironment()) {
+    throw new Error('Unable to resolve company for receptionist call in production.');
+  }
   const row = await sql`
     INSERT INTO companies (name, email)
     VALUES ('Demo Company', 'demo@plumberos.com')
@@ -197,6 +201,9 @@ export async function getCompanyIdForReceptionist(toPhone?: string | null) {
     } catch {
       // Table may not exist on older DBs; fall through to default company.
     }
+  }
+  if (isProductionEnvironment()) {
+    throw new Error('No company is configured for this receptionist phone number.');
   }
   return getOrCreateCompanyId(null);
 }

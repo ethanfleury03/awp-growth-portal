@@ -1,3 +1,5 @@
+import { isProductionEnvironment } from '@/lib/staging/config';
+
 export type DeliverySendInput = {
   estimateId: string;
   estimateNumber: string;
@@ -98,6 +100,22 @@ export class MockEstimateDeliveryProvider implements EstimateDeliveryProvider {
     return {
       provider: this.name,
       provider_message_id: `mock-${Date.now()}`,
+      status: 'sent',
+      subject,
+      body,
+    };
+  }
+}
+
+/** Records that the share link was generated for manual copy; no fake delivery occurred. */
+export class ManualCopyEstimateDeliveryProvider implements EstimateDeliveryProvider {
+  readonly name = 'manual_copy_link';
+
+  async send(input: DeliverySendInput): Promise<DeliveryResult> {
+    const { subject, body } = resolveEmailContent(input);
+    return {
+      provider: this.name,
+      provider_message_id: null,
       status: 'sent',
       subject,
       body,
@@ -249,11 +267,11 @@ export class EmailEstimateDeliveryProviderStub implements EstimateDeliveryProvid
   }
 }
 
-/** Email provider: Resend when configured, else stub for "email" mode, else mock. */
-export function pickEmailProvider(): EstimateDeliveryProvider {
-  const mode = (process.env.ESTIMATE_DELIVERY_PROVIDER || 'mock').toLowerCase();
+/** Email provider: Resend when configured, else a safe non-sending provider. */
+export function pickEmailProvider(env: NodeJS.ProcessEnv = process.env): EstimateDeliveryProvider {
+  const mode = (env.ESTIMATE_DELIVERY_PROVIDER || (isProductionEnvironment(env) ? 'email_stub' : 'mock')).toLowerCase();
   if (mode === 'console') return new ConsoleEstimateDeliveryProvider();
-  if (process.env.RESEND_API_KEY && process.env.ESTIMATE_FROM_EMAIL) {
+  if (env.RESEND_API_KEY && env.ESTIMATE_FROM_EMAIL) {
     return new ResendEstimateDeliveryProvider();
   }
   if (mode === 'email' || mode === 'email_stub' || mode === 'resend') {

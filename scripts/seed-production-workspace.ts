@@ -9,9 +9,17 @@ const wny = {
   phone: process.env.SEED_WNY_COMPANY_PHONE || null,
 };
 
+function requiredSeedEnv(key: string) {
+  const value = process.env[key]?.trim();
+  if (!value) {
+    throw new Error(`[seed-production-workspace] ${key} is required. Refusing to seed sample production data.`);
+  }
+  return value;
+}
+
 const sampleClient = {
-  name: process.env.SEED_CLIENT_COMPANY_NAME || 'Sample Client CRM',
-  email: (process.env.SEED_CLIENT_COMPANY_EMAIL || 'client@example.com').toLowerCase(),
+  name: requiredSeedEnv('SEED_CLIENT_COMPANY_NAME'),
+  email: requiredSeedEnv('SEED_CLIENT_COMPANY_EMAIL').toLowerCase(),
   phone: process.env.SEED_CLIENT_COMPANY_PHONE || null,
   industry: process.env.SEED_CLIENT_INDUSTRY || 'generic',
 };
@@ -22,8 +30,8 @@ const superAdmin = {
 };
 
 const clientAdmin = {
-  email: (process.env.SEED_CLIENT_ADMIN_EMAIL || 'client.admin@example.com').toLowerCase(),
-  name: process.env.SEED_CLIENT_ADMIN_NAME || 'Client Admin',
+  email: requiredSeedEnv('SEED_CLIENT_ADMIN_EMAIL').toLowerCase(),
+  name: requiredSeedEnv('SEED_CLIENT_ADMIN_NAME'),
 };
 
 async function upsertCompany(company: { name: string; email: string; phone?: string | null; industry?: string }) {

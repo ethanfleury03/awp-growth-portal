@@ -5,7 +5,7 @@ import {
   buildEstimateEmailCopy,
   pickEmailProvider,
   TwilioSmsEstimateDeliveryProvider,
-  MockEstimateDeliveryProvider,
+  ManualCopyEstimateDeliveryProvider,
   type DeliveryResult,
   type DeliverySendInput,
 } from '@/lib/estimates/delivery';
@@ -801,8 +801,8 @@ export async function sendEstimate(
       deliveryType = 'sms_share_link';
       recipientRecord = phone;
     } else {
-      const mock = new MockEstimateDeliveryProvider();
-      result = await mock.send({ ...inputBase, recipientEmail: null });
+      const manual = new ManualCopyEstimateDeliveryProvider();
+      result = await manual.send({ ...inputBase, recipientEmail: null });
       deliveryType = 'manual_copy_link';
       recipientRecord = publicUrl;
     }
