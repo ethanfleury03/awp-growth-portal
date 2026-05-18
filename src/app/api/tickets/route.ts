@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { isPortalResponse } from '@/lib/auth/tenant';
 import { requireModuleOrRespond } from '@/lib/modules/access';
-import { listCompanyTickets } from '@/lib/tickets/shared-ticket-board';
+import {
+  createTicket,
+  listCompanyTickets,
+  normalizeTicketCreateInput,
+} from '@/lib/tickets/shared-ticket-board';
 
 export async function GET() {
   const user = await requireModuleOrRespond('tickets');
@@ -15,9 +19,33 @@ export async function GET() {
   }
 }
 
-export async function POST() {
-  return NextResponse.json(
-    { error: 'Client ticket creation is disabled. Tickets are created by the admin team.' },
-    { status: 405 },
-  );
+export async function POST(request: Request) {
+  const user = await requireModuleOrRespond('tickets');
+  if (isPortalResponse(user)) return user;
+
+  const payload = await request.json().catch(() => ({}));
+  const parsed = normalizeTicketCreateInput({
+    title: (payload as { title?: unknown }).title,
+    description: (payload as { description?: unknown }).description,
+    priority: (payload as { priority?: unknown }).priority,
+    dueDate: (payload as { dueDate?: unknown; due_date?: unknown }).dueDate || (payload as { due_date?: unknown }).due_date,
+  });
+
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
+
+  try {
+    const ticket = await createTicket({
+      user,
+      title: parsed.title,
+      description: parsed.description,
+      priority: parsed.priority,
+      dueDate: parsed.dueDate,
+    });
+    return NextResponse.json({ ticket }, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to create ticket.';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

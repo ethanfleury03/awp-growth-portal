@@ -11,6 +11,7 @@ import {
   Inbox,
   Loader2,
   MessageSquareText,
+  Plus,
   RefreshCw,
   Search,
   Send,
@@ -66,12 +67,35 @@ type TicketDetailResponse = {
   comments: TicketComment[];
 };
 
+type CreateTicketDraft = {
+  title: string;
+  dueDate: string;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  description: string;
+};
+
 const priorityClass: Record<string, string> = {
   low: 'border-[rgba(47,107,79,0.24)] bg-[rgba(47,107,79,0.08)] text-[#2f6b4f]',
   normal: 'border-[rgba(37,99,235,0.22)] bg-[rgba(37,99,235,0.08)] text-[#2563eb]',
   high: 'border-[rgba(242,106,31,0.26)] bg-[rgba(242,106,31,0.1)] text-[#bd4c12]',
   urgent: 'border-[rgba(190,57,82,0.25)] bg-[rgba(190,57,82,0.1)] text-[#be3952]',
 };
+
+const priorityOptions: Array<{ value: CreateTicketDraft['priority']; label: string; description: string }> = [
+  { value: 'low', label: 'Low', description: 'Nice to have' },
+  { value: 'normal', label: 'Normal', description: 'Standard work' },
+  { value: 'high', label: 'High', description: 'Needs focus' },
+  { value: 'urgent', label: 'Urgent', description: 'Time sensitive' },
+];
+
+function emptyTicketDraft(): CreateTicketDraft {
+  return {
+    title: '',
+    dueDate: '',
+    priority: 'normal',
+    description: '',
+  };
+}
 
 function count(value: unknown) {
   return Number(value || 0);
@@ -110,6 +134,9 @@ export default function TicketsPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [commentBody, setCommentBody] = useState('');
   const [posting, setPosting] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createDraft, setCreateDraft] = useState<CreateTicketDraft>(() => emptyTicketDraft());
+  const [creating, setCreating] = useState(false);
 
   const loadBoard = useCallback(async (quiet = false) => {
     if (quiet) setRefreshing(true);
@@ -210,6 +237,37 @@ export default function TicketsPage() {
     }
   }
 
+  async function createNewTicket() {
+    if (!createDraft.title.trim() || creating) return;
+    setCreating(true);
+    setError('');
+    try {
+      const response = await fetch('/api/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: createDraft.title,
+          dueDate: createDraft.dueDate || null,
+          priority: createDraft.priority,
+          description: createDraft.description,
+        }),
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(json.error || 'Unable to create ticket.');
+      const ticket = json.ticket as Ticket | undefined;
+      setCreateOpen(false);
+      setCreateDraft(emptyTicketDraft());
+      setActiveTab('board');
+      setStatusFilter('all');
+      await loadBoard(true);
+      if (ticket?.id) await loadDetail(ticket.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to create ticket.');
+    } finally {
+      setCreating(false);
+    }
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-[var(--ops-bg)]">
       <main className="min-h-0 flex-1 overflow-hidden px-4 py-4 sm:px-5 xl:px-6">
@@ -227,6 +285,14 @@ export default function TicketsPage() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#2f6b4f] px-3 py-2 text-sm font-semibold text-white shadow-[var(--ops-shadow-soft)] transition hover:bg-[#275a42]"
+                >
+                  <Plus className="h-4 w-4" aria-hidden />
+                  Create Ticket
+                </button>
                 {(['board', 'mine', 'all'] as const).map((tab) => (
                   <button
                     key={tab}
@@ -364,6 +430,21 @@ export default function TicketsPage() {
           onPost={postComment}
         />
       ) : null}
+
+      {createOpen ? (
+        <CreateTicketDrawer
+          draft={createDraft}
+          creating={creating}
+          error={error}
+          onDraftChange={setCreateDraft}
+          onClose={() => {
+            if (creating) return;
+            setCreateOpen(false);
+            setCreateDraft(emptyTicketDraft());
+          }}
+          onCreate={() => void createNewTicket()}
+        />
+      ) : null}
     </div>
   );
 }
@@ -474,6 +555,140 @@ function TicketDrawer({
             </button>
           </div>
         </div>
+      </aside>
+    </div>
+  );
+}
+
+function CreateTicketDrawer({
+  draft,
+  creating,
+  error,
+  onDraftChange,
+  onClose,
+  onCreate,
+}: {
+  draft: CreateTicketDraft;
+  creating: boolean;
+  error: string;
+  onDraftChange: (draft: CreateTicketDraft) => void;
+  onClose: () => void;
+  onCreate: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/20 backdrop-blur-sm">
+      <aside className="flex h-full w-full flex-col border-l border-[var(--ops-border-strong)] bg-[var(--ops-surface-strong)] shadow-[0_18px_44px_-28px_rgba(8,18,35,0.5)] sm:max-w-[32rem]">
+        <div className="border-b border-[var(--ops-border)] px-5 py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--ops-muted)]">New ticket</p>
+              <h2 className="mt-1 text-xl font-semibold leading-7 text-[var(--ops-text)]">Create Ticket</h2>
+              <p className="mt-1 text-sm text-[var(--ops-muted)]">Capture the client request and place it in Inbox.</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={creating}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--ops-border)] text-[var(--ops-muted)] hover:bg-[var(--ops-surface-subtle)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <form
+          className="flex min-h-0 flex-1 flex-col"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onCreate();
+          }}
+        >
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            <div className="space-y-5">
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Name</span>
+                <input
+                  value={draft.title}
+                  onChange={(event) => onDraftChange({ ...draft, title: event.target.value.slice(0, 160) })}
+                  placeholder="Example: Update homepage hero copy"
+                  className="h-11 w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
+                />
+                <span className="mt-1 block text-xs text-[var(--ops-muted)]">{draft.title.trim().length}/160</span>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Date Needed Done By</span>
+                <input
+                  type="date"
+                  value={draft.dueDate}
+                  onChange={(event) => onDraftChange({ ...draft, dueDate: event.target.value })}
+                  className="h-11 w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
+                />
+              </label>
+
+              <div>
+                <p className="mb-2 text-sm font-semibold text-[var(--ops-text)]">Urgency</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {priorityOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => onDraftChange({ ...draft, priority: option.value })}
+                      className={cn(
+                        'rounded-lg border px-3 py-3 text-left transition',
+                        draft.priority === option.value
+                          ? priorityClass[option.value]
+                          : 'border-[var(--ops-border)] bg-white text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)]',
+                      )}
+                    >
+                      <span className="block text-sm font-semibold">{option.label}</span>
+                      <span className="mt-1 block text-xs opacity-80">{option.description}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Description</span>
+                <textarea
+                  value={draft.description}
+                  onChange={(event) => onDraftChange({ ...draft, description: event.target.value.slice(0, 4000) })}
+                  rows={8}
+                  placeholder="What needs to be done? Include links, client context, acceptance notes, or any constraints."
+                  className="w-full resize-none rounded-lg border border-[var(--ops-border)] bg-white px-3 py-2 text-sm leading-6 text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
+                />
+                <span className="mt-1 block text-xs text-[var(--ops-muted)]">{draft.description.trim().length}/4000</span>
+              </label>
+
+              {error ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {error}
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="border-t border-[var(--ops-border)] px-5 py-4">
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={creating}
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--ops-border)] bg-white px-4 text-sm font-semibold text-[var(--ops-text)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={creating || !draft.title.trim()}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#2f6b4f] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                {creating ? 'Creating' : 'Create ticket'}
+              </button>
+            </div>
+          </div>
+        </form>
       </aside>
     </div>
   );

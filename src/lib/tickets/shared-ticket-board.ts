@@ -1,7 +1,12 @@
+import { randomUUID } from 'node:crypto';
 import { sql, withTenantContext } from '@/lib/db';
 import type { SessionUser } from '@/lib/auth/types';
 
 export const TICKET_COMMENT_MAX_LENGTH = 4000;
+export const TICKET_TITLE_MAX_LENGTH = 160;
+export const TICKET_DESCRIPTION_MAX_LENGTH = 4000;
+
+const VALID_TICKET_PRIORITIES = new Set(['low', 'normal', 'high', 'urgent']);
 
 export type TicketBucket = {
   id: string;
@@ -32,6 +37,61 @@ export function normalizeTicketCommentBody(value: unknown):
     return { ok: false, error: `Comment body must be ${TICKET_COMMENT_MAX_LENGTH.toLocaleString()} characters or fewer.` };
   }
   return { ok: true, body };
+}
+
+export function normalizeTicketCreateInput(input: {
+  title?: unknown;
+  description?: unknown;
+  priority?: unknown;
+  dueDate?: unknown;
+}):
+  | {
+      ok: true;
+      title: string;
+      description: string | null;
+      priority: 'low' | 'normal' | 'high' | 'urgent';
+      dueDate: string | null;
+    }
+  | { ok: false; error: string } {
+  const title = String(input.title || '').trim();
+  if (!title) return { ok: false, error: 'Ticket name is required.' };
+  if (title.length > TICKET_TITLE_MAX_LENGTH) {
+    return { ok: false, error: `Ticket name must be ${TICKET_TITLE_MAX_LENGTH.toLocaleString()} characters or fewer.` };
+  }
+
+  const description = String(input.description || '').trim();
+  if (description.length > TICKET_DESCRIPTION_MAX_LENGTH) {
+    return { ok: false, error: `Description must be ${TICKET_DESCRIPTION_MAX_LENGTH.toLocaleString()} characters or fewer.` };
+  }
+
+  const priority = String(input.priority || 'normal').trim().toLowerCase();
+  if (!VALID_TICKET_PRIORITIES.has(priority)) {
+    return { ok: false, error: 'Urgency must be low, normal, high, or urgent.' };
+  }
+
+  const dueDate = String(input.dueDate || '').trim();
+  if (dueDate) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dueDate);
+    const parsed = match ? new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))) : null;
+    if (
+      !match ||
+      !parsed ||
+      Number.isNaN(parsed.getTime()) ||
+      parsed.getUTCFullYear() !== Number(match[1]) ||
+      parsed.getUTCMonth() !== Number(match[2]) - 1 ||
+      parsed.getUTCDate() !== Number(match[3])
+    ) {
+      return { ok: false, error: 'Date needed by must be a valid date.' };
+    }
+  }
+
+  return {
+    ok: true,
+    title,
+    description: description || null,
+    priority: priority as 'low' | 'normal' | 'high' | 'urgent',
+    dueDate: dueDate || null,
+  };
 }
 
 export async function listTicketBuckets(): Promise<TicketBucket[]> {
@@ -89,6 +149,75 @@ export async function listCompanyTickets(user: SessionUser) {
       buckets: await listTicketBuckets(),
       tickets,
       currentUserEmail: user.email,
+    };
+  });
+}
+
+export async function createTicket(input: {
+  user: SessionUser;
+  title: string;
+  description: string | null;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  dueDate: string | null;
+}) {
+  return withTenantContext(input.user.companyId, async () => {
+    const buckets = await listTicketBuckets();
+    const bucket = buckets[0];
+    if (!bucket) {
+      throw new Error('No active ticket bucket is configured.');
+    }
+
+    const orderRows = await sql`
+      SELECT COALESCE(MAX(sort_order), 0) AS max_sort_order
+      FROM admin_tickets
+      WHERE company_id = ${input.user.companyId}
+        AND bucket_id = ${bucket.id}
+    `;
+    const nextSortOrder = Number(orderRows[0]?.max_sort_order || 0) + 1;
+    const ticketId = randomUUID();
+
+    const rows = await sql`
+      INSERT INTO admin_tickets (
+        id,
+        company_id,
+        bucket_id,
+        title,
+        description,
+        priority,
+        requester_email,
+        source,
+        due_date,
+        sort_order,
+        created_by_user_id,
+        updated_by_user_id
+      ) VALUES (
+        ${ticketId},
+        ${input.user.companyId},
+        ${bucket.id},
+        ${input.title},
+        ${input.description},
+        ${input.priority},
+        ${input.user.email},
+        ${'portal'},
+        ${input.dueDate},
+        ${nextSortOrder},
+        ${input.user.id},
+        ${input.user.id}
+      )
+      RETURNING *
+    `;
+
+    const ticket = rows[0];
+    return {
+      ...ticket,
+      bucket_name: bucket.name,
+      bucket_color: bucket.color,
+      project_title: null,
+      project_status: null,
+      comment_count: 0,
+      latest_comment_body: null,
+      latest_comment_at: null,
+      commented_by_current_user: 0,
     };
   });
 }
