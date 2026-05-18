@@ -21,12 +21,20 @@ function requireStagingGatewayUrl(value: string): string {
 }
 
 export function getGatewayLoginUrl() {
+  return `${getGatewayBaseUrl()}/sign-in?redirect_url=/launch`;
+}
+
+export function getGatewayLogoutUrl() {
+  return `${getGatewayBaseUrl()}/api/staging-logout`;
+}
+
+function getGatewayBaseUrl() {
   const configuredGatewayUrl =
     cleanGatewayUrl(process.env.NEXT_PUBLIC_PORTAL_GATEWAY_URL) ||
     cleanGatewayUrl(process.env.PORTAL_GATEWAY_URL);
-  const gatewayUrl =
+  return (
     process.env.APP_ENV === 'staging'
       ? requireStagingGatewayUrl(configuredGatewayUrl)
-      : configuredGatewayUrl || DEFAULT_GATEWAY_URL;
-  return `${gatewayUrl}/sign-in?redirect_url=/launch`;
+      : configuredGatewayUrl || DEFAULT_GATEWAY_URL
+  );
 }

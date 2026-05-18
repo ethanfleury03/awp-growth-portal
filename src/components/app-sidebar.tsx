@@ -66,11 +66,41 @@ function navItemIsActive(pathname: string, href: string) {
 
 function ClerkSignOutIconButton({ className }: { className?: string }) {
   const { signOut } = useClerk();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  async function handleSignOut() {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { accept: 'application/json' },
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { mode?: string; redirectUrl?: string }
+        | null;
+      const redirectUrl = payload?.redirectUrl || getGatewayLoginUrl();
+
+      if (payload?.mode === 'gateway-fallback') {
+        window.location.assign(redirectUrl);
+        return;
+      }
+
+      await signOut({ redirectUrl });
+    } catch {
+      window.location.assign(getGatewayLoginUrl());
+    } finally {
+      setIsSigningOut(false);
+    }
+  }
+
   return (
     <button
       type="button"
-      onClick={() => signOut({ redirectUrl: getGatewayLoginUrl() })}
-      title="Sign out"
+      onClick={handleSignOut}
+      disabled={isSigningOut}
+      title={isSigningOut ? 'Signing out' : 'Sign out'}
       className={className}
     >
       <LogOut className="w-4 h-4" />
