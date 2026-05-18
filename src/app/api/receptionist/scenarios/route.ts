@@ -7,8 +7,8 @@ import { receptionistService } from '@/lib/receptionist/service';
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Unknown error';
 
-export async function GET() {
-  const blocked = rejectReceptionistMockInProduction();
+export async function GET(request: Request) {
+  const blocked = rejectReceptionistMockInProduction(process.env, request);
   if (blocked) return blocked;
 
   const portal = await requireModuleOrRespond('receptionist');
