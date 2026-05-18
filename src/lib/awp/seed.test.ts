@@ -8,6 +8,7 @@ function env(overrides: Partial<NodeJS.ProcessEnv>): NodeJS.ProcessEnv {
 describe('AWP demo seed guard', () => {
   it('does not run demo seeding in production by default', () => {
     expect(isAwpDemoSeedEnabled(env({ APP_ENV: 'production' }))).toBe(false);
+    expect(isAwpDemoSeedEnabled(env({ APP_ENV: 'prod' }))).toBe(false);
     expect(isAwpDemoSeedEnabled(env({ VERCEL_ENV: 'production', NODE_ENV: 'production' }))).toBe(false);
     expect(isAwpDemoSeedEnabled(env({ APP_ENV: 'staging', VERCEL_ENV: 'production' }))).toBe(false);
   });
@@ -17,8 +18,9 @@ describe('AWP demo seed guard', () => {
     expect(isAwpDemoSeedEnabled(env({ VERCEL_ENV: 'preview', NODE_ENV: 'production' }))).toBe(true);
   });
 
-  it('can be explicitly overridden for emergency data repair', () => {
-    expect(isAwpDemoSeedEnabled(env({ AWP_DEMO_SEED_ENABLED: '1', APP_ENV: 'production' }))).toBe(true);
+  it('can be explicitly controlled outside production', () => {
+    expect(isAwpDemoSeedEnabled(env({ AWP_DEMO_SEED_ENABLED: '1', APP_ENV: 'staging' }))).toBe(true);
+    expect(isAwpDemoSeedEnabled(env({ AWP_DEMO_SEED_ENABLED: '1', APP_ENV: 'production' }))).toBe(false);
     expect(isAwpDemoSeedEnabled(env({ AWP_DEMO_SEED_ENABLED: '0', APP_ENV: 'staging' }))).toBe(false);
   });
 });

@@ -1,4 +1,5 @@
 import { sql } from '@/lib/db';
+import { isProductionEnvironment } from '@/lib/staging/config';
 import {
   awpBusinessProfile,
   awpEstimateCatalogDefaults,
@@ -208,17 +209,19 @@ function cleanEnv(value: string | undefined) {
 
 export function isAwpDemoSeedEnabled(env: NodeJS.ProcessEnv = process.env) {
   const explicit = cleanEnv(env.AWP_DEMO_SEED_ENABLED);
-  if (['1', 'true', 'yes', 'on'].includes(explicit)) return true;
   if (['0', 'false', 'no', 'off'].includes(explicit)) return false;
+  if (isProductionEnvironment(env)) return false;
+  if (['1', 'true', 'yes', 'on'].includes(explicit)) return true;
 
   const vercelEnv = cleanEnv(env.VERCEL_ENV);
-  if (vercelEnv === 'production') return false;
   if (vercelEnv === 'preview') return true;
+  if (vercelEnv) return false;
 
   const appEnv = cleanEnv(env.APP_ENV);
   if (appEnv === 'staging' || appEnv === 'development' || appEnv === 'test') return true;
-  if (appEnv === 'production') return false;
+  if (appEnv) return false;
 
+  if (env.VERCEL === '1') return false;
   return cleanEnv(env.NODE_ENV) !== 'production';
 }
 

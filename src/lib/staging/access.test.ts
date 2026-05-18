@@ -18,6 +18,8 @@ describe('staging environment helpers', () => {
 
   it('treats Vercel production as production even if APP_ENV is mis-set', () => {
     expect(isProductionEnvironment(env({ APP_ENV: 'staging', VERCEL_ENV: 'production' }))).toBe(true);
+    expect(isProductionEnvironment(env({ APP_ENV: 'prod' }))).toBe(true);
+    expect(isProductionEnvironment(env({ APP_ENV: 'main' }))).toBe(true);
     expect(isProductionEnvironment(env({ APP_ENV: 'staging', VERCEL_ENV: 'preview' }))).toBe(false);
   });
 
