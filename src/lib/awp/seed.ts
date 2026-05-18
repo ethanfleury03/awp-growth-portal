@@ -202,6 +202,26 @@ const sampleLeads: SampleLead[] = [
 
 const seedPromises = new Map<string, Promise<void>>();
 
+function cleanEnv(value: string | undefined) {
+  return (value || '').trim().toLowerCase();
+}
+
+export function isAwpDemoSeedEnabled(env: NodeJS.ProcessEnv = process.env) {
+  const explicit = cleanEnv(env.AWP_DEMO_SEED_ENABLED);
+  if (['1', 'true', 'yes', 'on'].includes(explicit)) return true;
+  if (['0', 'false', 'no', 'off'].includes(explicit)) return false;
+
+  const appEnv = cleanEnv(env.APP_ENV);
+  if (appEnv === 'staging' || appEnv === 'development' || appEnv === 'test') return true;
+  if (appEnv === 'production') return false;
+
+  const vercelEnv = cleanEnv(env.VERCEL_ENV);
+  if (vercelEnv === 'preview') return true;
+  if (vercelEnv === 'production') return false;
+
+  return cleanEnv(env.NODE_ENV) !== 'production';
+}
+
 async function ensureAwpCompanyProfile(companyId: string) {
   await sql`
     UPDATE companies
@@ -732,6 +752,8 @@ async function runAwpDemoSeed(companyId: string, branchId?: string | null) {
 }
 
 export async function ensureAwpDemoData(companyId: string, branchId?: string | null) {
+  if (!isAwpDemoSeedEnabled()) return;
+
   const existing = seedPromises.get(companyId);
   if (existing) return existing;
 
