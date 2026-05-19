@@ -155,7 +155,6 @@ export default function TicketsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createDraft, setCreateDraft] = useState<CreateTicketDraft>(() => emptyTicketDraft());
   const [creating, setCreating] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
   const [editDraft, setEditDraft] = useState<EditTicketDraft | null>(null);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -293,7 +292,6 @@ export default function TicketsPage() {
   function startEditTicket(ticket: Ticket) {
     setEditDraft(ticketToEditDraft(ticket));
     setError('');
-    setEditOpen(true);
   }
 
   async function updateSelectedTicket() {
@@ -314,7 +312,6 @@ export default function TicketsPage() {
       });
       const json = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(json.error || 'Unable to update ticket.');
-      setEditOpen(false);
       setEditDraft(null);
       await Promise.all([loadBoard(true), loadDetail(selectedTicket.id)]);
     } catch (err) {
@@ -338,7 +335,6 @@ export default function TicketsPage() {
       setSelectedTicketId(null);
       setDetail(null);
       setCommentBody('');
-      setEditOpen(false);
       setEditDraft(null);
       await loadBoard(true);
     } catch (err) {
@@ -495,20 +491,31 @@ export default function TicketsPage() {
       </main>
 
       {selectedTicket ? (
-        <TicketDrawer
+        <TicketWorkspaceModal
           ticket={selectedTicket}
           comments={detail?.comments ?? []}
           loading={detailLoading}
           body={commentBody}
+          draft={editDraft}
+          buckets={board.buckets}
           posting={posting}
+          updating={updating}
           deleting={deleting}
+          error={error}
           onBodyChange={setCommentBody}
+          onDraftChange={setEditDraft}
           onClose={() => {
             setSelectedTicketId(null);
             setDetail(null);
             setCommentBody('');
+            setEditDraft(null);
           }}
           onEdit={() => startEditTicket(selectedTicket)}
+          onCancelEdit={() => {
+            if (updating) return;
+            setEditDraft(null);
+          }}
+          onUpdate={() => void updateSelectedTicket()}
           onDelete={() => void deleteSelectedTicket()}
           onPost={postComment}
         />
@@ -528,36 +535,27 @@ export default function TicketsPage() {
           onCreate={() => void createNewTicket()}
         />
       ) : null}
-
-      {editOpen && editDraft ? (
-        <EditTicketDrawer
-          draft={editDraft}
-          buckets={board.buckets}
-          updating={updating}
-          error={error}
-          onDraftChange={(draft) => setEditDraft(draft)}
-          onClose={() => {
-            if (updating) return;
-            setEditOpen(false);
-            setEditDraft(null);
-          }}
-          onUpdate={() => void updateSelectedTicket()}
-        />
-      ) : null}
     </div>
   );
 }
 
-function TicketDrawer({
+function TicketWorkspaceModal({
   ticket,
   comments,
   loading,
   body,
+  draft,
+  buckets,
   posting,
+  updating,
   deleting,
+  error,
   onBodyChange,
+  onDraftChange,
   onClose,
   onEdit,
+  onCancelEdit,
+  onUpdate,
   onDelete,
   onPost,
 }: {
@@ -565,14 +563,23 @@ function TicketDrawer({
   comments: TicketComment[];
   loading: boolean;
   body: string;
+  draft: EditTicketDraft | null;
+  buckets: Bucket[];
   posting: boolean;
+  updating: boolean;
   deleting: boolean;
+  error: string;
   onBodyChange: (value: string) => void;
+  onDraftChange: (draft: EditTicketDraft | null) => void;
   onClose: () => void;
   onEdit: () => void;
+  onCancelEdit: () => void;
+  onUpdate: () => void;
   onDelete: () => void;
   onPost: () => void;
 }) {
+  const isEditing = Boolean(draft);
+
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/25 p-3 backdrop-blur-sm sm:p-5">
       <section className="flex h-[min(52rem,calc(100vh-1.5rem))] w-full max-w-[82rem] flex-col overflow-hidden rounded-lg border border-[var(--ops-border-strong)] bg-[var(--ops-surface-strong)] shadow-[0_26px_80px_-44px_rgba(8,18,35,0.72)] sm:h-[min(52rem,calc(100vh-2.5rem))]">
@@ -590,14 +597,36 @@ function TicketDrawer({
             <p className="mt-1 text-sm text-[var(--ops-muted)]">Updated {formatDateTime(ticket.updated_at)}</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={onEdit}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm font-semibold text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)]"
-            >
-              <Edit3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Edit</span>
-            </button>
+            {isEditing ? (
+              <>
+                <button
+                  type="button"
+                  onClick={onCancelEdit}
+                  disabled={updating}
+                  className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm font-semibold text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={onUpdate}
+                  disabled={updating || !draft?.title.trim() || !draft?.bucketId}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#2f6b4f] px-3 text-sm font-semibold text-white hover:bg-[#275a42] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Edit3 className="h-4 w-4" />}
+                  <span className="hidden sm:inline">{updating ? 'Saving' : 'Save'}</span>
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm font-semibold text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)]"
+              >
+                <Edit3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Edit</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onDelete}
@@ -615,21 +644,112 @@ function TicketDrawer({
 
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(20rem,0.78fr)_minmax(0,1.22fr)]">
           <aside className="min-h-0 overflow-y-auto border-b border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-4 lg:border-b-0 lg:border-r sm:px-5">
-            <div className="grid grid-cols-2 gap-2">
-              <DetailPill label="Due date" value={formatDate(ticket.due_date)} icon={<CalendarDays className="h-4 w-4" />} />
-              <DetailPill label="Comments" value={String(count(ticket.comment_count))} icon={<MessageSquareText className="h-4 w-4" />} />
-              <DetailPill label="Project" value={ticket.project_title || 'None'} icon={<CheckCircle2 className="h-4 w-4" />} />
-              <DetailPill label="Files" value="Coming soon" icon={<Files className="h-4 w-4" />} />
-            </div>
+            {draft ? (
+              <form
+                className="space-y-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  onUpdate();
+                }}
+              >
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--ops-muted)]">Edit ticket</p>
+                  <h3 className="mt-1 text-lg font-semibold text-[var(--ops-text)]">Ticket details</h3>
+                </div>
 
-            <section className="mt-4 rounded-lg border border-[var(--ops-border)] bg-white px-4 py-3">
-              <h3 className="text-sm font-semibold text-[var(--ops-text)]">Details</h3>
-              {ticket.description ? (
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-muted)]">{ticket.description}</p>
-              ) : (
-                <p className="mt-2 text-sm text-[var(--ops-muted)]">No details yet.</p>
-              )}
-            </section>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Status</span>
+                  <select
+                    value={draft.bucketId}
+                    onChange={(event) => onDraftChange({ ...draft, bucketId: event.target.value })}
+                    className="h-11 w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
+                  >
+                    {buckets.map((bucket) => (
+                      <option key={bucket.id} value={bucket.id}>
+                        {bucket.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Name</span>
+                  <input
+                    value={draft.title}
+                    onChange={(event) => onDraftChange({ ...draft, title: event.target.value.slice(0, 160) })}
+                    className="h-11 w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
+                  />
+                  <span className="mt-1 block text-xs text-[var(--ops-muted)]">{draft.title.trim().length}/160</span>
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Date Needed Done By</span>
+                  <input
+                    type="date"
+                    value={draft.dueDate}
+                    onChange={(event) => onDraftChange({ ...draft, dueDate: event.target.value })}
+                    className="h-11 w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
+                  />
+                </label>
+
+                <div>
+                  <p className="mb-2 text-sm font-semibold text-[var(--ops-text)]">Urgency</p>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                    {priorityOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => onDraftChange({ ...draft, priority: option.value })}
+                        className={cn(
+                          'rounded-lg border px-3 py-3 text-left transition',
+                          draft.priority === option.value
+                            ? priorityClass[option.value]
+                            : 'border-[var(--ops-border)] bg-white text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)]',
+                        )}
+                      >
+                        <span className="block text-sm font-semibold">{option.label}</span>
+                        <span className="mt-1 block text-xs opacity-80">{option.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Description</span>
+                  <textarea
+                    value={draft.description}
+                    onChange={(event) => onDraftChange({ ...draft, description: event.target.value.slice(0, 4000) })}
+                    rows={8}
+                    className="w-full resize-none rounded-lg border border-[var(--ops-border)] bg-white px-3 py-2 text-sm leading-6 text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
+                  />
+                  <span className="mt-1 block text-xs text-[var(--ops-muted)]">{draft.description.trim().length}/4000</span>
+                </label>
+
+                {error ? (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {error}
+                  </div>
+                ) : null}
+              </form>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <DetailPill label="Due date" value={formatDate(ticket.due_date)} icon={<CalendarDays className="h-4 w-4" />} />
+                  <DetailPill label="Comments" value={String(count(ticket.comment_count))} icon={<MessageSquareText className="h-4 w-4" />} />
+                  <DetailPill label="Project" value={ticket.project_title || 'None'} icon={<CheckCircle2 className="h-4 w-4" />} />
+                  <DetailPill label="Files" value="Coming soon" icon={<Files className="h-4 w-4" />} />
+                </div>
+
+                <section className="mt-4 rounded-lg border border-[var(--ops-border)] bg-white px-4 py-3">
+                  <h3 className="text-sm font-semibold text-[var(--ops-text)]">Details</h3>
+                  {ticket.description ? (
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-muted)]">{ticket.description}</p>
+                  ) : (
+                    <p className="mt-2 text-sm text-[var(--ops-muted)]">No details yet.</p>
+                  )}
+                </section>
+              </>
+            )}
           </aside>
 
           <section className="flex min-h-0 flex-1 flex-col bg-[var(--ops-surface-subtle)]">
@@ -835,155 +955,6 @@ function CreateTicketDrawer({
               >
                 {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                 {creating ? 'Creating' : 'Create ticket'}
-              </button>
-            </div>
-          </div>
-        </form>
-      </aside>
-    </div>
-  );
-}
-
-function EditTicketDrawer({
-  draft,
-  buckets,
-  updating,
-  error,
-  onDraftChange,
-  onClose,
-  onUpdate,
-}: {
-  draft: EditTicketDraft;
-  buckets: Bucket[];
-  updating: boolean;
-  error: string;
-  onDraftChange: (draft: EditTicketDraft) => void;
-  onClose: () => void;
-  onUpdate: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/20 backdrop-blur-sm">
-      <aside className="flex h-full w-full flex-col border-l border-[var(--ops-border-strong)] bg-[var(--ops-surface-strong)] shadow-[0_18px_44px_-28px_rgba(8,18,35,0.5)] sm:max-w-[32rem]">
-        <div className="border-b border-[var(--ops-border)] px-5 py-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--ops-muted)]">Edit ticket</p>
-              <h2 className="mt-1 text-xl font-semibold leading-7 text-[var(--ops-text)]">Update Ticket</h2>
-              <p className="mt-1 text-sm text-[var(--ops-muted)]">Change the request, urgency, due date, or board status.</p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={updating}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--ops-border)] text-[var(--ops-muted)] hover:bg-[var(--ops-surface-subtle)] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        <form
-          className="flex min-h-0 flex-1 flex-col"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onUpdate();
-          }}
-        >
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-            <div className="space-y-5">
-              <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Status</span>
-                <select
-                  value={draft.bucketId}
-                  onChange={(event) => onDraftChange({ ...draft, bucketId: event.target.value })}
-                  className="h-11 w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
-                >
-                  {buckets.map((bucket) => (
-                    <option key={bucket.id} value={bucket.id}>
-                      {bucket.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Name</span>
-                <input
-                  value={draft.title}
-                  onChange={(event) => onDraftChange({ ...draft, title: event.target.value.slice(0, 160) })}
-                  className="h-11 w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
-                />
-                <span className="mt-1 block text-xs text-[var(--ops-muted)]">{draft.title.trim().length}/160</span>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Date Needed Done By</span>
-                <input
-                  type="date"
-                  value={draft.dueDate}
-                  onChange={(event) => onDraftChange({ ...draft, dueDate: event.target.value })}
-                  className="h-11 w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
-                />
-              </label>
-
-              <div>
-                <p className="mb-2 text-sm font-semibold text-[var(--ops-text)]">Urgency</p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {priorityOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => onDraftChange({ ...draft, priority: option.value })}
-                      className={cn(
-                        'rounded-lg border px-3 py-3 text-left transition',
-                        draft.priority === option.value
-                          ? priorityClass[option.value]
-                          : 'border-[var(--ops-border)] bg-white text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)]',
-                      )}
-                    >
-                      <span className="block text-sm font-semibold">{option.label}</span>
-                      <span className="mt-1 block text-xs opacity-80">{option.description}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-[var(--ops-text)]">Description</span>
-                <textarea
-                  value={draft.description}
-                  onChange={(event) => onDraftChange({ ...draft, description: event.target.value.slice(0, 4000) })}
-                  rows={8}
-                  className="w-full resize-none rounded-lg border border-[var(--ops-border)] bg-white px-3 py-2 text-sm leading-6 text-[var(--ops-text)] outline-none focus:border-[#2f6b4f] focus:ring-4 focus:ring-[rgba(47,107,79,0.14)]"
-                />
-                <span className="mt-1 block text-xs text-[var(--ops-muted)]">{draft.description.trim().length}/4000</span>
-              </label>
-
-              {error ? (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {error}
-                </div>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="border-t border-[var(--ops-border)] px-5 py-4">
-            <div className="flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={updating}
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--ops-border)] bg-white px-4 text-sm font-semibold text-[var(--ops-text)] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={updating || !draft.title.trim() || !draft.bucketId}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#2f6b4f] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Edit3 className="h-4 w-4" />}
-                {updating ? 'Saving' : 'Save changes'}
               </button>
             </div>
           </div>
