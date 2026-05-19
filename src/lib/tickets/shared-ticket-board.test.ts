@@ -4,6 +4,7 @@ import {
   normalizeTicketUpdateInput,
   TICKET_TITLE_MAX_LENGTH,
 } from './shared-ticket-board';
+import { signHermesRouterPayload } from './agent-router';
 
 describe('normalizeTicketCreateInput', () => {
   it('requires a ticket name', () => {
@@ -65,5 +66,17 @@ describe('normalizeTicketCreateInput', () => {
       dueDate: null,
       bucketId: 'bucket-1',
     });
+  });
+});
+
+describe('signHermesRouterPayload', () => {
+  it('signs the timestamp and raw body for the Mac mini router', () => {
+    expect(
+      signHermesRouterPayload(
+        '{"ticket_id":"t1"}',
+        '2026-05-19T00:00:00.000Z',
+        'secret',
+      ),
+    ).toBe('6579f87260ad150c51cd8124d5533f89789109f9de36bc956a7ab904603969df');
   });
 });

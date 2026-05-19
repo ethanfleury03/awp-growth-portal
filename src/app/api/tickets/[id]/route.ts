@@ -7,6 +7,7 @@ import {
   normalizeTicketUpdateInput,
   updateTicket,
 } from '@/lib/tickets/shared-ticket-board';
+import { queueTicketAgentEvent } from '@/lib/tickets/agent-router';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -55,6 +56,9 @@ export async function PATCH(request: Request, ctx: Ctx) {
       priority: parsed.priority,
       dueDate: parsed.dueDate,
       bucketId: parsed.bucketId,
+    });
+    await queueTicketAgentEvent({ eventType: 'ticket.updated', user, ticket }).catch((queueError) => {
+      console.error('[ticket-agent] failed to queue ticket.updated', queueError);
     });
     return NextResponse.json({ ticket });
   } catch (error) {

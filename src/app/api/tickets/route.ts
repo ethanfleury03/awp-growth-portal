@@ -6,6 +6,7 @@ import {
   listCompanyTickets,
   normalizeTicketCreateInput,
 } from '@/lib/tickets/shared-ticket-board';
+import { queueTicketAgentEvent } from '@/lib/tickets/agent-router';
 
 export async function GET() {
   const user = await requireModuleOrRespond('tickets');
@@ -42,6 +43,9 @@ export async function POST(request: Request) {
       description: parsed.description,
       priority: parsed.priority,
       dueDate: parsed.dueDate,
+    });
+    await queueTicketAgentEvent({ eventType: 'ticket.created', user, ticket }).catch((queueError) => {
+      console.error('[ticket-agent] failed to queue ticket.created', queueError);
     });
     return NextResponse.json({ ticket }, { status: 201 });
   } catch (error) {

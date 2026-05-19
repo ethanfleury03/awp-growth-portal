@@ -9,6 +9,8 @@ const EXPECTED_TABLES = [
   'feature_flags',
   'portal_destinations',
   'unassigned_portal_users',
+  'admin_tickets',
+  'ticket_agent_events',
 ];
 
 const RLS_AUDIT_TABLES = [
@@ -47,6 +49,9 @@ const RLS_AUDIT_TABLES = [
   'attachments',
   'service_contracts',
   'service_contract_schedules',
+  'admin_tickets',
+  'admin_ticket_comments',
+  'ticket_agent_events',
 ];
 
 function stableFingerprint(input: string) {
