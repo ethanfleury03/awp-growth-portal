@@ -755,8 +755,8 @@ function TicketWorkspaceModal({
           <section className="flex min-h-0 flex-1 flex-col bg-[var(--ops-surface-subtle)]">
             <div className="flex items-center justify-between gap-3 border-b border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 sm:px-5">
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-[var(--ops-text)]">Conversation</h3>
-                <p className="text-xs text-[var(--ops-muted)]">{count(ticket.comment_count).toLocaleString()} updates</p>
+                <h3 className="text-sm font-semibold text-[var(--ops-text)]">Ticket conversation</h3>
+                <p className="text-xs text-[var(--ops-muted)]">{count(ticket.comment_count).toLocaleString()} admin/client updates</p>
               </div>
               {loading ? <Loader2 className="h-4 w-4 animate-spin text-[var(--ops-muted)]" /> : null}
             </div>
@@ -807,7 +807,7 @@ function TicketWorkspaceModal({
               <textarea
                 value={body}
                 onChange={(event) => onBodyChange(event.target.value.slice(0, 4000))}
-                placeholder="Write an update or ask the agent"
+                placeholder="Write an admin/client update"
                 className="min-h-[6rem] w-full resize-none rounded-lg border border-[var(--ops-border)] bg-white px-3 py-2 text-sm text-[var(--ops-text)] outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-blue-100"
               />
               <div className="mt-2 flex items-center justify-between gap-3">
@@ -819,7 +819,7 @@ function TicketWorkspaceModal({
                   className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  Send
+                  Add update
                 </button>
               </div>
             </div>

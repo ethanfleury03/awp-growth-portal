@@ -48,6 +48,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
   }
 
   try {
+    const previousDetail = await getCompanyTicketDetail(id, user.companyId);
     const ticket = await updateTicket({
       user,
       ticketId: id,
@@ -57,7 +58,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
       dueDate: parsed.dueDate,
       bucketId: parsed.bucketId,
     });
-    await queueTicketAgentEvent({ eventType: 'ticket.updated', user, ticket }).catch((queueError) => {
+    await queueTicketAgentEvent({ eventType: 'ticket.updated', user, ticket, previousTicket: previousDetail?.ticket ?? null }).catch((queueError) => {
       console.error('[ticket-agent] failed to queue ticket.updated', queueError);
     });
     return NextResponse.json({ ticket });

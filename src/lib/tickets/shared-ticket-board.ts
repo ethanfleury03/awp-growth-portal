@@ -452,3 +452,172 @@ export async function addTicketComment(input: {
     return rows[0] as TicketComment;
   });
 }
+
+export type TicketAgentLifecycleStatus =
+  | 'started'
+  | 'in_progress'
+  | 'blocked'
+  | 'needs_info'
+  | 'completed'
+  | 'ready_for_review'
+  | 'done'
+  | 'failed'
+  | string;
+
+export type TicketAgentLifecycleResult = {
+  ticket: Record<string, unknown>;
+  comment: TicketComment;
+  bucketMoved: boolean;
+  bucketName: string | null;
+};
+
+function normalizeLifecycleStatus(value: string) {
+  return value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+}
+
+function lifecycleBucketCandidates(status: string) {
+  const normalized = normalizeLifecycleStatus(status);
+  if (['started', 'start', 'in_progress', 'working', 'running', 'picked_up'].includes(normalized)) {
+    return ['In progress'];
+  }
+  if (['blocked', 'needs_info', 'needs_information', 'waiting_on_client', 'waiting'].includes(normalized)) {
+    return ['Waiting on client'];
+  }
+  if (['completed', 'complete', 'ready_for_review', 'review', 'done', 'finished', 'success'].includes(normalized)) {
+    return ['Ready for review', 'Done'];
+  }
+  if (['failed', 'error'].includes(normalized)) {
+    return ['Waiting on client'];
+  }
+  return [];
+}
+
+function defaultAgentLifecycleMessage(status: string) {
+  const normalized = normalizeLifecycleStatus(status);
+  if (['started', 'start', 'in_progress', 'working', 'running', 'picked_up'].includes(normalized)) {
+    return 'AWP Growth Agent started working on this.';
+  }
+  if (['blocked', 'needs_info', 'needs_information', 'waiting_on_client', 'waiting'].includes(normalized)) {
+    return 'AWP Growth Agent is blocked and needs more information.';
+  }
+  if (['failed', 'error'].includes(normalized)) {
+    return 'AWP Growth Agent hit an issue while working on this ticket.';
+  }
+  return 'AWP Growth Agent finished this ticket and it is ready for review.';
+}
+
+function buildAgentLifecycleComment(input: {
+  status: string;
+  message?: string | null;
+  result?: string | null;
+  artifactPaths?: string[];
+  artifactUrls?: string[];
+}) {
+  const message = String(input.message || '').trim() || defaultAgentLifecycleMessage(input.status);
+  const result = String(input.result || '').trim();
+  const artifactPaths = (input.artifactPaths || []).map((item) => item.trim()).filter(Boolean);
+  const artifactUrls = (input.artifactUrls || []).map((item) => item.trim()).filter(Boolean);
+
+  const lines = [message];
+  if (result && result !== message) {
+    lines.push('', result);
+  }
+  if (artifactPaths.length || artifactUrls.length) {
+    lines.push('', 'Artifacts:');
+    for (const path of artifactPaths) lines.push(`- ${path}`);
+    for (const url of artifactUrls) lines.push(`- ${url}`);
+  }
+
+  const body = lines.join('\n');
+  if (body.length <= TICKET_COMMENT_MAX_LENGTH) return body;
+  return `${body.slice(0, TICKET_COMMENT_MAX_LENGTH - 68).trimEnd()}\n\n[Agent update truncated to fit the ticket conversation.]`;
+}
+
+async function resolveLifecycleBucket(status: string): Promise<TicketBucket | null> {
+  const candidates = lifecycleBucketCandidates(status).map((name) => name.toLowerCase());
+  if (candidates.length === 0) return null;
+
+  const buckets = await listTicketBuckets();
+  for (const candidate of candidates) {
+    const bucket = buckets.find((item) => item.name.trim().toLowerCase() === candidate);
+    if (bucket) return bucket;
+  }
+  return null;
+}
+
+async function moveTicketToBucket(input: {
+  ticketId: string;
+  companyId: string;
+  bucket: TicketBucket;
+}) {
+  return withTenantContext(input.companyId, async () => {
+    const existingRows = await sql`
+      SELECT id, bucket_id
+      FROM admin_tickets
+      WHERE id = ${input.ticketId}
+        AND company_id = ${input.companyId}
+      LIMIT 1
+    `;
+    const existing = existingRows[0];
+    if (!existing) {
+      throw new Error('Ticket not found.');
+    }
+    if (String(existing.bucket_id) === input.bucket.id) {
+      return false;
+    }
+
+    const orderRows = await sql`
+      SELECT COALESCE(MAX(sort_order), 0) AS max_sort_order
+      FROM admin_tickets
+      WHERE company_id = ${input.companyId}
+        AND bucket_id = ${input.bucket.id}
+    `;
+    const nextSortOrder = Number(orderRows[0]?.max_sort_order || 0) + 1;
+
+    await sql`
+      UPDATE admin_tickets
+      SET bucket_id = ${input.bucket.id},
+          sort_order = ${nextSortOrder},
+          updated_by_user_id = NULL,
+          updated_at = NOW()
+      WHERE id = ${input.ticketId}
+        AND company_id = ${input.companyId}
+    `;
+    return true;
+  });
+}
+
+export async function applyTicketAgentLifecycleUpdate(input: {
+  ticketId: string;
+  companyId: string;
+  status: TicketAgentLifecycleStatus;
+  message?: string | null;
+  result?: string | null;
+  artifactPaths?: string[];
+  artifactUrls?: string[];
+}): Promise<TicketAgentLifecycleResult> {
+  const status = String(input.status || '').trim();
+  if (!status) throw new Error('Agent status is required.');
+
+  const bucket = await resolveLifecycleBucket(status);
+  const bucketMoved = bucket
+    ? await moveTicketToBucket({ ticketId: input.ticketId, companyId: input.companyId, bucket })
+    : false;
+  const comment = await addTicketComment({
+    ticketId: input.ticketId,
+    companyId: input.companyId,
+    authorUserId: null,
+    authorRole: 'agent',
+    authorName: 'AWP Growth Agent',
+    authorEmail: 'awp-agent@wnyautomation.local',
+    body: buildAgentLifecycleComment(input),
+  });
+  const detail = await getCompanyTicketDetail(input.ticketId, input.companyId);
+  if (!detail) throw new Error('Ticket not found.');
+  return {
+    ticket: detail.ticket,
+    comment,
+    bucketMoved,
+    bucketName: bucket?.name || null,
+  };
+}
