@@ -13,10 +13,14 @@ const AgentStatusPayload = z.object({
   run_id: z.string().trim().optional(),
   status: z.string().trim().min(1).max(80),
   message: z.string().trim().max(8000).optional(),
+  summary: z.string().trim().max(12000).optional(),
   result: z.string().trim().max(20000).optional(),
   result_summary: z.string().trim().max(12000).optional(),
+  solution_summary: z.string().trim().max(12000).optional(),
   artifact_paths: z.array(z.string().trim().min(1).max(1200)).max(MAX_ARTIFACTS).optional(),
   artifact_urls: z.array(z.string().trim().min(1).max(1200)).max(MAX_ARTIFACTS).optional(),
+  drive_links: z.array(z.string().trim().min(1).max(1200)).max(MAX_ARTIFACTS).optional(),
+  file_links: z.array(z.string().trim().min(1).max(1200)).max(MAX_ARTIFACTS).optional(),
 });
 
 function bearerToken(request: Request) {
@@ -112,9 +116,13 @@ export async function POST(request: Request) {
       companyId: String(ticket.company_id),
       status: parsed.data.status,
       message: parsed.data.message,
-      result: parsed.data.result || parsed.data.result_summary,
+      result: parsed.data.result || parsed.data.summary || parsed.data.result_summary || parsed.data.solution_summary,
       artifactPaths: parsed.data.artifact_paths || [],
-      artifactUrls: parsed.data.artifact_urls || [],
+      artifactUrls: [
+        ...(parsed.data.artifact_urls || []),
+        ...(parsed.data.drive_links || []),
+        ...(parsed.data.file_links || []),
+      ],
     });
 
     return NextResponse.json({

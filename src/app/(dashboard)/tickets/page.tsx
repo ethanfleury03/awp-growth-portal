@@ -76,11 +76,18 @@ type TicketDetailResponse = {
 type TicketPanel = 'conversation' | 'solution' | 'files';
 
 type TicketSolution = {
-  status: 'ready' | 'draft' | 'empty';
+  status: 'ready' | 'draft' | 'pending';
   label: string;
   body: string;
   updatedAt: string | null;
-  artifacts: string[];
+  artifacts: TicketArtifact[];
+};
+
+type TicketArtifact = {
+  id: string;
+  label: string;
+  href: string;
+  kind: 'drive' | 'url' | 'local';
 };
 
 type CreateTicketDraft = {
@@ -158,13 +165,70 @@ function isProgressOnlyAgentComment(body: string) {
   return /started working|is blocked|needs more information|hit an issue/i.test(body);
 }
 
-function extractArtifactLinks(body: string) {
-  const artifacts: string[] = [];
+function artifactKind(href: string): TicketArtifact['kind'] {
+  if (/drive\.google\.com|docs\.google\.com/i.test(href)) return 'drive';
+  if (/^https?:\/\//i.test(href)) return 'url';
+  return 'local';
+}
+
+function artifactLabel(value: string) {
+  try {
+    const url = new URL(value);
+    if (/docs\.google\.com/i.test(url.hostname)) {
+      if (url.pathname.startsWith('/spreadsheets/')) return 'Google Sheet';
+      if (url.pathname.startsWith('/document/')) return 'Google Doc';
+      if (url.pathname.startsWith('/presentation/')) return 'Google Slides';
+      if (url.pathname.startsWith('/forms/')) return 'Google Form';
+    }
+    if (/drive\.google\.com/i.test(url.hostname)) {
+      if (url.pathname.includes('/folders/')) return 'Google Drive folder';
+      return 'Google Drive file';
+    }
+    const segments = url.pathname.split('/').filter(Boolean);
+    return segments.at(-1) || url.hostname;
+  } catch {
+    return value.split('/').filter(Boolean).at(-1) || value;
+  }
+}
+
+function pushArtifact(artifacts: TicketArtifact[], seen: Set<string>, href: string, label?: string) {
+  const cleaned = href.trim();
+  if (!cleaned || seen.has(cleaned)) return;
+  if (!/^(\/|https?:\/\/)/i.test(cleaned)) return;
+  seen.add(cleaned);
+  artifacts.push({
+    id: cleaned,
+    href: cleaned,
+    label: label?.trim() || artifactLabel(cleaned),
+    kind: artifactKind(cleaned),
+  });
+}
+
+function extractArtifactLinks(body: string): TicketArtifact[] {
+  const artifacts: TicketArtifact[] = [];
+  const seen = new Set<string>();
+  const markdownLinkPattern = /\[([^\]]+)]\((https?:\/\/[^)\s]+)\)/g;
+  const rawUrlPattern = /https?:\/\/[^\s)]+/g;
+
+  for (const match of body.matchAll(markdownLinkPattern)) {
+    pushArtifact(artifacts, seen, match[2], match[1]);
+  }
+
   for (const line of body.split('\n')) {
     const trimmed = line.trim();
-    if (!trimmed.startsWith('- ')) continue;
-    const value = trimmed.slice(2).trim();
-    if (/^(\/|https?:\/\/)/i.test(value)) artifacts.push(value);
+    const bulletValue = trimmed.startsWith('- ') ? trimmed.slice(2).trim() : '';
+    if (bulletValue) {
+      const markdownMatch = /^\[([^\]]+)]\((https?:\/\/[^)\s]+)\)$/.exec(bulletValue);
+      if (markdownMatch) {
+        pushArtifact(artifacts, seen, markdownMatch[2], markdownMatch[1]);
+      } else {
+        pushArtifact(artifacts, seen, bulletValue);
+      }
+    }
+
+    for (const match of trimmed.matchAll(rawUrlPattern)) {
+      pushArtifact(artifacts, seen, match[0]);
+    }
   }
   return artifacts;
 }
@@ -176,9 +240,19 @@ function ticketSolution(ticket: Ticket, comments: TicketComment[]): TicketSoluti
 
   if (!latestAgentComment || (!readyStatus && isProgressOnlyAgentComment(latestAgentComment.body))) {
     return {
-      status: 'empty',
-      label: 'No solution yet',
-      body: '',
+      status: 'pending',
+      label: 'Summary pending',
+      body: [
+        `This ticket is currently ${ticket.bucket_name}.`,
+        '',
+        'Request summary',
+        ticket.description?.trim() || ticket.title,
+        '',
+        `Urgency: ${priorityLabel(ticket.priority)}`,
+        `Due date: ${formatDate(ticket.due_date)}`,
+        '',
+        'No final solution has been posted yet. When the work is complete, this report will show the final summary and any Google Drive deliverables linked to the ticket.',
+      ].join('\n'),
       updatedAt: null,
       artifacts: [],
     };
@@ -638,7 +712,7 @@ function TicketWorkspaceModal({
   const solution = useMemo(() => ticketSolution(ticket, comments), [comments, ticket]);
   const tabOptions: Array<{ id: TicketPanel; label: string; count?: number; icon: ReactNode }> = [
     { id: 'conversation', label: 'Conversation', count: count(ticket.comment_count), icon: <MessageSquareText className="h-4 w-4" /> },
-    { id: 'solution', label: 'Solution', count: solution.status === 'empty' ? 0 : 1, icon: <FileText className="h-4 w-4" /> },
+    { id: 'solution', label: 'Solution', count: 1, icon: <FileText className="h-4 w-4" /> },
     { id: 'files', label: 'Files', count: solution.artifacts.length, icon: <FolderOpen className="h-4 w-4" /> },
   ];
 
@@ -932,22 +1006,6 @@ function TicketWorkspaceModal({
 }
 
 function SolutionPanel({ solution, ticket }: { solution: TicketSolution; ticket: Ticket }) {
-  if (solution.status === 'empty') {
-    return (
-      <div className="flex h-full min-h-[18rem] items-center justify-center rounded-lg border border-dashed border-[var(--ops-border-strong)] bg-white px-6 text-center">
-        <div className="max-w-md">
-          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg border border-[rgba(47,107,79,0.2)] bg-[rgba(47,107,79,0.08)] text-[#2f6b4f]">
-            <FileText className="h-5 w-5" />
-          </div>
-          <h3 className="mt-3 text-base font-semibold text-[var(--ops-text)]">No solution yet</h3>
-          <p className="mt-2 text-sm leading-6 text-[var(--ops-muted)]">
-            When the AWP Growth Agent finishes or the ticket is ready for review, the final summary and any deliverables will appear here.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <article className="rounded-lg border border-[var(--ops-border)] bg-white shadow-[var(--ops-shadow-soft)]">
       <div className="border-b border-[var(--ops-border)] px-4 py-3 sm:px-5">
@@ -959,7 +1017,9 @@ function SolutionPanel({ solution, ticket }: { solution: TicketSolution; ticket:
                   'rounded-full border px-2 py-1 text-[10px] font-semibold uppercase',
                   solution.status === 'ready'
                     ? 'border-[rgba(47,107,79,0.24)] bg-[rgba(47,107,79,0.08)] text-[#2f6b4f]'
-                    : 'border-[rgba(242,106,31,0.26)] bg-[rgba(242,106,31,0.1)] text-[#bd4c12]',
+                    : solution.status === 'draft'
+                      ? 'border-[rgba(242,106,31,0.26)] bg-[rgba(242,106,31,0.1)] text-[#bd4c12]'
+                      : 'border-[rgba(37,99,235,0.22)] bg-[rgba(37,99,235,0.08)] text-[#2563eb]',
                 )}
               >
                 {solution.label}
@@ -981,10 +1041,11 @@ function SolutionPanel({ solution, ticket }: { solution: TicketSolution; ticket:
 
         {solution.artifacts.length ? (
           <div className="mt-4">
-            <h4 className="text-sm font-semibold text-[var(--ops-text)]">Deliverables</h4>
+            <h4 className="text-sm font-semibold text-[var(--ops-text)]">Linked deliverables</h4>
+            <p className="mt-1 text-xs text-[var(--ops-muted)]">These files support the written summary above.</p>
             <div className="mt-2 grid gap-2">
               {solution.artifacts.map((artifact) => (
-                <ArtifactRow key={artifact} artifact={artifact} />
+                <ArtifactRow key={artifact.id} artifact={artifact} />
               ))}
             </div>
           </div>
@@ -994,7 +1055,7 @@ function SolutionPanel({ solution, ticket }: { solution: TicketSolution; ticket:
   );
 }
 
-function FilesPanel({ artifacts }: { artifacts: string[] }) {
+function FilesPanel({ artifacts }: { artifacts: TicketArtifact[] }) {
   if (artifacts.length === 0) {
     return (
       <div className="flex h-full min-h-[18rem] items-center justify-center rounded-lg border border-dashed border-[var(--ops-border-strong)] bg-white px-6 text-center">
@@ -1014,28 +1075,30 @@ function FilesPanel({ artifacts }: { artifacts: string[] }) {
   return (
     <div className="space-y-3">
       {artifacts.map((artifact) => (
-        <ArtifactRow key={artifact} artifact={artifact} />
+        <ArtifactRow key={artifact.id} artifact={artifact} />
       ))}
     </div>
   );
 }
 
-function ArtifactRow({ artifact }: { artifact: string }) {
-  const isUrl = /^https?:\/\//i.test(artifact);
+function ArtifactRow({ artifact }: { artifact: TicketArtifact }) {
+  const isUrl = artifact.kind === 'drive' || artifact.kind === 'url';
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--ops-border)] bg-white px-3 py-3 shadow-[var(--ops-shadow-soft)]">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--ops-border)] bg-[var(--ops-surface-subtle)] text-[var(--ops-muted)]">
-          <Files className="h-4 w-4" />
+          {artifact.kind === 'drive' ? <FolderOpen className="h-4 w-4" /> : <Files className="h-4 w-4" />}
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-[var(--ops-text)]">{artifact.split('/').filter(Boolean).at(-1) || artifact}</p>
-          <p className="truncate text-xs text-[var(--ops-muted)]">{artifact}</p>
+          <p className="truncate text-sm font-semibold text-[var(--ops-text)]">{artifact.label}</p>
+          <p className="truncate text-xs text-[var(--ops-muted)]">
+            {artifact.kind === 'drive' ? 'Google Drive link' : artifact.kind === 'url' ? 'External link' : artifact.href}
+          </p>
         </div>
       </div>
       {isUrl ? (
         <a
-          href={artifact}
+          href={artifact.href}
           target="_blank"
           rel="noreferrer"
           className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm font-semibold text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)]"

@@ -520,10 +520,10 @@ function buildAgentLifecycleComment(input: {
 
   const lines = [message];
   if (result && result !== message) {
-    lines.push('', result);
+    lines.push('', 'Summary', result);
   }
   if (artifactPaths.length || artifactUrls.length) {
-    lines.push('', 'Artifacts:');
+    lines.push('', 'Linked files');
     for (const path of artifactPaths) lines.push(`- ${path}`);
     for (const url of artifactUrls) lines.push(`- ${url}`);
   }
