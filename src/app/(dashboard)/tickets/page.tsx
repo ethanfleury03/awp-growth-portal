@@ -574,112 +574,138 @@ function TicketDrawer({
   onPost: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-slate-950/20 backdrop-blur-sm">
-      <aside className="flex h-full w-full flex-col border-l border-[var(--ops-border-strong)] bg-[var(--ops-surface-strong)] shadow-[0_18px_44px_-28px_rgba(8,18,35,0.5)] sm:max-w-[32rem]">
-        <div className="border-b border-[var(--ops-border)] px-5 py-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={cn('rounded-full border px-2 py-1 text-[10px] font-semibold uppercase', priorityClass[ticket.priority] ?? priorityClass.normal)}>
-                  {priorityLabel(ticket.priority)}
-                </span>
-                <span className="rounded-full border border-[var(--ops-border)] bg-[var(--ops-surface-subtle)] px-2 py-1 text-[10px] font-semibold uppercase text-[var(--ops-muted)]">
-                  {ticket.bucket_name}
-                </span>
-              </div>
-              <h2 className="mt-2 text-xl font-semibold leading-7 text-[var(--ops-text)]">{ticket.title}</h2>
-              <p className="mt-1 text-sm text-[var(--ops-muted)]">Updated {formatDateTime(ticket.updated_at)}</p>
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/25 p-3 backdrop-blur-sm sm:p-5">
+      <section className="flex h-[min(52rem,calc(100vh-1.5rem))] w-full max-w-[82rem] flex-col overflow-hidden rounded-lg border border-[var(--ops-border-strong)] bg-[var(--ops-surface-strong)] shadow-[0_26px_80px_-44px_rgba(8,18,35,0.72)] sm:h-[min(52rem,calc(100vh-2.5rem))]">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--ops-border)] px-4 py-3 sm:px-5">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={cn('rounded-full border px-2 py-1 text-[10px] font-semibold uppercase', priorityClass[ticket.priority] ?? priorityClass.normal)}>
+                {priorityLabel(ticket.priority)}
+              </span>
+              <span className="rounded-full border border-[var(--ops-border)] bg-[var(--ops-surface-subtle)] px-2 py-1 text-[10px] font-semibold uppercase text-[var(--ops-muted)]">
+                {ticket.bucket_name}
+              </span>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                onClick={onEdit}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm font-semibold text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)]"
-              >
-                <Edit3 className="h-4 w-4" />
-                Edit
-              </button>
-              <button
-                type="button"
-                onClick={onDelete}
-                disabled={deleting}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label="Delete ticket"
-              >
-                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              </button>
-              <button type="button" onClick={onClose} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--ops-border)] text-[var(--ops-muted)] hover:bg-[var(--ops-surface-subtle)]">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+            <h2 className="mt-2 line-clamp-2 text-xl font-semibold leading-7 text-[var(--ops-text)] sm:text-2xl">{ticket.title}</h2>
+            <p className="mt-1 text-sm text-[var(--ops-muted)]">Updated {formatDateTime(ticket.updated_at)}</p>
           </div>
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          <div className="grid grid-cols-2 gap-2">
-            <DetailPill label="Due date" value={formatDate(ticket.due_date)} icon={<CalendarDays className="h-4 w-4" />} />
-            <DetailPill label="Comments" value={String(count(ticket.comment_count))} icon={<MessageSquareText className="h-4 w-4" />} />
-            <DetailPill label="Project" value={ticket.project_title || 'None'} icon={<CheckCircle2 className="h-4 w-4" />} />
-            <DetailPill label="Files" value="Coming soon" icon={<Files className="h-4 w-4" />} />
-          </div>
-
-          {ticket.description ? (
-            <section className="mt-4 rounded-lg border border-[var(--ops-border)] bg-white px-4 py-3">
-              <h3 className="text-sm font-semibold text-[var(--ops-text)]">Details</h3>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-muted)]">{ticket.description}</p>
-            </section>
-          ) : null}
-
-          <section className="mt-4">
-            <h3 className="mb-3 text-sm font-semibold text-[var(--ops-text)]">Conversation</h3>
-            {loading ? (
-              <div className="rounded-lg border border-[var(--ops-border)] bg-white px-4 py-6 text-center text-sm text-[var(--ops-muted)]">
-                <Loader2 className="mx-auto mb-2 h-4 w-4 animate-spin" />
-                Loading conversation
-              </div>
-            ) : comments.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-[var(--ops-border-strong)] bg-white px-4 py-6 text-center text-sm text-[var(--ops-muted)]">
-                No comments yet
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="rounded-lg border border-[var(--ops-border)] bg-white px-4 py-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-[var(--ops-text)]">{comment.author_name || comment.author_email || 'Team member'}</p>
-                        <p className="text-xs text-[var(--ops-muted)]">{comment.author_role.replace('_', ' ')} · {formatDateTime(comment.created_at)}</p>
-                      </div>
-                    </div>
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-muted)]">{comment.body}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-
-        <div className="border-t border-[var(--ops-border)] px-5 py-4">
-          <textarea
-            value={body}
-            onChange={(event) => onBodyChange(event.target.value.slice(0, 4000))}
-            placeholder="Write a comment"
-            className="min-h-[7rem] w-full rounded-lg border border-[var(--ops-border)] bg-white px-3 py-2 text-sm text-[var(--ops-text)] outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-blue-100"
-          />
-          <div className="mt-2 flex items-center justify-between gap-3">
-            <span className="text-xs text-[var(--ops-muted)]">{body.length}/4000</span>
+          <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
-              onClick={onPost}
-              disabled={posting || !body.trim()}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              onClick={onEdit}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm font-semibold text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)]"
             >
-              {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Send
+              <Edit3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Edit</span>
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              disabled={deleting}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Delete ticket"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            </button>
+            <button type="button" onClick={onClose} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--ops-border)] text-[var(--ops-muted)] hover:bg-[var(--ops-surface-subtle)]">
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
-      </aside>
+
+        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(20rem,0.78fr)_minmax(0,1.22fr)]">
+          <aside className="min-h-0 overflow-y-auto border-b border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-4 lg:border-b-0 lg:border-r sm:px-5">
+            <div className="grid grid-cols-2 gap-2">
+              <DetailPill label="Due date" value={formatDate(ticket.due_date)} icon={<CalendarDays className="h-4 w-4" />} />
+              <DetailPill label="Comments" value={String(count(ticket.comment_count))} icon={<MessageSquareText className="h-4 w-4" />} />
+              <DetailPill label="Project" value={ticket.project_title || 'None'} icon={<CheckCircle2 className="h-4 w-4" />} />
+              <DetailPill label="Files" value="Coming soon" icon={<Files className="h-4 w-4" />} />
+            </div>
+
+            <section className="mt-4 rounded-lg border border-[var(--ops-border)] bg-white px-4 py-3">
+              <h3 className="text-sm font-semibold text-[var(--ops-text)]">Details</h3>
+              {ticket.description ? (
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-muted)]">{ticket.description}</p>
+              ) : (
+                <p className="mt-2 text-sm text-[var(--ops-muted)]">No details yet.</p>
+              )}
+            </section>
+          </aside>
+
+          <section className="flex min-h-0 flex-1 flex-col bg-[var(--ops-surface-subtle)]">
+            <div className="flex items-center justify-between gap-3 border-b border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 sm:px-5">
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-[var(--ops-text)]">Conversation</h3>
+                <p className="text-xs text-[var(--ops-muted)]">{count(ticket.comment_count).toLocaleString()} updates</p>
+              </div>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin text-[var(--ops-muted)]" /> : null}
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+              {loading ? (
+                <div className="flex h-full items-center justify-center rounded-lg border border-[var(--ops-border)] bg-white text-sm text-[var(--ops-muted)]">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading conversation
+                </div>
+              ) : comments.length === 0 ? (
+                <div className="flex h-full min-h-[16rem] items-center justify-center rounded-lg border border-dashed border-[var(--ops-border-strong)] bg-white text-sm text-[var(--ops-muted)]">
+                  No updates yet
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {comments.map((comment) => {
+                    const author = comment.author_name || comment.author_email || 'Team member';
+                    const initials = author
+                      .split(/\s+/)
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((part) => part[0]?.toUpperCase())
+                      .join('') || 'A';
+                    const isStaff = comment.author_role === 'staff' || comment.author_role === 'admin' || comment.author_role === 'super_admin';
+                    return (
+                      <article key={comment.id} className={cn('flex gap-3', isStaff && 'justify-end')}>
+                        {!isStaff ? (
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2f6b4f] text-xs font-semibold text-white">
+                            {initials}
+                          </div>
+                        ) : null}
+                        <div className={cn('max-w-[min(42rem,92%)] rounded-lg border px-4 py-3 shadow-[var(--ops-shadow-soft)]', isStaff ? 'border-[rgba(47,107,79,0.22)] bg-white' : 'border-[var(--ops-border)] bg-white')}>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <p className="text-sm font-semibold text-[var(--ops-text)]">{author}</p>
+                            <p className="text-xs text-[var(--ops-muted)]">{comment.author_role.replace('_', ' ')} · {formatDateTime(comment.created_at)}</p>
+                          </div>
+                          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-muted)]">{comment.body}</p>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 sm:px-5">
+              <textarea
+                value={body}
+                onChange={(event) => onBodyChange(event.target.value.slice(0, 4000))}
+                placeholder="Write an update or ask the agent"
+                className="min-h-[6rem] w-full resize-none rounded-lg border border-[var(--ops-border)] bg-white px-3 py-2 text-sm text-[var(--ops-text)] outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-blue-100"
+              />
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <span className="text-xs text-[var(--ops-muted)]">{body.length}/4000</span>
+                <button
+                  type="button"
+                  onClick={onPost}
+                  disabled={posting || !body.trim()}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  Send
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
     </div>
   );
 }
