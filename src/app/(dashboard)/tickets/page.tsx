@@ -7,8 +7,10 @@ import {
   CheckCircle2,
   Clock3,
   Edit3,
+  FileText,
   Files,
   Filter,
+  FolderOpen,
   Inbox,
   Loader2,
   MessageSquareText,
@@ -69,6 +71,16 @@ type BoardResponse = {
 type TicketDetailResponse = {
   ticket: Ticket;
   comments: TicketComment[];
+};
+
+type TicketPanel = 'conversation' | 'solution' | 'files';
+
+type TicketSolution = {
+  status: 'ready' | 'draft' | 'empty';
+  label: string;
+  body: string;
+  updatedAt: string | null;
+  artifacts: string[];
 };
 
 type CreateTicketDraft = {
@@ -136,6 +148,49 @@ function formatDateTime(value: string | null) {
 
 function priorityLabel(value: string) {
   return value ? `${value.charAt(0).toUpperCase()}${value.slice(1)}` : 'Normal';
+}
+
+function isAgentComment(comment: TicketComment) {
+  return comment.author_role === 'agent' || /agent/i.test(comment.author_name || '');
+}
+
+function isProgressOnlyAgentComment(body: string) {
+  return /started working|is blocked|needs more information|hit an issue/i.test(body);
+}
+
+function extractArtifactLinks(body: string) {
+  const artifacts: string[] = [];
+  for (const line of body.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('- ')) continue;
+    const value = trimmed.slice(2).trim();
+    if (/^(\/|https?:\/\/)/i.test(value)) artifacts.push(value);
+  }
+  return artifacts;
+}
+
+function ticketSolution(ticket: Ticket, comments: TicketComment[]): TicketSolution {
+  const agentComments = comments.filter(isAgentComment);
+  const latestAgentComment = agentComments.at(-1);
+  const readyStatus = /ready for review|done/i.test(ticket.bucket_name || '');
+
+  if (!latestAgentComment || (!readyStatus && isProgressOnlyAgentComment(latestAgentComment.body))) {
+    return {
+      status: 'empty',
+      label: 'No solution yet',
+      body: '',
+      updatedAt: null,
+      artifacts: [],
+    };
+  }
+
+  return {
+    status: readyStatus ? 'ready' : 'draft',
+    label: readyStatus ? 'Solution ready' : 'Draft solution',
+    body: latestAgentComment.body,
+    updatedAt: latestAgentComment.created_at,
+    artifacts: extractArtifactLinks(latestAgentComment.body),
+  };
 }
 
 export default function TicketsPage() {
@@ -579,6 +634,13 @@ function TicketWorkspaceModal({
   onPost: () => void;
 }) {
   const isEditing = Boolean(draft);
+  const [panel, setPanel] = useState<TicketPanel>('conversation');
+  const solution = useMemo(() => ticketSolution(ticket, comments), [comments, ticket]);
+  const tabOptions: Array<{ id: TicketPanel; label: string; count?: number; icon: ReactNode }> = [
+    { id: 'conversation', label: 'Conversation', count: count(ticket.comment_count), icon: <MessageSquareText className="h-4 w-4" /> },
+    { id: 'solution', label: 'Solution', count: solution.status === 'empty' ? 0 : 1, icon: <FileText className="h-4 w-4" /> },
+    { id: 'files', label: 'Files', count: solution.artifacts.length, icon: <FolderOpen className="h-4 w-4" /> },
+  ];
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/25 p-3 backdrop-blur-sm sm:p-5">
@@ -753,56 +815,94 @@ function TicketWorkspaceModal({
           </aside>
 
           <section className="flex min-h-0 flex-1 flex-col bg-[var(--ops-surface-subtle)]">
-            <div className="flex items-center justify-between gap-3 border-b border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 sm:px-5">
-              <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-[var(--ops-text)]">Ticket conversation</h3>
-                <p className="text-xs text-[var(--ops-muted)]">{count(ticket.comment_count).toLocaleString()} admin/client updates</p>
-              </div>
+            <div className="border-b border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 sm:px-5">
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-[var(--ops-text)]">
+                    {panel === 'conversation' ? 'Ticket conversation' : panel === 'solution' ? 'Solution report' : 'Ticket files'}
+                  </h3>
+                  <p className="text-xs text-[var(--ops-muted)]">
+                    {panel === 'conversation'
+                      ? `${count(ticket.comment_count).toLocaleString()} admin/client updates`
+                      : panel === 'solution'
+                        ? solution.label
+                        : solution.artifacts.length ? `${solution.artifacts.length.toLocaleString()} linked artifacts` : 'No linked files yet'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {tabOptions.map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setPanel(tab.id)}
+                      className={cn(
+                        'inline-flex h-9 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition',
+                        panel === tab.id
+                          ? 'border-[rgba(47,107,79,0.28)] bg-[rgba(47,107,79,0.1)] text-[#2f6b4f]'
+                          : 'border-[var(--ops-border)] bg-white text-[var(--ops-muted)] hover:text-[var(--ops-text)]',
+                      )}
+                    >
+                      {tab.icon}
+                      {tab.label}
+                      {tab.count ? (
+                        <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] text-[var(--ops-muted)]">{tab.count}</span>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
               {loading ? <Loader2 className="h-4 w-4 animate-spin text-[var(--ops-muted)]" /> : null}
+              </div>
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
               {loading ? (
                 <div className="flex h-full items-center justify-center rounded-lg border border-[var(--ops-border)] bg-white text-sm text-[var(--ops-muted)]">
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading conversation
+                  Loading ticket
                 </div>
-              ) : comments.length === 0 ? (
-                <div className="flex h-full min-h-[16rem] items-center justify-center rounded-lg border border-dashed border-[var(--ops-border-strong)] bg-white text-sm text-[var(--ops-muted)]">
-                  No updates yet
-                </div>
+              ) : panel === 'conversation' ? (
+                comments.length === 0 ? (
+                  <div className="flex h-full min-h-[16rem] items-center justify-center rounded-lg border border-dashed border-[var(--ops-border-strong)] bg-white text-sm text-[var(--ops-muted)]">
+                    No updates yet
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {comments.map((comment) => {
+                      const author = comment.author_name || comment.author_email || 'Team member';
+                      const initials = author
+                        .split(/\s+/)
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((part) => part[0]?.toUpperCase())
+                        .join('') || 'A';
+                      const isStaff = comment.author_role === 'staff' || comment.author_role === 'admin' || comment.author_role === 'super_admin';
+                      return (
+                        <article key={comment.id} className={cn('flex gap-3', isStaff && 'justify-end')}>
+                          {!isStaff ? (
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2f6b4f] text-xs font-semibold text-white">
+                              {initials}
+                            </div>
+                          ) : null}
+                          <div className={cn('max-w-[min(42rem,92%)] rounded-lg border px-4 py-3 shadow-[var(--ops-shadow-soft)]', isStaff ? 'border-[rgba(47,107,79,0.22)] bg-white' : 'border-[var(--ops-border)] bg-white')}>
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <p className="text-sm font-semibold text-[var(--ops-text)]">{author}</p>
+                              <p className="text-xs text-[var(--ops-muted)]">{comment.author_role.replace('_', ' ')} · {formatDateTime(comment.created_at)}</p>
+                            </div>
+                            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-muted)]">{comment.body}</p>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )
+              ) : panel === 'solution' ? (
+                <SolutionPanel solution={solution} ticket={ticket} />
               ) : (
-                <div className="space-y-4">
-                  {comments.map((comment) => {
-                    const author = comment.author_name || comment.author_email || 'Team member';
-                    const initials = author
-                      .split(/\s+/)
-                      .filter(Boolean)
-                      .slice(0, 2)
-                      .map((part) => part[0]?.toUpperCase())
-                      .join('') || 'A';
-                    const isStaff = comment.author_role === 'staff' || comment.author_role === 'admin' || comment.author_role === 'super_admin';
-                    return (
-                      <article key={comment.id} className={cn('flex gap-3', isStaff && 'justify-end')}>
-                        {!isStaff ? (
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2f6b4f] text-xs font-semibold text-white">
-                            {initials}
-                          </div>
-                        ) : null}
-                        <div className={cn('max-w-[min(42rem,92%)] rounded-lg border px-4 py-3 shadow-[var(--ops-shadow-soft)]', isStaff ? 'border-[rgba(47,107,79,0.22)] bg-white' : 'border-[var(--ops-border)] bg-white')}>
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <p className="text-sm font-semibold text-[var(--ops-text)]">{author}</p>
-                            <p className="text-xs text-[var(--ops-muted)]">{comment.author_role.replace('_', ' ')} · {formatDateTime(comment.created_at)}</p>
-                          </div>
-                          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-muted)]">{comment.body}</p>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
+                <FilesPanel artifacts={solution.artifacts} />
               )}
             </div>
 
+            {panel === 'conversation' ? (
             <div className="border-t border-[var(--ops-border)] bg-[var(--ops-surface-strong)] px-4 py-3 sm:px-5">
               <textarea
                 value={body}
@@ -823,9 +923,130 @@ function TicketWorkspaceModal({
                 </button>
               </div>
             </div>
+            ) : null}
           </section>
         </div>
       </section>
+    </div>
+  );
+}
+
+function SolutionPanel({ solution, ticket }: { solution: TicketSolution; ticket: Ticket }) {
+  if (solution.status === 'empty') {
+    return (
+      <div className="flex h-full min-h-[18rem] items-center justify-center rounded-lg border border-dashed border-[var(--ops-border-strong)] bg-white px-6 text-center">
+        <div className="max-w-md">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg border border-[rgba(47,107,79,0.2)] bg-[rgba(47,107,79,0.08)] text-[#2f6b4f]">
+            <FileText className="h-5 w-5" />
+          </div>
+          <h3 className="mt-3 text-base font-semibold text-[var(--ops-text)]">No solution yet</h3>
+          <p className="mt-2 text-sm leading-6 text-[var(--ops-muted)]">
+            When the AWP Growth Agent finishes or the ticket is ready for review, the final summary and any deliverables will appear here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <article className="rounded-lg border border-[var(--ops-border)] bg-white shadow-[var(--ops-shadow-soft)]">
+      <div className="border-b border-[var(--ops-border)] px-4 py-3 sm:px-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={cn(
+                  'rounded-full border px-2 py-1 text-[10px] font-semibold uppercase',
+                  solution.status === 'ready'
+                    ? 'border-[rgba(47,107,79,0.24)] bg-[rgba(47,107,79,0.08)] text-[#2f6b4f]'
+                    : 'border-[rgba(242,106,31,0.26)] bg-[rgba(242,106,31,0.1)] text-[#bd4c12]',
+                )}
+              >
+                {solution.label}
+              </span>
+              <span className="rounded-full border border-[var(--ops-border)] bg-[var(--ops-surface-subtle)] px-2 py-1 text-[10px] font-semibold uppercase text-[var(--ops-muted)]">
+                {ticket.bucket_name}
+              </span>
+            </div>
+            <h3 className="mt-3 text-lg font-semibold text-[var(--ops-text)]">Solution for {ticket.title}</h3>
+            {solution.updatedAt ? <p className="mt-1 text-xs text-[var(--ops-muted)]">Updated {formatDateTime(solution.updatedAt)}</p> : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 py-4 sm:px-5">
+        <div className="rounded-lg border border-[var(--ops-border)] bg-[var(--ops-surface-subtle)] px-4 py-4">
+          <p className="whitespace-pre-wrap text-sm leading-6 text-[var(--ops-text)]">{solution.body}</p>
+        </div>
+
+        {solution.artifacts.length ? (
+          <div className="mt-4">
+            <h4 className="text-sm font-semibold text-[var(--ops-text)]">Deliverables</h4>
+            <div className="mt-2 grid gap-2">
+              {solution.artifacts.map((artifact) => (
+                <ArtifactRow key={artifact} artifact={artifact} />
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function FilesPanel({ artifacts }: { artifacts: string[] }) {
+  if (artifacts.length === 0) {
+    return (
+      <div className="flex h-full min-h-[18rem] items-center justify-center rounded-lg border border-dashed border-[var(--ops-border-strong)] bg-white px-6 text-center">
+        <div className="max-w-md">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg border border-[rgba(37,99,235,0.2)] bg-[rgba(37,99,235,0.08)] text-[#2563eb]">
+            <FolderOpen className="h-5 w-5" />
+          </div>
+          <h3 className="mt-3 text-base font-semibold text-[var(--ops-text)]">No files linked yet</h3>
+          <p className="mt-2 text-sm leading-6 text-[var(--ops-muted)]">
+            Google Drive folders, Docs, Sheets, PDFs, and other deliverables will be listed here once they are attached to the ticket result.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {artifacts.map((artifact) => (
+        <ArtifactRow key={artifact} artifact={artifact} />
+      ))}
+    </div>
+  );
+}
+
+function ArtifactRow({ artifact }: { artifact: string }) {
+  const isUrl = /^https?:\/\//i.test(artifact);
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--ops-border)] bg-white px-3 py-3 shadow-[var(--ops-shadow-soft)]">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--ops-border)] bg-[var(--ops-surface-subtle)] text-[var(--ops-muted)]">
+          <Files className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-[var(--ops-text)]">{artifact.split('/').filter(Boolean).at(-1) || artifact}</p>
+          <p className="truncate text-xs text-[var(--ops-muted)]">{artifact}</p>
+        </div>
+      </div>
+      {isUrl ? (
+        <a
+          href={artifact}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg border border-[var(--ops-border)] bg-white px-3 text-sm font-semibold text-[var(--ops-text)] hover:bg-[var(--ops-surface-subtle)]"
+        >
+          Open
+        </a>
+      ) : (
+        <span className="shrink-0 rounded-full bg-[var(--ops-surface-subtle)] px-2 py-1 text-[10px] font-semibold uppercase text-[var(--ops-muted)]">
+          Local
+        </span>
+      )}
     </div>
   );
 }
