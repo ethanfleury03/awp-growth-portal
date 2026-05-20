@@ -23,6 +23,8 @@ const TENANT_TABLES = [
   'buckets',
   'call_logs',
   'receptionist_calls',
+  'tickets',
+  'ticket_comments',
   'audit_logs',
 ];
 

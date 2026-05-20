@@ -38,6 +38,7 @@
    - `/app` loads for assigned AWP client users after gateway access is configured.
    - Disabled module URLs show the module-disabled screen.
    - `/api/health` returns `ok: true` and `db: "up"`.
+   - `/tickets` loads for an assigned client user and a test ticket creates successfully.
 
 ## Database & Backup Requirements
 
@@ -68,6 +69,8 @@
 - A brand-new unassigned login lands on `/account-unassigned`.
 - The unassigned login appears in `/super-admin` and can be assigned.
 - Core CRM pages load: dashboard, leads, customers, estimates, invoices.
+- Tickets load, save, and remain scoped to the signed-in tenant.
+- `DISCORD_TICKETS_WEBHOOK_URL` is configured if new-ticket Discord alerts are expected.
 - Disabled modules are hidden and direct URLs are blocked.
 - Sentry/logging env vars are configured.
 - Gateway login/webhook URLs use `app.wnyautomation.com`; AWP Stripe, Twilio, and Retell webhook URLs use `awp.wnyautomation.com`.
@@ -105,6 +108,7 @@ SEED_CLIENT_INDUSTRY="generic"
 - Client can create or edit a customer.
 - Client can create an estimate.
 - Client can create an invoice or see a clear configuration message if payments are not ready.
+- Client can create a ticket, open it again, and add a reply.
 - Client can log out and sign back in.
 - WNY super admin can see client activity in tenant audit/health views.
 
