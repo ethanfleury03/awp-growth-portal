@@ -18,12 +18,22 @@ async function ensureTicketSchema() {
       discord_message_id text,
       notification_error text,
       discord_notified_at timestamp with time zone,
+      solution_summary text,
+      solution_details text,
+      solution_source text,
+      solution_external_id text,
+      solution_reported_at timestamp with time zone,
       last_activity_at timestamp with time zone DEFAULT now() NOT NULL,
       resolved_at timestamp with time zone,
       created_at timestamp with time zone DEFAULT now() NOT NULL,
       updated_at timestamp with time zone DEFAULT now() NOT NULL
     )
   `;
+  await sql`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS solution_summary text`;
+  await sql`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS solution_details text`;
+  await sql`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS solution_source text`;
+  await sql`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS solution_external_id text`;
+  await sql`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS solution_reported_at timestamp with time zone`;
   await sql`CREATE INDEX IF NOT EXISTS idx_tickets_company ON tickets(company_id)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_tickets_company_status ON tickets(company_id, status)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_tickets_company_activity ON tickets(company_id, last_activity_at)`;
@@ -111,10 +121,21 @@ async function verifyTicketSchema() {
   const rows = await sql`
     SELECT
       to_regclass('public.tickets') AS tickets,
-      to_regclass('public.ticket_comments') AS ticket_comments
+      to_regclass('public.ticket_comments') AS ticket_comments,
+      EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'tickets'
+          AND column_name = 'solution_reported_at'
+      ) AS has_solution_columns
   `;
-  const row = rows[0] as { tickets?: string | null; ticket_comments?: string | null } | undefined;
-  if (!row?.tickets || !row?.ticket_comments) {
+  const row = rows[0] as {
+    tickets?: string | null;
+    ticket_comments?: string | null;
+    has_solution_columns?: boolean | number | null;
+  } | undefined;
+  if (!row?.tickets || !row?.ticket_comments || !row?.has_solution_columns) {
     throw new Error('Ticket schema verification failed.');
   }
 }

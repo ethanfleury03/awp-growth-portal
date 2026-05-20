@@ -1,5 +1,11 @@
 import type Database from 'better-sqlite3';
 
+function addColumnIfMissing(db: Database.Database, table: string, column: string, ddl: string) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  if (columns.some((entry) => entry.name === column)) return;
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+}
+
 export function applyTicketMigrations(db: Database.Database) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS tickets (
@@ -18,6 +24,11 @@ export function applyTicketMigrations(db: Database.Database) {
       discord_message_id TEXT,
       notification_error TEXT,
       discord_notified_at TEXT,
+      solution_summary TEXT,
+      solution_details TEXT,
+      solution_source TEXT,
+      solution_external_id TEXT,
+      solution_reported_at TEXT,
       last_activity_at TEXT NOT NULL DEFAULT (datetime('now')),
       resolved_at TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -43,4 +54,10 @@ export function applyTicketMigrations(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_ticket_comments_ticket ON ticket_comments(ticket_id);
     CREATE INDEX IF NOT EXISTS idx_ticket_comments_company_ticket ON ticket_comments(company_id, ticket_id);
   `);
+
+  addColumnIfMissing(db, 'tickets', 'solution_summary', 'solution_summary TEXT');
+  addColumnIfMissing(db, 'tickets', 'solution_details', 'solution_details TEXT');
+  addColumnIfMissing(db, 'tickets', 'solution_source', 'solution_source TEXT');
+  addColumnIfMissing(db, 'tickets', 'solution_external_id', 'solution_external_id TEXT');
+  addColumnIfMissing(db, 'tickets', 'solution_reported_at', 'solution_reported_at TEXT');
 }

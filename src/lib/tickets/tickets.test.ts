@@ -23,6 +23,8 @@ import {
   getTicket,
   listTickets,
   normalizeTicketCreateInput,
+  normalizeTicketSolutionInput,
+  recordTicketSolution,
   updateTicket,
 } from './tickets';
 
@@ -76,6 +78,27 @@ describe('ticket input normalization', () => {
         description: 'Please add me.',
         category: 'access',
         priority: 'urgent',
+      },
+    });
+  });
+
+  it('normalizes Hermes solution payloads', () => {
+    expect(
+      normalizeTicketSolutionInput({
+        ticket_id: 'ticket-1',
+        summary: ' Fixed the login issue. ',
+        details: ' User can sign in again. ',
+        status: 'RESOLVED',
+        run_id: 'hermes-run-1',
+      }),
+    ).toEqual({
+      ok: true,
+      value: {
+        ticketId: 'ticket-1',
+        solutionSummary: 'Fixed the login issue.',
+        solutionDetails: 'User can sign in again.',
+        status: 'resolved',
+        externalId: 'hermes-run-1',
       },
     });
   });
@@ -146,5 +169,49 @@ describe('ticket persistence', () => {
 
     expect(updated.status).toBe('in_progress');
     expect(updated.priority).toBe('high');
+  });
+
+  it('records Hermes solutions as client-visible resolved tickets', async () => {
+    await resetData();
+
+    const ticket = await createTicket({
+      companyId: 'tenant-a',
+      branchId: null,
+      user: viewerUser,
+      title: 'Hermes ticket',
+      description: 'Needs a solution from Hermes.',
+      category: 'general',
+      priority: 'normal',
+    });
+
+    const result = await recordTicketSolution({
+      ticketId: ticket.id,
+      solutionSummary: 'The portal login is working again.',
+      solutionDetails: 'The account assignment was refreshed and the user can sign in normally.',
+      status: 'resolved',
+      externalId: 'hermes-run-123',
+    });
+
+    expect(result.ticket.status).toBe('resolved');
+    expect(result.ticket.solution_summary).toBe('The portal login is working again.');
+    expect(result.ticket.solution_source).toBe('hermes');
+    expect(result.comment?.author_name).toBe('Hermes');
+    expect(result.comment?.is_internal).toBe(0);
+
+    const duplicate = await recordTicketSolution({
+      ticketId: ticket.id,
+      solutionSummary: 'The portal login is working again.',
+      solutionDetails: 'The account assignment was refreshed and the user can sign in normally.',
+      status: 'resolved',
+      externalId: 'hermes-run-123',
+    });
+
+    const detail = await getTicket({ companyId: 'tenant-a', ticketId: ticket.id });
+    const tenantAList = await listTickets({ companyId: 'tenant-a' });
+
+    expect(duplicate.duplicate).toBe(true);
+    expect(detail?.comments).toHaveLength(1);
+    expect(detail?.comments[0].body).toContain('Solution: The portal login is working again.');
+    expect(tenantAList.tickets[0].solution_reported_at).toBeTruthy();
   });
 });

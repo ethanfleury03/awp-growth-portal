@@ -70,6 +70,7 @@
 - The unassigned login appears in `/super-admin` and can be assigned.
 - Core CRM pages load: dashboard, leads, customers, estimates, invoices.
 - Tickets load, save, and remain scoped to the signed-in tenant.
+- `HERMES_TICKETS_API_TOKEN` is configured if Hermes will report ticket solutions automatically.
 - `DISCORD_TICKETS_WEBHOOK_URL` is configured if new-ticket Discord alerts are expected.
 - Disabled modules are hidden and direct URLs are blocked.
 - Sentry/logging env vars are configured.

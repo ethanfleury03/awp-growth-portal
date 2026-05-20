@@ -1,8 +1,9 @@
-import { sql, withTenantContext } from '@/lib/db';
+import { sql, withSuperAdminContext, withTenantContext } from '@/lib/db';
 import { roleAtLeast, type SessionUser } from '@/lib/auth/types';
 
 export const TICKET_TITLE_MAX_LENGTH = 160;
 export const TICKET_BODY_MAX_LENGTH = 4000;
+export const TICKET_SOLUTION_MAX_LENGTH = 4000;
 
 export const TICKET_STATUSES = ['open', 'in_progress', 'waiting_on_client', 'resolved', 'closed'] as const;
 export const TICKET_PRIORITIES = ['low', 'normal', 'high', 'urgent'] as const;
@@ -28,6 +29,11 @@ export type TicketRow = {
   discord_message_id: string | null;
   notification_error: string | null;
   discord_notified_at: string | null;
+  solution_summary: string | null;
+  solution_details: string | null;
+  solution_source: string | null;
+  solution_external_id: string | null;
+  solution_reported_at: string | null;
   last_activity_at: string;
   resolved_at: string | null;
   created_at: string;
@@ -146,6 +152,49 @@ export function normalizeTicketPatchInput(input: unknown): ValidationResult<{
   return { ok: true, value: patch };
 }
 
+export function normalizeTicketSolutionInput(input: unknown): ValidationResult<{
+  ticketId: string;
+  solutionSummary: string;
+  solutionDetails: string;
+  status: TicketStatus;
+  externalId: string | null;
+}> {
+  const record = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
+  const ticketId = normalizeText(record.ticketId ?? record.ticket_id ?? record.id);
+  const solutionSummary = normalizeText(record.solutionSummary ?? record.solution_summary ?? record.summary);
+  const solutionDetails = normalizeText(record.solutionDetails ?? record.solution_details ?? record.details ?? record.body);
+  const externalId = normalizeText(record.externalId ?? record.external_id ?? record.runId ?? record.run_id) || null;
+  const status = normalizeText(record.status || 'resolved').toLowerCase();
+
+  if (!ticketId) return { ok: false, error: 'Ticket id is required.' };
+  if (!solutionSummary && !solutionDetails) {
+    return { ok: false, error: 'Solution summary or details are required.' };
+  }
+  if (solutionSummary.length > TICKET_TITLE_MAX_LENGTH) {
+    return { ok: false, error: `Solution summary must be ${TICKET_TITLE_MAX_LENGTH} characters or fewer.` };
+  }
+  if (solutionDetails.length > TICKET_SOLUTION_MAX_LENGTH) {
+    return { ok: false, error: `Solution details must be ${TICKET_SOLUTION_MAX_LENGTH.toLocaleString()} characters or fewer.` };
+  }
+  if (externalId && externalId.length > 240) {
+    return { ok: false, error: 'External id must be 240 characters or fewer.' };
+  }
+  if (!TICKET_STATUSES.includes(status as TicketStatus)) {
+    return { ok: false, error: 'Invalid ticket status.' };
+  }
+
+  return {
+    ok: true,
+    value: {
+      ticketId,
+      solutionSummary,
+      solutionDetails,
+      status: status as TicketStatus,
+      externalId,
+    },
+  };
+}
+
 function toNumber(value: unknown): number {
   const n = Number(value || 0);
   return Number.isFinite(n) ? n : 0;
@@ -173,6 +222,10 @@ function getDiscordTicketWebhookUrl() {
 
 function truncateForDiscord(value: string, max: number) {
   return value.length <= max ? value : `${value.slice(0, max - 3)}...`;
+}
+
+function formatSolutionComment(summary: string, details: string) {
+  return [summary ? `Solution: ${summary}` : '', details].filter(Boolean).join('\n\n');
 }
 
 async function companyName(companyId: string): Promise<string> {
@@ -216,7 +269,13 @@ export async function listTickets(input: {
 
     if (search) {
       const like = `%${search}%`;
-      query = sql`${query} AND (t.title ILIKE ${like} OR t.description ILIKE ${like} OR t.category ILIKE ${like})`;
+      query = sql`${query} AND (
+        t.title ILIKE ${like}
+        OR t.description ILIKE ${like}
+        OR t.category ILIKE ${like}
+        OR t.solution_summary ILIKE ${like}
+        OR t.solution_details ILIKE ${like}
+      )`;
     }
 
     const rows = await sql`
@@ -470,6 +529,89 @@ export async function updateTicket(input: {
     });
     if (!result) throw new Error('Ticket not found.');
     return result.ticket;
+  });
+}
+
+export async function recordTicketSolution(input: {
+  ticketId: string;
+  solutionSummary: string;
+  solutionDetails: string;
+  status?: TicketStatus;
+  externalId?: string | null;
+}): Promise<{ ticket: TicketRow; comment: TicketCommentRow | null; duplicate: boolean }> {
+  const solutionSummary = normalizeText(input.solutionSummary);
+  const solutionDetails = normalizeText(input.solutionDetails);
+  const status = input.status || 'resolved';
+  const externalId = normalizeText(input.externalId) || null;
+
+  if (!input.ticketId) throw new Error('Ticket id is required.');
+  if (!solutionSummary && !solutionDetails) throw new Error('Solution summary or details are required.');
+  if (!TICKET_STATUSES.includes(status)) throw new Error('Invalid ticket status.');
+
+  return withSuperAdminContext(async () => {
+    const existingRows = await sql`
+      SELECT id, company_id, solution_external_id
+      FROM tickets
+      WHERE id = ${input.ticketId}
+      LIMIT 1
+    `;
+    const existing = existingRows[0];
+    if (!existing) throw new Error('Ticket not found.');
+
+    const companyId = String(existing.company_id);
+    const duplicate = Boolean(externalId && String(existing.solution_external_id || '') === externalId);
+    let comment: TicketCommentRow | null = null;
+
+    if (!duplicate) {
+      const commentRows = await sql`
+        INSERT INTO ticket_comments (
+          ticket_id,
+          company_id,
+          author_user_id,
+          author_role,
+          author_name,
+          author_email,
+          body,
+          is_internal
+        )
+        VALUES (
+          ${input.ticketId},
+          ${companyId},
+          'hermes',
+          'staff',
+          'Hermes',
+          NULL,
+          ${formatSolutionComment(solutionSummary, solutionDetails)},
+          ${false}
+        )
+        RETURNING *
+      `;
+      comment = commentRows[0] as TicketCommentRow;
+    }
+
+    const resolvedAt = status === 'resolved' || status === 'closed' ? new Date().toISOString() : null;
+    await sql`
+      UPDATE tickets
+      SET status = ${status},
+          solution_summary = ${solutionSummary || null},
+          solution_details = ${solutionDetails || null},
+          solution_source = 'hermes',
+          solution_external_id = ${externalId},
+          solution_reported_at = datetime('now'),
+          resolved_at = ${resolvedAt},
+          last_activity_at = datetime('now'),
+          updated_at = datetime('now')
+      WHERE id = ${input.ticketId}
+        AND company_id = ${companyId}
+    `;
+
+    const result = await getTicket({
+      companyId,
+      ticketId: input.ticketId,
+      includeInternal: true,
+    });
+    if (!result) throw new Error('Ticket not found.');
+    return { ticket: result.ticket, comment, duplicate };
   });
 }
 

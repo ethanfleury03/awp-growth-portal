@@ -29,7 +29,7 @@ import {
   TimelineList,
 } from '@/components/ops/ui';
 import { roleAtLeast, type SessionUser } from '@/lib/auth/types';
-import { formatDateTimeLabel, humanizeToken } from '@/lib/ops';
+import { cn, formatDateTimeLabel, humanizeToken } from '@/lib/ops';
 
 type TicketStatus = 'open' | 'in_progress' | 'waiting_on_client' | 'resolved' | 'closed';
 type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
@@ -45,6 +45,11 @@ type TicketRow = {
   created_by_name: string | null;
   created_by_email: string | null;
   notification_error: string | null;
+  solution_summary: string | null;
+  solution_details: string | null;
+  solution_source: string | null;
+  solution_external_id: string | null;
+  solution_reported_at: string | null;
   last_activity_at: string;
   created_at: string;
   resolved_at: string | null;
@@ -128,6 +133,14 @@ function priorityTone(priority: string) {
 
 function requester(ticket: TicketRow) {
   return ticket.created_by_name || ticket.created_by_email || 'Client user';
+}
+
+function hasSolution(ticket: TicketRow) {
+  return Boolean(ticket.solution_reported_at || ticket.solution_summary || ticket.solution_details);
+}
+
+function isSolvedTicket(ticket: TicketRow) {
+  return hasSolution(ticket) || ticket.status === 'resolved' || ticket.status === 'closed';
 }
 
 export default function TicketsPage() {
@@ -376,45 +389,60 @@ export default function TicketsPage() {
                 minWidthClassName="min-w-[980px]"
                 className="border-0 shadow-none"
               >
-                {visibleTickets.map((ticket) => (
-                  <tr
-                    key={ticket.id}
-                    onClick={() => openDetail(ticket)}
-                    className="cursor-pointer transition-colors hover:bg-[var(--ops-surface-subtle)]"
-                  >
-                    <td className="px-5 py-4">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="max-w-[560px] truncate text-sm font-semibold text-[var(--ops-text)]">
-                            {ticket.title}
+                {visibleTickets.map((ticket) => {
+                  const solved = isSolvedTicket(ticket);
+                  const solutionReady = hasSolution(ticket);
+                  return (
+                    <tr
+                      key={ticket.id}
+                      onClick={() => openDetail(ticket)}
+                      className={cn(
+                        'cursor-pointer transition-colors',
+                        solved ? 'bg-[var(--ops-success-soft)] hover:bg-[var(--ops-success-soft)]' : 'hover:bg-[var(--ops-surface-subtle)]',
+                      )}
+                    >
+                      <td className="px-5 py-4">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="max-w-[560px] truncate text-sm font-semibold text-[var(--ops-text)]">
+                              {ticket.title}
+                            </p>
+                            {solutionReady ? (
+                              <StatusBadge tone="success">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Solution
+                              </StatusBadge>
+                            ) : null}
+                            {ticket.notification_error ? (
+                              <StatusBadge tone="warning">
+                                <AlertTriangle className="h-3 w-3" />
+                                Notify
+                              </StatusBadge>
+                            ) : null}
+                          </div>
+                          <p className="mt-1 line-clamp-1 max-w-[680px] text-xs text-[var(--ops-muted)]">
+                            {ticket.description}
                           </p>
-                          {ticket.notification_error ? (
-                            <StatusBadge tone="warning">
-                              <AlertTriangle className="h-3 w-3" />
-                              Notify
-                            </StatusBadge>
-                          ) : null}
                         </div>
-                        <p className="mt-1 line-clamp-1 max-w-[680px] text-xs text-[var(--ops-muted)]">
-                          {ticket.description}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-sm text-[var(--ops-muted)]">{requester(ticket)}</td>
-                    <td className="px-5 py-4">
-                      <div className="text-sm text-[var(--ops-text)]">{formatDateTimeLabel(ticket.last_activity_at)}</div>
-                      <div className="mt-1 text-xs text-[var(--ops-muted)]">
-                        {ticket.comment_count || 0} comments
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <StatusBadge tone={priorityTone(ticket.priority)}>{humanizeToken(ticket.priority)}</StatusBadge>
-                    </td>
-                    <td className="px-5 py-4">
-                      <StatusBadge tone={statusTone(ticket.status)}>{humanizeToken(ticket.status)}</StatusBadge>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-[var(--ops-muted)]">{requester(ticket)}</td>
+                      <td className="px-5 py-4">
+                        <div className="text-sm text-[var(--ops-text)]">{formatDateTimeLabel(ticket.last_activity_at)}</div>
+                        <div className="mt-1 text-xs text-[var(--ops-muted)]">
+                          {solutionReady && ticket.solution_reported_at
+                            ? `Solution posted ${formatDateTimeLabel(ticket.solution_reported_at)}`
+                            : `${ticket.comment_count || 0} comments`}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <StatusBadge tone={priorityTone(ticket.priority)}>{humanizeToken(ticket.priority)}</StatusBadge>
+                      </td>
+                      <td className="px-5 py-4">
+                        <StatusBadge tone={statusTone(ticket.status)}>{humanizeToken(ticket.status)}</StatusBadge>
+                      </td>
+                    </tr>
+                  );
+                })}
               </DataTable>
             )}
           </ConsolePanel>
@@ -511,6 +539,28 @@ export default function TicketsPage() {
               <StatusBadge tone={priorityTone(selectedTicket.priority)}>{humanizeToken(selectedTicket.priority)}</StatusBadge>
               <StatusBadge tone="muted">{formatDateTimeLabel(selectedTicket.created_at)}</StatusBadge>
             </div>
+
+            {hasSolution(selectedTicket) ? (
+              <div className="rounded-xl border border-[var(--ops-success-soft-border)] bg-[var(--ops-success-soft)] px-4 py-4">
+                <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[var(--ops-success-ink)]">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Solution posted</span>
+                  {selectedTicket.solution_reported_at ? (
+                    <span className="font-normal text-[var(--ops-muted)]">
+                      {formatDateTimeLabel(selectedTicket.solution_reported_at)}
+                    </span>
+                  ) : null}
+                </div>
+                {selectedTicket.solution_summary ? (
+                  <p className="mt-3 text-sm font-semibold text-[var(--ops-text)]">{selectedTicket.solution_summary}</p>
+                ) : null}
+                {selectedTicket.solution_details ? (
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--ops-text)]">
+                    {selectedTicket.solution_details}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             {selectedTicket.notification_error && canManage ? (
               <div className="rounded-xl border border-[var(--ops-warning-soft-border)] bg-[var(--ops-warning-soft)] px-4 py-3 text-sm text-[var(--ops-warning-ink)]">
